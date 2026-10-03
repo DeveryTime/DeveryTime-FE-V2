@@ -1,17 +1,21 @@
 import { useEffect, useRef } from "react";
-import type {
-  DialogHTMLAttributes,
-  ReactNode,
-} from "react";
+import type { DialogHTMLAttributes, ReactNode } from "react";
 import S from "./Modal.styles";
 
-interface ModalProps
-  extends Omit<DialogHTMLAttributes<HTMLDialogElement>, "children" | "onClose"> {
-  children: ReactNode;
-  onClose: () => void;
-  closeButtonLabel?: string;
-  closeIcon?: ReactNode;
-}
+type AccessibleName =
+  | { "aria-label": string; "aria-labelledby"?: never }
+  | { "aria-label"?: never; "aria-labelledby": string };
+
+type ModalProps = Omit<
+  DialogHTMLAttributes<HTMLDialogElement>,
+  "children" | "onClose" | "aria-label" | "aria-labelledby"
+> &
+  AccessibleName & {
+    children: ReactNode;
+    onClose: () => void;
+    closeButtonLabel?: string;
+    closeIcon?: ReactNode;
+  };
 
 const Modal = ({
   children,

@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import colors from "../../../styles/tokens/colors";
+import { colors } from "../../../styles/tokens/colors";
 
 interface ButtonStyleProps {
   $variant: "primary" | "secondary" | "ghost" | "danger";

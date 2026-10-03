@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import colors from "../../../styles/tokens/colors";
+import { colors } from "../../../styles/tokens/colors";
 
 const S = {
   Input: styled.input`
