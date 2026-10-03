@@ -1,8 +1,6 @@
 import styled from "@emotion/styled";
-import { GlobalStyle } from "../../styles/globalStyle";
-import {colors} from "../../styles/tokens/colors"
+import { colors } from "../../styles/tokens/colors";
 import { Link } from "react-router-dom";
-
 
 export const SignupWrapper = styled.div`
   display: flex;
@@ -26,49 +24,52 @@ export const CardBox = styled.div`
   border-radius: 15px;
 `;
 
-export const Title = styled.div`
+export const Title = styled.h1`
   display: flex;
   justify-content: center;
   align-items: center;
   color: #000000;
   font-family: Pretendard;
-  font-style: Bold;
   font-size: 36px;
   font-weight: 700;
 `;
 
-export const Button = styled.div`
+export const Button = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
   width: 564px;
   height: 64px;
+  padding: 0;
+  border: none;
   background-color: ${colors.blue[400]};
   border-radius: 15px;
   color: #ffffff;
   font-size: 20px;
   font-weight: 500;
-  font-style: Medium;
   font-family: Pretendard;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${colors.blue[500]};
+  }
 `;
 
 export const LinkText = styled(Link)`
   color: #000000;
   font-size: 16px;
   font-weight: 500;
-  font-style: Medium;
   font-family: Pretendard;
   text-decoration: underline;
   text-underline-offset: 6px;
 `;
 
-export const Qusetion = styled.div`
+export const Qusetion = styled.span`
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 16px;
   font-weight: 500;
-  font-style: Medium;
   font-family: Pretendard;
 `;
 
@@ -82,7 +83,7 @@ export const QuestionText = styled.div`
 export const QuestionPasswordText = styled.div`
   display: flex;
   justify-content: flex-start;
-  align-items: start;
+  align-items: flex-start;
   gap: 8px;
   margin-top: 10px;
   width: 564px;
@@ -90,7 +91,6 @@ export const QuestionPasswordText = styled.div`
   font-family: Pretendard;
   font-size: 16px;
   font-weight: 500;
-  font-style: Medium;
 `;
 
 export const PasswordArea = styled.div`
@@ -130,15 +130,10 @@ export const EyeButton = styled.button`
   color: #6f6f6f;
   font-size: 24px;
   cursor: pointer;
-`;
 
-export const PasswordText = styled.div`
-  width: 564px;
-  margin-top: -15px;
-  color: #606060;
-  font-family: Pretendard;
-  font-size: 14px;
-  font-weight: 500;
+  &:hover {
+    color: #333333;
+  }
 `;
 
 export const PasswordWrapper = styled.div`
