@@ -1,5 +1,7 @@
 import type { ChangeEvent } from "react";
-import { Input, InputBoxWrapper } from "./InputBoxStyle";
+import {Input} from "../inputBox/InputBoxStyle"
+import { InputBoxWrapper } from "./InputBoxStyle";
+
 
 interface InputBoxProps {
   placeholder: string;
@@ -25,3 +27,6 @@ export const InputBox = ({
     </InputBoxWrapper>
   );
 };
+
+
+
