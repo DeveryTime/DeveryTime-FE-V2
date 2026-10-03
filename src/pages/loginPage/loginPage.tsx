@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { InputBox } from "../../components/loginPage/inputBox/InputBox";
 import {
   BackgroundLayer,
