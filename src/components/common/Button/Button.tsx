@@ -12,7 +12,7 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   return (
-    <S.Button $variant={variant} {...props}>
+    <S.Button $variant={variant} {...props} type="submit">
       {children}
     </S.Button>
   );
