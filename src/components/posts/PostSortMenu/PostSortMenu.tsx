@@ -8,7 +8,6 @@ interface PostSortMenuProps {
   onChange: (sort: PostSort) => void;
 }
 
-
 interface SortOption {
   value: PostSort;
   label: string;
@@ -16,7 +15,7 @@ interface SortOption {
 
 // 화면에 표시할 게시글 정렬 옵션 목록이다.
 const sortOptions: SortOption[] = [
-  { value: "likes", label: "인기순" },
+  { value: "likes", label: "좋아요순" },
   { value: "latest", label: "최신순" },
   { value: "views", label: "조회순" },
 ];
