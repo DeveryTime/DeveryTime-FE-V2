@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import S from "./Navbar.style";
 import logoIcon from "../assets/logoIcon.svg";
 import profile from "../assets/profile.svg";
-import searchIcon from "../assets/SearchIcon.svg";
+import searchIcon from "../assets/searchIcon.svg";
 
 const NavBar = () => {
   const [searchValue, setSearchValue] = useState("");
@@ -42,6 +42,7 @@ const NavBar = () => {
           <S.SearchInput
             type="text"
             placeholder="키워드로 게시글을 검색해보세요"
+            aria-label="게시글 검색"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => {
@@ -51,8 +52,8 @@ const NavBar = () => {
             }}
           />
 
-          <S.SearchIcon>
-            <img src={searchIcon} alt="검색" />
+          <S.SearchIcon type="button" aria-label="검색" onClick={handleSearch}>
+            <img src={searchIcon} alt="" />
           </S.SearchIcon>
         </S.Search>
       </S.NavGap>
@@ -70,9 +71,7 @@ const NavBar = () => {
           {isLoggedIn ? (
             <S.ProfileImage src={profile} alt="프로필" />
           ) : (
-            <Link to="/login">
-              <S.Login>로그인</S.Login>
-            </Link>
+            <S.Login to="/login">로그인</S.Login>
           )}
         </div>
       </S.NavCatalog>

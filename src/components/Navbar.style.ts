@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
-import { colors } from "../styles/tokens/colors";
 
 const S = {
   Nav: styled.nav`
@@ -9,7 +8,8 @@ const S = {
     align-items: center;
     padding: 16px 28px;
     box-sizing: border-box;
-    background-color: ${colors.blue[100]};
+    background-color: #b0c5fd;
+    border: none;
     box-shadow: 0px 1px 4px -1px rgba(0, 0, 0, 0.1);
     width: 100%;
   `,
@@ -23,18 +23,20 @@ const S = {
   `,
 
   NavCatalog: styled.div`
-    display: flex;
-    align-items: center;
     gap: 58px;
+    display: flex;
   `,
-
   Logo: styled(Link)`
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 8px;
     flex-shrink: 0;
     cursor: pointer;
     text-decoration: none;
+
+    img {
+      height: 40px;
+    }
   `,
 
   LogoName: styled.div`
@@ -42,7 +44,7 @@ const S = {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    color: ${colors.blue[900]};
+    color: #fff;
     font-weight: 700;
     flex-shrink: 0;
     white-space: nowrap;
@@ -74,23 +76,15 @@ const S = {
     margin: 0;
   `,
 
-  SearchIcon: styled.div`
+  SearchIcon: styled.button`
     cursor: pointer;
     display: flex;
     align-items: center;
     margin-left: 8px;
     flex-shrink: 0;
-  `,
-
-  ProfileImage: styled.img`
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    object-fit: cover;
-    background-color: #fff;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    display: block;
+    border: none;
+    background: none;
+    padding: 0;
   `,
 
   Category: styled.div`
@@ -98,7 +92,7 @@ const S = {
     align-items: center;
     gap: 27px;
     padding: 0 0 0 58px;
-    color: ${colors.blue[900]};
+    color: #fff;
     font-weight: 700;
     flex-shrink: 0;
     white-space: nowrap;
@@ -109,21 +103,29 @@ const S = {
       cursor: pointer;
 
       &:hover {
-        color: ${colors.blue[700]};
+        color: #000;
       }
     }
   `,
 
-  Login: styled.button`
+  Login: styled(Link)`
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 9px 23px 10px 22px;
-    color: ${colors.blue[900]};
+    padding: 7px 17px 7px 17px;
+    color: black;
     font-weight: 500;
     border: none;
     background-color: #fff;
-    border-radius: 16px;
+    border-radius: 14px;
     cursor: pointer;
+    flex-shrink: 0;
+    text-decoration: none;
+  `,
+
+  ProfileImage: styled.img`
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
   `,
 };
