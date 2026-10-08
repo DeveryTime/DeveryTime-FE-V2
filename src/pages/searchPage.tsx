@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import S from "./searchPage.style";
+import { SearchPostResult } from "../components/searchPostResult";
 
 interface SearchPost {
   id: number;
@@ -8,18 +10,15 @@ interface SearchPost {
   createdAt: string;
 }
 
-function SearchPage() {
+export function SearchPage() {
   const [searchParams] = useSearchParams();
   const keyword = searchParams.get("keyword") || "";
 
+  const [currentPage, setCurrentPage] = useState(1);
+
   const posts: SearchPost[] = [];
   const totalElements = posts.length;
-
-  const formatDate = (isoString: string) => {
-    if (!isoString) return "";
-
-    return isoString.split("T")[0].replace(/-/g, ".");
-  };
+  const totalPages = 1;
 
   return (
     <S.PageContainer>
@@ -30,17 +29,12 @@ function SearchPage() {
       <S.CategoryMeta>검색 결과 {totalElements}개</S.CategoryMeta>
 
       {posts.length > 0 ? (
-        <S.ListContainer>
-          {posts.map((post) => (
-            <S.PostCard key={post.id}>
-              <S.PostTitle>{post.title}</S.PostTitle>
-
-              <S.PostInfo>
-                {post.categoryName} · {formatDate(post.createdAt)}
-              </S.PostInfo>
-            </S.PostCard>
-          ))}
-        </S.ListContainer>
+        <SearchPostResult
+          posts={posts}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       ) : (
         <S.EmptyMessage role="status">
           '{keyword}'에 대한 검색 결과가 없습니다.
