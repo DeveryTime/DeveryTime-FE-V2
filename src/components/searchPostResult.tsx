@@ -6,6 +6,7 @@ import {
   FiChevronsRight,
 } from "react-icons/fi";
 
+// 검색 결과 게시글 타입
 export interface SearchPostResultItem {
   id: number;
   title: string;
@@ -13,6 +14,7 @@ export interface SearchPostResultItem {
   createdAt: string;
 }
 
+// 검색 결과 컴포넌트 Props
 interface SearchPostResultProps {
   posts: SearchPostResultItem[];
   currentPage: number;
@@ -22,8 +24,10 @@ interface SearchPostResultProps {
   pageSize?: number;
 }
 
+// 페이지 번호를 10개씩 표시
 const PAGE_GROUP_SIZE = 10;
 
+// 날짜 형식 변경
 function formatDate(createdAt: string) {
   return createdAt.split("T")[0]?.replace(/-/g, ".") ?? "";
 }
@@ -36,21 +40,26 @@ export function SearchPostResult({
   onPostClick,
   pageSize = 20,
 }: SearchPostResultProps) {
+  // 페이지네이션 계산
   const safeTotalPages = Math.max(1, totalPages);
   const currentGroup = Math.floor((currentPage - 1) / PAGE_GROUP_SIZE);
   const firstPage = currentGroup * PAGE_GROUP_SIZE + 1;
   const lastPage = Math.min(firstPage + PAGE_GROUP_SIZE - 1, safeTotalPages);
+
+  // 현재 페이지 그룹의 페이지 번호 생성
   const pageNumbers = Array.from(
     { length: lastPage - firstPage + 1 },
     (_, index) => firstPage + index,
   );
 
+  // 검색 결과가 없을 때
   if (posts.length === 0) {
     return <EmptyMessage>검색 결과가 없습니다.</EmptyMessage>;
   }
 
   return (
     <>
+      {/* 검색 결과 게시글 목록 */}
       <Table>
         <thead>
           <tr>
@@ -60,23 +69,37 @@ export function SearchPostResult({
             <TableHeader>작성일</TableHeader>
           </tr>
         </thead>
+
         <tbody>
           {posts.map((post, index) => (
-            <TableRow
-              key={post.id}
-              onClick={() => onPostClick?.(post.id)}
-              $isClickable={Boolean(onPostClick)}
-            >
+            <TableRow key={post.id}>
               <TableCell>{(currentPage - 1) * pageSize + index + 1}</TableCell>
+
               <TableCell>{post.categoryName}</TableCell>
-              <TableCell>{post.title}</TableCell>
+
+              {/* 제목 클릭 시 게시글 이동 */}
+              <TableCell>
+                {onPostClick ? (
+                  <TitleButton
+                    type="button"
+                    onClick={() => onPostClick(post.id)}
+                  >
+                    {post.title}
+                  </TitleButton>
+                ) : (
+                  post.title
+                )}
+              </TableCell>
+
               <TableCell>{formatDate(post.createdAt)}</TableCell>
             </TableRow>
           ))}
         </tbody>
       </Table>
 
+      {/* 페이지네이션 */}
       <Pagination aria-label="검색 결과 페이지 이동">
+        {/* 첫 페이지 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(1)}
@@ -85,6 +108,8 @@ export function SearchPostResult({
         >
           <FiChevronsLeft aria-hidden="true" />
         </PageButton>
+
+        {/* 이전 페이지 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(currentPage - 1)}
@@ -94,6 +119,7 @@ export function SearchPostResult({
           <FiChevronLeft aria-hidden="true" />
         </PageButton>
 
+        {/* 페이지 번호 */}
         {pageNumbers.map((page) => (
           <PageButton
             key={page}
@@ -105,6 +131,7 @@ export function SearchPostResult({
           </PageButton>
         ))}
 
+        {/* 다음 페이지 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(currentPage + 1)}
@@ -113,6 +140,8 @@ export function SearchPostResult({
         >
           <FiChevronRight aria-hidden="true" />
         </PageButton>
+
+        {/* 마지막 페이지 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(safeTotalPages)}
@@ -126,6 +155,7 @@ export function SearchPostResult({
   );
 }
 
+// 검색 결과 테이블
 const Table = styled.table`
   width: 100%;
   height: auto;
@@ -155,6 +185,7 @@ const Table = styled.table`
   }
 `;
 
+// 테이블 헤더
 const TableHeader = styled.th`
   padding: 6px 8px;
   border-top: 3px solid #000000;
@@ -162,20 +193,42 @@ const TableHeader = styled.th`
   font-weight: 500;
 `;
 
+// 테이블 내용
 const TableCell = styled.td`
   padding: 8px;
   border: none;
   text-align: left;
 `;
 
-const TableRow = styled.tr<{ $isClickable: boolean }>`
-  cursor: ${({ $isClickable }) => ($isClickable ? "pointer" : "default")};
-
+// 테이블 행
+const TableRow = styled.tr`
   &:hover {
     background-color: #f5f5f5;
   }
 `;
 
+// 게시글 제목 버튼
+const TitleButton = styled.button`
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #577aed;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+`;
+
+// 페이지네이션 영역
 const Pagination = styled.nav`
   width: 360px;
   height: 22px;
@@ -189,6 +242,7 @@ const Pagination = styled.nav`
   transform: translateX(-80px);
 `;
 
+// 페이지 버튼
 const PageButton = styled.button`
   width: 22px;
   height: 22px;
@@ -217,6 +271,7 @@ const PageButton = styled.button`
   }
 `;
 
+// 검색 결과가 없을 때 표시되는 문구
 const EmptyMessage = styled.p`
   padding: 56px 0;
   color: #6b7280;
