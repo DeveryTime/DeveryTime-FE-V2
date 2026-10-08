@@ -42,7 +42,7 @@ export const S = {
   // 내 정보 영역
   InfoContainer: styled.div`
     position: relative;
-    width: 918px;
+    width: min(918px, 100%);
     min-height: 300px;
     padding: 12px 20px;
     box-sizing: border-box;
@@ -104,6 +104,8 @@ export const S = {
     display: flex;
     flex-direction: column;
     gap: 28px;
+    width: min(918px, 100%);
+    min-width: 0;
   `,
 };
 
