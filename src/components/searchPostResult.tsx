@@ -24,10 +24,10 @@ interface SearchPostResultProps {
   pageSize?: number;
 }
 
-// 페이지 번호를 10개씩 표시
+// 한 번에 보여줄 페이지 번호 개수
 const PAGE_GROUP_SIZE = 10;
 
-// 날짜 형식 변경
+// 날짜 데이터를 화면에 표시할 형식으로 변환
 function formatDate(createdAt: string) {
   return createdAt.split("T")[0]?.replace(/-/g, ".") ?? "";
 }
@@ -40,7 +40,7 @@ export function SearchPostResult({
   onPostClick,
   pageSize = 20,
 }: SearchPostResultProps) {
-  // 페이지네이션 계산
+  // 현재 페이지를 기준으로 페이지 번호 범위 계산
   const safeTotalPages = Math.max(1, totalPages);
   const currentGroup = Math.floor((currentPage - 1) / PAGE_GROUP_SIZE);
   const firstPage = currentGroup * PAGE_GROUP_SIZE + 1;
@@ -52,7 +52,7 @@ export function SearchPostResult({
     (_, index) => firstPage + index,
   );
 
-  // 검색 결과가 없을 때
+  // 검색 결과가 없는 경우 안내 문구 표시
   if (posts.length === 0) {
     return <EmptyMessage>검색 결과가 없습니다.</EmptyMessage>;
   }
@@ -73,11 +73,12 @@ export function SearchPostResult({
         <tbody>
           {posts.map((post, index) => (
             <TableRow key={post.id}>
+              {/* 현재 페이지를 기준으로 게시글 번호 표시 */}
               <TableCell>{(currentPage - 1) * pageSize + index + 1}</TableCell>
 
               <TableCell>{post.categoryName}</TableCell>
 
-              {/* 제목 클릭 시 게시글 이동 */}
+              {/* 제목 클릭 시 게시글 상세 페이지로 이동 */}
               <TableCell>
                 {onPostClick ? (
                   <TitleButton
@@ -91,15 +92,16 @@ export function SearchPostResult({
                 )}
               </TableCell>
 
+              {/* 작성일 표시 */}
               <TableCell>{formatDate(post.createdAt)}</TableCell>
             </TableRow>
           ))}
         </tbody>
       </Table>
 
-      {/* 페이지네이션 */}
+      {/* 검색 결과 페이지 이동 */}
       <Pagination aria-label="검색 결과 페이지 이동">
-        {/* 첫 페이지 */}
+        {/* 첫 페이지로 이동 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(1)}
@@ -109,7 +111,7 @@ export function SearchPostResult({
           <FiChevronsLeft aria-hidden="true" />
         </PageButton>
 
-        {/* 이전 페이지 */}
+        {/* 이전 페이지로 이동 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(currentPage - 1)}
@@ -119,7 +121,7 @@ export function SearchPostResult({
           <FiChevronLeft aria-hidden="true" />
         </PageButton>
 
-        {/* 페이지 번호 */}
+        {/* 페이지 번호 표시 */}
         {pageNumbers.map((page) => (
           <PageButton
             key={page}
@@ -131,7 +133,7 @@ export function SearchPostResult({
           </PageButton>
         ))}
 
-        {/* 다음 페이지 */}
+        {/* 다음 페이지로 이동 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(currentPage + 1)}
@@ -141,7 +143,7 @@ export function SearchPostResult({
           <FiChevronRight aria-hidden="true" />
         </PageButton>
 
-        {/* 마지막 페이지 */}
+        {/* 마지막 페이지로 이동 */}
         <PageButton
           type="button"
           onClick={() => onPageChange(safeTotalPages)}
@@ -242,7 +244,7 @@ const Pagination = styled.nav`
   transform: translateX(-80px);
 `;
 
-// 페이지 버튼
+// 페이지 이동 버튼
 const PageButton = styled.button`
   width: 22px;
   height: 22px;

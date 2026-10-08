@@ -54,7 +54,7 @@ export const S = {
     }
   `,
 
-  // 게시글 제목
+  // 게시글제목
   PostTitle: styled.div`
     font-size: 16px;
     font-weight: 600;
