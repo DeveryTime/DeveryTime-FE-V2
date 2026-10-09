@@ -1,28 +1,11 @@
-import { useState, type ChangeEvent } from "react";
-import { InputBox } from "../../components/loginPage/inputBox/InputBox";
-import {
-  BackgroundLayer,
-  ContentLayer,
-} from "../BackgroundAct/BackgroundActStyle";
-import { Background } from "../BackgroundAct/BackgroundAct";
+import { useState } from "react";
+import  InputBox  from "../../components/loginPage/inputBox/InputBox";
+import S from "../BackgroundAct/BackgroundActStyle";
+import Background from "../BackgroundAct/BackgroundAct";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import LoginS from "./loginPageStyle";
 
-import {
-  SignupWrapper,
-  CardBox,
-  Title,
-  Button,
-  Qusetion,
-  LinkText,
-  QuestionText,
-  PasswordArea,
-  EyeButton,
-  PasswordInput,
-  PasswordWrapper,
-  QuestionPasswordText,
-} from "./loginPageStyle";
-
-export const LoginPage = () => {
+const LoginPage = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -50,14 +33,14 @@ export const LoginPage = () => {
   };
 
   return (
-    <SignupWrapper>
-      <BackgroundLayer>
+    <LoginS.SignupWrapper>
+      <S.BackgroundLayer>
         <Background />
-      </BackgroundLayer>
+      </S.BackgroundLayer>
 
-      <ContentLayer>
-        <CardBox>
-          <Title>로그인</Title>
+      <S.ContentLayer>
+        <LoginS.CardBox>
+          <LoginS.Title>로그인</LoginS.Title>
 
           <InputBox
             placeholder="이메일"
@@ -66,9 +49,9 @@ export const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <PasswordWrapper>
-            <PasswordArea>
-              <PasswordInput
+          <LoginS.PasswordWrapper>
+            <LoginS.PasswordArea>
+              <LoginS.PasswordInput
                 type={showPassword ? "text" : "password"}
                 placeholder="비밀번호"
                 aria-label="비밀번호"
@@ -76,31 +59,35 @@ export const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
 
-              <EyeButton
+              <LoginS.EyeButton
                 type="button"
-                aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+                aria-label={
+                  showPassword ? "비밀번호 숨기기" : "비밀번호 표시"
+                }
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? <IoEyeOutline /> : <IoEyeOffOutline />}
-              </EyeButton>
-            </PasswordArea>
+              </LoginS.EyeButton>
+            </LoginS.PasswordArea>
 
-            <QuestionPasswordText>
-              <Qusetion>비밀번호를 잊으셨나요?</Qusetion>
-              <LinkText to="/FindPassword">여기</LinkText>
-            </QuestionPasswordText>
-          </PasswordWrapper>
+            <LoginS.QuestionPasswordText>
+              <LoginS.Qusetion>비밀번호를 잊으셨나요?</LoginS.Qusetion>
+              <LoginS.LinkText to="/FindPassword">여기</LoginS.LinkText>
+            </LoginS.QuestionPasswordText>
+          </LoginS.PasswordWrapper>
 
-          <Button type="button" onClick={handleNext}>
+          <LoginS.Button type="button" onClick={handleNext}>
             다음
-          </Button>
+          </LoginS.Button>
 
-          <QuestionText>
-            <Qusetion>계정이 없으신가요?</Qusetion>
-            <LinkText to="/signup/1">회원가입</LinkText>
-          </QuestionText>
-        </CardBox>
-      </ContentLayer>
-    </SignupWrapper>
+          <LoginS.QuestionText>
+            <LoginS.Qusetion>계정이 없으신가요?</LoginS.Qusetion>
+            <LoginS.LinkText to="/signup/1">회원가입</LoginS.LinkText>
+          </LoginS.QuestionText>
+        </LoginS.CardBox>
+      </S.ContentLayer>
+    </LoginS.SignupWrapper>
   );
 };
+
+export default LoginPage;
