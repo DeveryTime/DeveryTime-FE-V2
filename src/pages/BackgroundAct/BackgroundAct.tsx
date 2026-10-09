@@ -1,13 +1,9 @@
-import {
-  MovingCircleleft,
-  BackgroundWrapper,
-  MovingCircleright,
-} from "./BackgroundActStyle";
+import S from "./BackgroundActStyle";
 
-export const Background = () => {
+const Background = () => {
   return (
-    <BackgroundWrapper>
-      <MovingCircleleft
+    <S.BackgroundWrapper>
+      <S.MovingCircleleft
         initial={{ x: 0, y: 0 }}
         animate={{
           x: [0, 120, 280, 420, 300, 820, 0],
@@ -20,7 +16,7 @@ export const Background = () => {
         }}
       />
 
-      <MovingCircleright
+      <S.MovingCircleright
         initial={{ x: 0, y: 0 }}
         animate={{
           x: [0, -80, -180, -100, 40, 120, 0],
@@ -32,6 +28,8 @@ export const Background = () => {
           ease: "easeInOut",
         }}
       />
-    </BackgroundWrapper>
+    </S.BackgroundWrapper>
   );
 };
+
+export default Background;
