@@ -27,3 +27,9 @@ export const Input = styled.input`
     opacity: 1;
   }
 `;
+const S = {
+  InputBoxWrapper,
+  Input,
+};
+
+export default S;
