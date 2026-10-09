@@ -8,7 +8,7 @@ interface InputBoxProps {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const InputBox = ({
+const InputBox = ({
   placeholder,
   ariaLabel,
   value,
@@ -25,6 +25,5 @@ export const InputBox = ({
     </S.InputBoxWrapper>
   );
 };
-
-
+export default InputBox;
 
