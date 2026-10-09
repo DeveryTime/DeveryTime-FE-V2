@@ -4,11 +4,13 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./App.tsx";
 import { GlobalStyle } from "./styles/globalStyle.tsx";
+import { Toaster } from "react-hot-toast";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <GlobalStyle />
+      <Toaster />
       <App />
     </BrowserRouter>
   </StrictMode>,
