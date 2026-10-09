@@ -7,7 +7,7 @@ const Text = () => {
       {/* 랜딩페이지 소개 문구 */}
       <S.Text>
         <S.Text1>
-          <Slide triggerOnce direction="right" duration={700} fraction={1}>
+          <Slide triggerOnce direction="right" duration={700} fraction={0.5}>
             <div>
               DSM 소통의 길 <br />
               데브리타임에 온걸 환영해요!

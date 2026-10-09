@@ -21,39 +21,39 @@ const PandaMotion = () => {
       {/* 판다 애니메이션 */}
       <S.Panda1>
         <Zoom triggerOnce duration={600} fraction={1} delay={600}>
-          <img src={panda1} alt="panda" />
+          <img src={panda1} />
         </Zoom>
       </S.Panda1>
 
       <S.Panda2>
         <Zoom triggerOnce duration={600} fraction={1}>
-          <img src={panda2} alt="panda" />
+          <img src={panda2} />
         </Zoom>
       </S.Panda2>
 
       <S.Panda3>
         <Zoom triggerOnce duration={600} fraction={1}>
-          <img src={panda3} alt="panda" />
+          <img src={panda3} />
         </Zoom>
       </S.Panda3>
 
       {/* 반짝이 애니메이션 */}
       <S.Glitter>
         <Zoom triggerOnce duration={600} fraction={1} delay={700}>
-          <img src={glitter} alt="glitter" />
+          <img src={glitter} />
         </Zoom>
       </S.Glitter>
 
       {/* 마지막 별과 판다 애니메이션 */}
       <S.Star2>
         <Zoom triggerOnce duration={600} fraction={1}>
-          <img src={star} alt="star" />
+          <img src={star} />
         </Zoom>
       </S.Star2>
 
       <S.Panda4>
         <Zoom triggerOnce duration={600} fraction={1} delay={600}>
-          <img src={panda4} alt="panda" />
+          <img src={panda4} />
         </Zoom>
       </S.Panda4>
     </S.Background>
