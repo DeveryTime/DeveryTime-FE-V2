@@ -24,3 +24,5 @@ export const colors = {
     900: "#001c6a",
   },
 };
+
+export default colors;
