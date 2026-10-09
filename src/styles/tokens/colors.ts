@@ -49,3 +49,5 @@ export const colors = {
     black45: "rgba(0, 0, 0, 0.45)",
   },
 };
+
+export default colors;
