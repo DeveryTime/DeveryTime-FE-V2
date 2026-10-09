@@ -26,9 +26,9 @@ const PostTable = ({ posts, onPostClick }: PostTableProps) => {
             key={post.id}
             onClick={() => onPostClick(post.id)}
             tabIndex={0}
-            role="button"
+
             onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key == "") {
+              if (event.key === "Enter" || event.key == " ") {
                 event.preventDefault();
                 onPostClick(post.id);
               }
