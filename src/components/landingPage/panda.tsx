@@ -11,12 +11,14 @@ import star from "../../assets/Star.svg";
 const PandaMotion = () => {
   return (
     <S.Background>
+      {/* 별 애니메이션 */}
       <S.Star>
         <Zoom triggerOnce duration={600} fraction={1}>
           <img src={star} alt="star" />
         </Zoom>
       </S.Star>
 
+      {/* 판다 애니메이션 */}
       <S.Panda1>
         <Zoom triggerOnce duration={600} fraction={1} delay={600}>
           <img src={panda1} alt="panda" />
@@ -35,12 +37,14 @@ const PandaMotion = () => {
         </Zoom>
       </S.Panda3>
 
+      {/* 반짝이 애니메이션 */}
       <S.Glitter>
         <Zoom triggerOnce duration={600} fraction={1} delay={700}>
           <img src={glitter} alt="glitter" />
         </Zoom>
       </S.Glitter>
 
+      {/* 마지막 별과 판다 애니메이션 */}
       <S.Star2>
         <Zoom triggerOnce duration={600} fraction={1}>
           <img src={star} alt="star" />

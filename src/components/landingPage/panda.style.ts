@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
 export const S = {
+  // 전체 배경
   Background: styled.div`
     position: relative;
     top: 0;
@@ -8,6 +9,7 @@ export const S = {
     z-index: 1;
   `,
 
+  // 별 위치
   Star: styled.div`
     position: absolute;
     top: 293px;
@@ -15,6 +17,7 @@ export const S = {
     transform: translateX(-50%);
   `,
 
+  // 첫 번째 판다 위치
   Panda1: styled.div`
     position: absolute;
     top: 310px;
@@ -22,6 +25,7 @@ export const S = {
     z-index: 5;
   `,
 
+  // 두 번째 판다 위치
   Panda2: styled.div`
     position: absolute;
     top: 1400px;
@@ -30,6 +34,7 @@ export const S = {
     z-index: 5;
   `,
 
+  // 반짝이 위치
   Glitter: styled.div`
     position: absolute;
     top: 2780px;
@@ -38,6 +43,7 @@ export const S = {
     z-index: 5;
   `,
 
+  // 세 번째 판다 위치
   Panda3: styled.div`
     position: absolute;
     top: 2750px;
@@ -46,6 +52,7 @@ export const S = {
     z-index: 5;
   `,
 
+  // 두 번째 별 위치
   Star2: styled.div`
     position: absolute;
     top: 3990px;
@@ -53,6 +60,7 @@ export const S = {
     transform: translateX(-50%);
   `,
 
+  // 네 번째 판다 위치
   Panda4: styled.div`
     position: absolute;
     top: 4050px;

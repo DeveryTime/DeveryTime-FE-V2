@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import S from "./background.style";
 
+// 선 애니메이션에 필요한 props
 type LineProps = {
   LineComponent: typeof S.Line1 | typeof S.Line2 | typeof S.Line3;
   d: string;
@@ -28,12 +29,14 @@ const Line = ({
     const path = svg.querySelector("path");
     if (!path) return;
 
+    // 선의 전체 길이를 계산하고 애니메이션 초기 상태 설정
     const length = path.getTotalLength();
 
     path.style.strokeDasharray = `${length}`;
     path.style.strokeDashoffset = `${length}`;
     path.style.transition = `stroke-dashoffset ${duration}s ease`;
 
+    // 화면에 선이 나타나면 애니메이션 실행
     const startAnimation = () => {
       if (hasAnimated.current) return;
 
@@ -75,6 +78,7 @@ const Line = ({
 const Background = () => {
   return (
     <S.BackgroundLayout>
+      {/* 배경 장식 요소 */}
       <S.Obj1 />
       <S.Obj2 />
       <S.Obj3 />
@@ -82,6 +86,7 @@ const Background = () => {
       <S.Obj5 />
       <S.Obj6 />
 
+      {/* 스크롤에 따라 그려지는 배경 선 */}
       <Line
         LineComponent={S.Line1}
         d="M-15 63.1419C28.8333 147.475 298.222 484.17 726 255.53C1026.5 94.918 1532.3 -163.57 1989.5 144.03"

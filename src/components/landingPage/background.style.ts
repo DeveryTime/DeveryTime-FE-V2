@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import { keyframes } from "@emotion/react";
 
+// 배경 요소가 위아래로 이동하는 애니메이션
 const move1 = keyframes`
   0% { transform: translate3d(0, 0, 0); }
   25% { transform: translate3d(40vw, -1200px, 0); }
@@ -50,6 +51,7 @@ const move6 = keyframes`
 `;
 
 export const S = {
+  // 전체 배경 레이아웃
   BackgroundLayout: styled.div`
     position: relative;
     width: 100%;
@@ -58,6 +60,7 @@ export const S = {
     overflow-x: hidden;
   `,
 
+  // 흐릿한 배경 장식 요소
   Obj1: styled.div`
     position: absolute;
     width: 1572px;
@@ -129,6 +132,8 @@ export const S = {
     filter: blur(186.6px);
     animation: ${move6} 25s ease-in-out infinite alternate;
   `,
+
+  // 배경 선 위치
   Line1: styled.svg`
     position: absolute;
     top: 848px;

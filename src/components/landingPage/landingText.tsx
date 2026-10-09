@@ -4,6 +4,7 @@ import S from "./landingText.style";
 const Text = () => {
   return (
     <>
+      {/* 랜딩페이지 소개 문구 */}
       <S.Text>
         <S.Text1>
           <Slide triggerOnce direction="right" duration={700} fraction={1}>
@@ -45,6 +46,7 @@ const Text = () => {
         </S.Text4>
       </S.Text>
 
+      {/* 서비스 시작 버튼 */}
       <S.StartBtn>시작하기</S.StartBtn>
     </>
   );
