@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-export const InputBoxWrapper = styled.div`
+const InputBoxWrapper = styled.div`
   width: 560px;
   height: 42px;
   display: flex;
@@ -13,7 +13,7 @@ export const InputBoxWrapper = styled.div`
   top: -30px; */
 `;
 
-export const Input = styled.input`
+const Input = styled.input`
   width: 100%;
   height: 40px;
   border: none;
