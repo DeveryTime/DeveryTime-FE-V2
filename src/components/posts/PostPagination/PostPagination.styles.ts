@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
+
 import  colors from "../../../styles/tokens/colors";
+
 
 const S = {
   PaginationContainer: styled.nav`
