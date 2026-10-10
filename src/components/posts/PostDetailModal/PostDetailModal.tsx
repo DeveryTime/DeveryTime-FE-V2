@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
@@ -17,6 +17,7 @@ import getApiErrorMessage from "../../../api/errorMessages";
 
 interface PostDetailModalProps {
   post: PostDetailData;
+  currentUserId: number;
   onClose: () => void;
   onDelete: (postId: number, userId: number) => void;
   onUpdate?: (postId: number, title: string, content: string) => void;
@@ -53,6 +54,7 @@ const CommentDate = (dateString: string) => {
 
 const PostDetailModal = ({
   post,
+  currentUserId,
   onClose,
   onDelete,
   onUpdate,
@@ -64,6 +66,15 @@ const PostDetailModal = ({
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
+  const currentPostRef = useRef(post);
+
+  useLayoutEffect(() => {
+    currentPostRef.current = post;
+    setIsLiked(post.liked);
+    setLikeCount(post.likeCount);
+    setIsLikeLoading(false);
+    setLikeError(null);
+  }, [post.id, post.liked, post.likeCount]);
 
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
@@ -81,9 +92,15 @@ const PostDetailModal = ({
   const [editingPostTitle, setEditingPostTitle] = useState("");
   const [editingPostContent, setEditingPostContent] = useState("");
   const [postUpdateError, setPostUpdateError] = useState<string | null>(null);
+  const [displayedPostTitle, setDisplayedPostTitle] = useState(post.title);
+  const [displayedPostContent, setDisplayedPostContent] = useState(
+    post.content,
+  );
 
-  // 현재 로그인한 사용자의 ID라고 가정한 값이다.
-  const currentUserId = 1;
+  useLayoutEffect(() => {
+    setDisplayedPostTitle(post.title);
+    setDisplayedPostContent(post.content);
+  }, [post.id, post.title, post.content]);
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {
@@ -91,28 +108,35 @@ const PostDetailModal = ({
       return;
     }
 
+    const requestedPostId = post.id;
     setLikeError(null);
     setIsLikeLoading(true);
 
     try {
       const likeResult = isLiked
-        ? await postsApi.unlikePost(post.id)
-        : await postsApi.likePost(post.id);
+        ? await postsApi.unlikePost(requestedPostId)
+        : await postsApi.likePost(requestedPostId);
+
+      if (currentPostRef.current.id !== requestedPostId) {
+        return;
+      }
 
       setLikeCount((previous) => {
         if (likeResult.liked === isLiked) {
           return previous;
         }
 
-        return likeResult.liked
-          ? previous + 1
-          : Math.max(0, previous - 1);
+        return likeResult.liked ? previous + 1 : Math.max(0, previous - 1);
       });
       setIsLiked(likeResult.liked);
     } catch (error) {
-      setLikeError(getApiErrorMessage(error, "좋아요 처리에 실패했습니다."));
+      if (currentPostRef.current.id === requestedPostId) {
+        setLikeError(getApiErrorMessage(error, "좋아요 처리에 실패했습니다."));
+      }
     } finally {
-      setIsLikeLoading(false);
+      if (currentPostRef.current.id === requestedPostId) {
+        setIsLikeLoading(false);
+      }
     }
   };
 
@@ -120,8 +144,8 @@ const PostDetailModal = ({
   const handlePostEditStart = () => {
     setIsPostEditing(true);
     setIsPostMenuOpen(false);
-    setEditingPostTitle(post.title);
-    setEditingPostContent(post.content);
+    setEditingPostTitle(displayedPostTitle);
+    setEditingPostContent(displayedPostContent);
     setPostUpdateError(null);
   };
 
@@ -145,7 +169,7 @@ const PostDetailModal = ({
     fetchComments();
   }, [post.id]);
 
-  //게시글 수정 저장 함수 로직 
+  //게시글 수정 저장 함수 로직
   const handlePostEditSave = async () => {
     const trimmedPostTitle = editingPostTitle.trim();
     const trimmedPostContent = editingPostContent.trim();
@@ -164,6 +188,8 @@ const PostDetailModal = ({
     try {
       await postsApi.updatePost(post.id, updateData);
 
+      setDisplayedPostTitle(trimmedPostTitle);
+      setDisplayedPostContent(trimmedPostContent);
       onUpdate?.(post.id, trimmedPostTitle, trimmedPostContent);
       setIsPostEditing(false);
     } catch (error) {
@@ -172,7 +198,6 @@ const PostDetailModal = ({
       );
     }
   };
-
 
   return (
     <S.DetailDialog
@@ -270,8 +295,8 @@ const PostDetailModal = ({
                   type="button"
                   variant="secondary"
                   onClick={() => {
-                    setEditingPostTitle(post.title);
-                    setEditingPostContent(post.content);
+                    setEditingPostTitle(displayedPostTitle);
+                    setEditingPostContent(displayedPostContent);
                     setIsPostEditing(false);
                   }}
                 >
@@ -292,19 +317,21 @@ const PostDetailModal = ({
             </S.PostEditForm>
           ) : (
             <>
-              <S.PostTitle id="post-detail-title"> {post.title} </S.PostTitle>
+              <S.PostTitle id="post-detail-title">
+                {displayedPostTitle}
+              </S.PostTitle>
               <S.PostContent>
-                <ReactMarkdown>{post.content}</ReactMarkdown>
+                <ReactMarkdown>{displayedPostContent}</ReactMarkdown>
               </S.PostContent>
               {post.imageUrls.length > 0 && (
                 <S.ImageList>
                   {post.imageUrls.map((imageUrl, index) => (
-                      <S.ContentImage
-                        key={`${imageUrl}-${index}`}
-                        src={imageUrl}
-                        alt={`${post.title} 첨부된 이미지`}
-                      />
-                    ))}
+                    <S.ContentImage
+                      key={`${imageUrl}-${index}`}
+                      src={imageUrl}
+                      alt={`${displayedPostTitle} 첨부된 이미지`}
+                    />
+                  ))}
                 </S.ImageList>
               )}
             </>

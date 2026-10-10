@@ -181,7 +181,9 @@ const S = {
     display: inline-block;
     position: absolute;
     top: 50px;
-    left: 740px;
+    right: clamp(16px, 4vw, 40px);
+    box-sizing: border-box;
+    max-width: calc(100% - 32px);
     font-size: 14px;
     background-color: ${colors.gray[50]};
     color: ${colors.gray[700]};
