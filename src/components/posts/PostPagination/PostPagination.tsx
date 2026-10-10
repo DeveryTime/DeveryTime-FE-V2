@@ -14,7 +14,6 @@ interface PostPaginationProps {
   onChange: (page: number) => void;
 }
 
-
 const PostPagination = ({
   currentPage,
   totalPages,
@@ -36,55 +35,63 @@ const PostPagination = ({
   );
 
   return (
-    // 첫 페이지, 이전 페이지, 페이지 번호, 다음 페이지, 마지막 페이지를 제공한다.
-    <S.PaginationContainer aria-label="게시글 페이지 이동">
-      <S.PageButton
-        type="button"
-        onClick={() => onChange(1)}
-        disabled={currentPage === 1}
-        aria-label="첫 페이지로 이동"
-      >
-        <ChevronsLeft aria-hidden="true" />
-      </S.PageButton>
-
-      <S.PageButton
-        type="button"
-        onClick={() => onChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        aria-label="이전 페이지"
-      >
-        <ChevronLeft aria-hidden="true" />
-      </S.PageButton>
-
-      {pages.map((page) => (
+    <>
+      {/* 첫 페이지, 이전 페이지, 페이지 번호, 다음 페이지, 마지막 페이지를 제공한다. */}
+      <S.PaginationContainer aria-label="게시글 페이지 이동">
         <S.PageButton
-          key={page}
           type="button"
-          onClick={() => onChange(page)}
-          aria-current={currentPage === page ? "page" : undefined}
+          onClick={() => onChange(1)}
+          disabled={totalPages === 0 || currentPage === 1}
+          aria-label="첫 페이지로 이동"
         >
-          {page}
+          <ChevronsLeft aria-hidden="true" />
         </S.PageButton>
-      ))}
 
-      <S.PageButton
-        type="button"
-        onClick={() => onChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        aria-label="다음 페이지로 이동"
-      >
-        <ChevronRight aria-hidden="true" />
-      </S.PageButton>
+        <S.PageButton
+          type="button"
+          onClick={() => onChange(currentPage - 1)}
+          disabled={totalPages === 0 || currentPage === 1}
+          aria-label="이전 페이지"
+        >
+          <ChevronLeft aria-hidden="true" />
+        </S.PageButton>
 
-      <S.PageButton
-        type="button"
-        onClick={() => onChange(totalPages)}
-        disabled={currentPage === totalPages}
-        aria-label="마지막 페이지로 이동"
-      >
-        <ChevronsRight aria-hidden="true" />
-      </S.PageButton>
-    </S.PaginationContainer>
+        {pages.map((page) => (
+          <S.PageButton
+            key={page}
+            type="button"
+            onClick={() => onChange(page)}
+            aria-current={currentPage === page ? "page" : undefined}
+          >
+            {page}
+          </S.PageButton>
+        ))}
+
+        <S.PageButton
+          type="button"
+          onClick={() => onChange(currentPage + 1)}
+          disabled={totalPages === 0 || currentPage === totalPages}
+          aria-label="다음 페이지로 이동"
+        >
+          <ChevronRight aria-hidden="true" />
+        </S.PageButton>
+
+        <S.PageButton
+          type="button"
+          onClick={() => onChange(totalPages)}
+          disabled={totalPages === 0 || currentPage === totalPages}
+          aria-label="마지막 페이지로 이동"
+        >
+          <ChevronsRight aria-hidden="true" />
+        </S.PageButton>
+      </S.PaginationContainer>
+
+      {totalPages > 0 && (
+        <S.PageSummary role="status">
+          현재 페이지 {currentPage} / 전체 페이지 {totalPages}
+        </S.PageSummary>
+      )}
+    </>
   );
 };
 
