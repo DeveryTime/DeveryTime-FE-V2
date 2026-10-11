@@ -13,7 +13,11 @@ import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
 import getApiErrorMessage from "../../api/errorMessages";
 
-const PostMainPage = () => {
+interface PostMainPageProps {
+  currentUserId: number;
+}
+
+const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
   const [selectedSort, setSelectedSort] = useState<PostSort>("likes");
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,6 +186,7 @@ const PostMainPage = () => {
         {selectedPost && (
           <PostDetailModal
             post={selectedPost}
+            currentUserId={currentUserId}
             onClose={handlePostDetailClose}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
