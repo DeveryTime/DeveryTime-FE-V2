@@ -1,12 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
-import type {
-  PostDetailData,
-  PostSort,
-  PostTableItem,
-} from "../../types/posts.types";
+import type { PostDetailData, PostSort, PostTableItem } from "../../types/posts.types";
 import S from "./PostMainPage.styles";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
@@ -21,11 +17,12 @@ const PostMainPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
+    null,
+  );
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const detailRequestId = useRef(0);
 
   // 정렬 기준별로 화면 제목을 연결한다.
   const sortTitles: Record<PostSort, string> = {
@@ -62,12 +59,12 @@ const PostMainPage = () => {
             createdAt: post.createdAt,
           })),
         );
-        const nextTotalPages = Math.max(1, response.totalPages);
-        setTotalPages(nextTotalPages);
-        setCurrentPage((page) => Math.min(page, nextTotalPages));
+        setTotalPages(Math.max(1, response.totalPages));
       } catch (error) {
         if (isActive) {
-          setError(getApiErrorMessage(error, "게시글을 불러오지 못했습니다."));
+          setError(
+            getApiErrorMessage(error, "게시글을 불러오지 못했습니다."),
+          );
         }
       } finally {
         if (isActive) {
@@ -85,36 +82,19 @@ const PostMainPage = () => {
 
   // 표의 게시글을 선택하면 상세 정보를 조회한다.
   const handlePostClick = async (postId: number) => {
-    const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
 
     try {
       const postDetail = await postsApi.getPost(postId);
-      if (requestId !== detailRequestId.current) {
-        return;
-      }
-
       setSelectedPost(postDetail);
     } catch (error) {
-      if (requestId !== detailRequestId.current) {
-        return;
-      }
-
       setDetailError(
         getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
       );
     } finally {
-      if (requestId === detailRequestId.current) {
-        setIsDetailLoading(false);
-      }
+      setIsDetailLoading(false);
     }
-  };
-
-  const handlePostDetailClose = () => {
-    detailRequestId.current += 1;
-    setSelectedPost(null);
-    setIsDetailLoading(false);
   };
 
   // 삭제 성공 후 현재 목록을 갱신하고 상세 모달을 닫는다.
@@ -124,7 +104,7 @@ const PostMainPage = () => {
       setPosts((currentPosts) =>
         currentPosts.filter((post) => post.id !== postId),
       );
-      handlePostDetailClose();
+      setSelectedPost(null);
       setReloadKey((current) => current + 1);
     } catch (error) {
       setDetailError(
@@ -134,7 +114,11 @@ const PostMainPage = () => {
   };
 
   // 수정 성공 후 목록 제목과 열린 상세 게시글을 함께 갱신한다.
-  const handlePostUpdate = (postId: number, title: string, content: string) => {
+  const handlePostUpdate = (
+    postId: number,
+    title: string,
+    content: string,
+  ) => {
     setPosts((currentPosts) =>
       currentPosts.map((post) =>
         post.id === postId ? { ...post, title } : post,
@@ -149,7 +133,7 @@ const PostMainPage = () => {
 
   return (
     // 정렬 메뉴, 게시글 목록, 상세 모달, 페이지네이션을 배치한다.
-    <S.PageContainer>
+      <S.PageContainer>
       <S.SortMenuArea>
         <PostSortMenu
           selectedSort={selectedSort}
@@ -167,13 +151,9 @@ const PostMainPage = () => {
         {isLoading && <p>게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
 
-        {!isLoading &&
-          !error &&
-          (posts.length > 0 ? (
-            <PostTable posts={posts} onPostClick={handlePostClick} />
-          ) : (
-            <p>게시글이 없습니다.</p>
-          ))}
+        {!isLoading && !error && (
+          <PostTable posts={posts} onPostClick={handlePostClick} />
+        )}
 
         {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
         {detailError && <p role="alert">{detailError}</p>}
@@ -182,7 +162,7 @@ const PostMainPage = () => {
         {selectedPost && (
           <PostDetailModal
             post={selectedPost}
-            onClose={handlePostDetailClose}
+            onClose={() => setSelectedPost(null)}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
           />
@@ -197,6 +177,6 @@ const PostMainPage = () => {
       </S.Content>
     </S.PageContainer>
   );
-};
+}
 
 export default PostMainPage;
