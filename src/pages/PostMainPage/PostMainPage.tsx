@@ -176,6 +176,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => setSelectedPost(null)}
+
+            onClose={handlePostDetailClose}
+
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
           />
