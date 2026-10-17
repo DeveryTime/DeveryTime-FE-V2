@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
@@ -32,6 +32,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const detailRequestId = useRef(0);
 
   // 정렬 기준별로 화면 제목을 연결한다.
   const sortTitles: Record<PostSort, string> = {
@@ -59,6 +60,14 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           return;
         }
 
+        const nextTotalPages = Math.max(1, response.totalPages);
+        setTotalPages(nextTotalPages);
+
+        if (currentPage > nextTotalPages) {
+          setCurrentPage(nextTotalPages);
+          return;
+        }
+
         setPosts(
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
@@ -70,7 +79,6 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
             }),
           ),
         );
-        setTotalPages(Math.max(1, response.totalPages));
       } catch (error) {
         if (isActive) {
           setError(
@@ -93,23 +101,37 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 표의 게시글을 선택하면 상세 정보를 조회한다.
   const handlePostClick = async (postId: number) => {
+    const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
 
     try {
       const postDetail = await postsApi.getPost(postId);
+      if (requestId !== detailRequestId.current) {
+        return;
+      }
+
       setSelectedPost(postDetail);
     } catch (error) {
+      if (requestId !== detailRequestId.current) {
+        return;
+      }
+
       setDetailError(
         getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
       );
     } finally {
-      setIsDetailLoading(false);
+      if (requestId === detailRequestId.current) {
+        setIsDetailLoading(false);
+      }
     }
   };
 
   // 삭제 성공 후 현재 목록을 갱신하고 상세 모달을 닫는다.
   const handlePostDelete = async (postId: number) => {
+    detailRequestId.current += 1;
+    setIsDetailLoading(false);
+
     try {
       await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
@@ -175,7 +197,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
             post={selectedPost}
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
-            onClose={() => setSelectedPost(null)}
+            onClose={() => {
+              detailRequestId.current += 1;
+              setSelectedPost(null);
+              setIsDetailLoading(false);
+            }}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
           />

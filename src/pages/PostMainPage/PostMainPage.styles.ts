@@ -3,20 +3,29 @@ import styled from "@emotion/styled";
 const S = {
   PageContainer: styled.main`
     display: grid;
-    grid-template-columns: 130px 1293px;
+    grid-template-columns: 130px minmax(0, 1fr);
     column-gap: 56px;
     align-items: start;
 
-    width: 1479px;
+    @media (max-width: 900px) {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 24px;
+    }
+
+    width: min(1479px, calc(100% - 48px));
     margin: 108px auto 0;
   `,
 
   SortMenuArea: styled.aside`
     margin-top: 78px;
+
+    @media (max-width: 900px) {
+      margin-top: 0;
+    }
   `,
 
   Content: styled.section`
-    width: 1293px;
+    min-width: 0;
   `,
 
   Title: styled.h1`
