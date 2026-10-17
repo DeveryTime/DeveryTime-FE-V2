@@ -5,7 +5,6 @@ import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
-import type { PostListResponseItem } from "../../types/posts.types";
 
 import type {
   PostDetailData,
@@ -55,15 +54,13 @@ const CategoryPage = ({ categoryId, categoryName }: CategoryPageProps) => {
         }
 
         setPosts(
-          response.content.map(
-            (post: PostListResponseItem, index: number) => ({
+          response.content.map((post, index) => ({
             id: post.id,
             number: response.page * response.size + index + 1,
             category: post.category,
             title: post.title,
             createdAt: post.createdAt,
-            }),
-          ),
+          })),
         );
         setTotalPages(Math.max(1, response.totalPages));
       } catch (error) {
