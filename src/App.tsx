@@ -1,10 +1,12 @@
-import Info from "./pages/myInfoPage";
+import { BrowserRouter } from "react-router-dom";
+
+import SignupPageRoutes from "./router/signupPageRoutes";
 
 function App() {
   return (
-    <div>
-      <Info />
-    </div>
+    <BrowserRouter>
+      <SignupPageRoutes />
+    </BrowserRouter>
   );
 }
 
