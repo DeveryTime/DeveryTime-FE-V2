@@ -17,10 +17,13 @@ const SignupS = {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: 660px;
-    height: 700px;
+    width: min(660px, calc(100% - 32px));
+    min-height: 700px;
+    height: auto;
+    box-sizing: border-box;
+    padding: 32px 24px;
     background-color: #ffffff;
-    gap: 64px;
+    gap: clamp(24px, 5vw, 64px);
     box-shadow: 6px 4px 12px 8px #00000040;
     border-radius: 15px;
   `,
@@ -39,7 +42,8 @@ const SignupS = {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     height: 64px;
     border: none;
     background-color: ${colors.blue[400]};
@@ -77,7 +81,11 @@ const SignupS = {
     display: flex;
     justify-content: center;
     align-items: center;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
     gap: 8px;
+    text-align: center;
   `,
 };
 

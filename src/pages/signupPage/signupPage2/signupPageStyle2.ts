@@ -17,10 +17,13 @@ const Signup2S = {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: 660px;
-    height: 700px;
+    width: min(660px, calc(100% - 32px));
+    min-height: 700px;
+    height: auto;
+    box-sizing: border-box;
+    padding: 32px 24px;
     background-color: #ffffff;
-    gap: 64px;
+    gap: clamp(24px, 5vw, 64px);
     box-shadow: 6px 4px 12px 8px #00000040;
     border-radius: 15px;
   `,
@@ -35,7 +38,7 @@ const Signup2S = {
 
   BackButton: styled.button`
     position: absolute;
-    left: 40px;
+    left: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -60,7 +63,8 @@ const Signup2S = {
     display: flex;
     align-items: center;
     position: relative;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     height: 64px;
     transform: translateY(30px);
     border-bottom: 2px solid #6f6f6f;
@@ -69,6 +73,7 @@ const Signup2S = {
   EmailInput: styled.input`
     width: 100%;
     height: 64px;
+    box-sizing: border-box;
     padding: 0;
     padding-right: 135px;
     border: none;
@@ -79,6 +84,12 @@ const Signup2S = {
 
     &::placeholder {
       color: #6f6f6f;
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${colors.blue[400]};
+      outline-offset: 2px;
+      border-radius: 4px;
     }
   `,
 
@@ -104,7 +115,8 @@ const Signup2S = {
     display: flex;
     align-items: center;
     position: relative;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     height: 64px;
     border-bottom: 2px solid #6f6f6f;
     transform: translateY(30px);
@@ -113,6 +125,7 @@ const Signup2S = {
   VerificationInput: styled.input`
     width: 100%;
     height: 64px;
+    box-sizing: border-box;
     padding: 0;
     padding-right: 80px;
     border: none;
@@ -123,6 +136,12 @@ const Signup2S = {
 
     &::placeholder {
       color: #6f6f6f;
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${colors.blue[400]};
+      outline-offset: 2px;
+      border-radius: 4px;
     }
   `,
 
@@ -135,7 +154,8 @@ const Signup2S = {
   `,
 
   VerificationText: styled.div`
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     color: #000000;
     font-family: Pretendard;
     font-size: 18px;
@@ -147,7 +167,8 @@ const Signup2S = {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     height: 64px;
     padding: 0;
     border: none;
@@ -186,7 +207,11 @@ const Signup2S = {
     display: flex;
     justify-content: center;
     align-items: center;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
     gap: 8px;
+    text-align: center;
   `,
 };
 

@@ -6,6 +6,20 @@ import S from "../../BackgroundAct/BackgroundActStyle";
 import Background from "../../BackgroundAct/BackgroundAct";
 import Signup2S from "../signupPage2/signupPageStyle2";
 
+const isValidSchoolEmail = (value: string) => {
+  const [localPart, domain, ...extraParts] = value.trim().split("@");
+
+  return Boolean(
+    localPart &&
+      /^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/i.test(localPart) &&
+      !localPart.startsWith(".") &&
+      !localPart.endsWith(".") &&
+      !localPart.includes("..") &&
+      domain?.toLowerCase() === "dsm.hs.kr" &&
+      extraParts.length === 0,
+  );
+};
+
 const SignupPage2 = () => {
   const navigate = useNavigate();
 
@@ -20,7 +34,7 @@ const SignupPage2 = () => {
       return;
     }
 
-    if (!email.endsWith("@dsm.hs.kr")) {
+    if (!isValidSchoolEmail(email)) {
       alert("학교 이메일(@dsm.hs.kr)을 입력해주세요.");
       return;
     }
@@ -74,7 +88,7 @@ const SignupPage2 = () => {
       return;
     }
 
-    if (!email.endsWith("@dsm.hs.kr")) {
+    if (!isValidSchoolEmail(email)) {
       alert("학교 이메일(@dsm.hs.kr)을 입력해주세요.");
       return;
     }
@@ -124,7 +138,16 @@ const SignupPage2 = () => {
               placeholder="이메일"
               aria-label="이메일"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                const nextEmail = e.target.value;
+
+                if (nextEmail !== email) {
+                  setVerificationCode("");
+                  setTime(0);
+                }
+
+                setEmail(nextEmail);
+              }}
             />
 
             <Signup2S.VerifyButton type="button" onClick={handleSendCode}>

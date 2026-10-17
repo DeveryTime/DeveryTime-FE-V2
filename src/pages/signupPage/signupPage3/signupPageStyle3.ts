@@ -17,10 +17,13 @@ const Signup3S = {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: 660px;
-    height: 700px;
+    width: min(660px, calc(100% - 32px));
+    min-height: 700px;
+    height: auto;
+    box-sizing: border-box;
+    padding: 32px 24px;
     background-color: #ffffff;
-    gap: 28px;
+    gap: clamp(20px, 3vw, 28px);
     box-shadow: 6px 4px 12px 8px #00000040;
     border-radius: 15px;
   `,
@@ -36,7 +39,7 @@ const Signup3S = {
 
   BackButton: styled.button`
     position: absolute;
-    left: 40px;
+    left: 0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -61,7 +64,8 @@ const Signup3S = {
     display: flex;
     align-items: center;
     position: relative;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     height: 64px;
     border-bottom: 2px solid #6f6f6f;
   `,
@@ -69,6 +73,7 @@ const Signup3S = {
   PasswordInput: styled.input`
     width: 100%;
     height: 64px;
+    box-sizing: border-box;
     padding: 0;
     padding-right: 45px;
     border: none;
@@ -79,6 +84,12 @@ const Signup3S = {
 
     &::placeholder {
       color: #6f6f6f;
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${colors.blue[400]};
+      outline-offset: 2px;
+      border-radius: 4px;
     }
   `,
 
@@ -100,7 +111,8 @@ const Signup3S = {
     display: flex;
     align-items: center;
     gap: 5px;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     margin-top: -15px;
     color: #606060;
     font-family: Pretendard;
@@ -112,7 +124,8 @@ const Signup3S = {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 564px;
+    width: min(564px, 100%);
+    box-sizing: border-box;
     height: 64px;
     margin-top: 20px;
     padding: 0;
@@ -152,8 +165,12 @@ const Signup3S = {
     display: flex;
     justify-content: center;
     align-items: center;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
+    text-align: center;
   `,
 };
 
