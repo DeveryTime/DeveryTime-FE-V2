@@ -2,7 +2,16 @@ import { useEffect, useState } from "react";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
+<<<<<<< Updated upstream
 import type { PostDetailData, PostSort, PostTableItem } from "../../types/posts.types";
+=======
+import type {
+  PostDetailData,
+  PostListResponseItem,
+  PostSort,
+  PostTableItem,
+} from "../../types/posts.types";
+>>>>>>> Stashed changes
 import S from "./PostMainPage.styles";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
@@ -51,13 +60,15 @@ const PostMainPage = () => {
         }
 
         setPosts(
-          response.content.map((post, index) => ({
-            id: post.id,
-            number: response.page * response.size + index + 1,
-            category: post.category,
-            title: post.title,
-            createdAt: post.createdAt,
-          })),
+          response.content.map(
+            (post: PostListResponseItem, index: number) => ({
+              id: post.id,
+              number: response.page * response.size + index + 1,
+              category: post.category,
+              title: post.title,
+              createdAt: post.createdAt,
+            }),
+          ),
         );
         setTotalPages(Math.max(1, response.totalPages));
       } catch (error) {
