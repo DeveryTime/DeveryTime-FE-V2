@@ -1,8 +1,8 @@
 import styled from "@emotion/styled";
 import colors from "../../../styles/tokens/colors";
 
-export const InputBoxWrapper = styled.div`
-  width: min(560px, 100%);
+const InputBoxWrapper = styled.div`
+  width: 560px;
   height: 42px;
   display: flex;
   align-items: center;
@@ -12,7 +12,7 @@ export const InputBoxWrapper = styled.div`
   box-sizing: border-box;
 `;
 
-export const Input = styled.input`
+const Input = styled.input`
   width: 100%;
   height: 40px;
   border: none;
@@ -33,3 +33,9 @@ export const Input = styled.input`
     opacity: 1;
   }
 `;
+const S = {
+  InputBoxWrapper,
+  Input,
+};
+
+export default S;
