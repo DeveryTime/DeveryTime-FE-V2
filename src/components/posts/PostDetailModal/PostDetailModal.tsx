@@ -1,4 +1,10 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type ChangeEvent,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
@@ -279,7 +285,9 @@ const PostDetailModal = ({
 
               <S.PostEditTitleInput
                 value={editingPostTitle}
-                onChange={(event) => setEditingPostTitle(event.target.value)}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  setEditingPostTitle(event.target.value)
+                }
                 aria-label="게시글 제목"
               />
 

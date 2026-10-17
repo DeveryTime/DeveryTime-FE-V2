@@ -8,6 +8,7 @@ import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailMo
 
 import type {
   PostDetailData,
+  PostListResponseItem,
   PostSort,
   PostTableItem,
 } from "../../types/posts.types";
@@ -69,13 +70,15 @@ const CategoryPage = ({
         }
 
         setPosts(
-          response.content.map((post, index) => ({
-            id: post.id,
-            number: response.page * response.size + index + 1,
-            category: post.category,
-            title: post.title,
-            createdAt: post.createdAt,
-          })),
+          response.content.map(
+            (post: PostListResponseItem, index: number) => ({
+              id: post.id,
+              number: response.page * response.size + index + 1,
+              category: post.category,
+              title: post.title,
+              createdAt: post.createdAt,
+            }),
+          ),
         );
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
