@@ -109,9 +109,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   };
 
   // 삭제 성공 후 현재 목록을 갱신하고 상세 모달을 닫는다.
-  const handlePostDelete = async (postId: number, userId: number) => {
+  const handlePostDelete = async (postId: number) => {
     try {
-      await postsApi.deletePost(postId, userId);
+      await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
         currentPosts.filter((post) => post.id !== postId),
       );
@@ -174,6 +174,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           <PostDetailModal
             post={selectedPost}
             currentUserId={currentUserId}
+            isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => setSelectedPost(null)}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
