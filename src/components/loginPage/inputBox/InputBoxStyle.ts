@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
+import colors from "../../../styles/tokens/colors";
 
 export const InputBoxWrapper = styled.div`
-  width: 560px;
+  width: min(560px, 100%);
   height: 42px;
   display: flex;
   align-items: center;
@@ -9,8 +10,6 @@ export const InputBoxWrapper = styled.div`
   padding-bottom: 12px;
   border-bottom: 2px solid #6f6f6f;
   box-sizing: border-box;
-  /* position: relative;
-  top: -30px; */
 `;
 
 export const Input = styled.input`
@@ -18,9 +17,16 @@ export const Input = styled.input`
   height: 40px;
   border: none;
   outline: none;
+  box-sizing: border-box;
   padding: 0;
   font-size: 24px;
   color: #333;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.blue[400]};
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 
   &::placeholder {
     color: #6f6f6f;
