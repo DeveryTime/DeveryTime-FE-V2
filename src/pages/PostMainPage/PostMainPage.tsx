@@ -2,23 +2,23 @@ import { useEffect, useState } from "react";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
-<<<<<<< Updated upstream
-import type { PostDetailData, PostSort, PostTableItem } from "../../types/posts.types";
-=======
 import type {
   PostDetailData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
 } from "../../types/posts.types";
->>>>>>> Stashed changes
 import S from "./PostMainPage.styles";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
 import getApiErrorMessage from "../../api/errorMessages";
 
-const PostMainPage = () => {
+interface PostMainPageProps {
+  currentUserId: number;
+}
+
+const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
   const [selectedSort, setSelectedSort] = useState<PostSort>("likes");
   const [currentPage, setCurrentPage] = useState(1);
@@ -173,6 +173,7 @@ const PostMainPage = () => {
         {selectedPost && (
           <PostDetailModal
             post={selectedPost}
+            currentUserId={currentUserId}
             onClose={() => setSelectedPost(null)}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
