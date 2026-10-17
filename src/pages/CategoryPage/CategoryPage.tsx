@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import S from "./CategoryPage.styles";
 
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
@@ -18,38 +18,23 @@ import getApiErrorMessage from "../../api/errorMessages";
 interface CategoryPageProps {
   categoryId: number;
   categoryName: string;
-  currentUserId: number;
 }
 
-const CategoryPage = ({
-  categoryId,
-  categoryName,
-  currentUserId,
-}: CategoryPageProps) => {
+const CategoryPage = ({ categoryId, categoryName }: CategoryPageProps) => {
   const [selectedSort, setSelectedSort] = useState<PostSort>("latest");
   const [currentPage, setCurrentPage] = useState(1);
-  const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
+  const [selectedPost, setSelectedPost] =
+    useState<PostDetailData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const detailRequestId = useRef(0);
 
   // 카테고리, 정렬 기준, 페이지가 바뀌면 서버 목록을 다시 조회한다.
   useEffect(() => {
-    if (previousCategoryId.current !== categoryId) {
-      previousCategoryId.current = categoryId;
-
-      if (currentPage !== 1) {
-        setCurrentPage(1);
-        return;
-      }
-    }
-
     let isActive = true;
 
     const fetchCategoryPosts = async () => {
@@ -77,13 +62,14 @@ const CategoryPage = ({
             createdAt: post.createdAt,
           })),
         );
-        const nextTotalPages = Math.max(1, response.totalPages);
-        setTotalPages(nextTotalPages);
-        setCurrentPage((page) => Math.min(page, nextTotalPages));
+        setTotalPages(Math.max(1, response.totalPages));
       } catch (error) {
         if (isActive) {
           setError(
-            getApiErrorMessage(error, "카테고리 게시글을 불러오지 못했습니다."),
+            getApiErrorMessage(
+              error,
+              "카테고리 게시글을 불러오지 못했습니다.",
+            ),
           );
         }
       } finally {
@@ -101,29 +87,18 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
-    const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
 
     try {
       const postDetail = await postsApi.getPost(postId);
-      if (requestId !== detailRequestId.current) {
-        return;
-      }
-
       setSelectedPost(postDetail);
     } catch (error) {
-      if (requestId !== detailRequestId.current) {
-        return;
-      }
-
       setDetailError(
         getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
       );
     } finally {
-      if (requestId === detailRequestId.current) {
-        setIsDetailLoading(false);
-      }
+      setIsDetailLoading(false);
     }
   };
 
@@ -144,7 +119,11 @@ const CategoryPage = ({
   };
 
   //수정 성공한 후에 상태 갱신하는 로직
-  const handlePostUpdate = (postId: number, title: string, content: string) => {
+  const handlePostUpdate = (
+    postId: number,
+    title: string,
+    content: string,
+  ) => {
     setPosts((currentPage) =>
       currentPage.map((currentPost) =>
         currentPost.id === postId ? { ...currentPost, title } : currentPost,
@@ -152,7 +131,7 @@ const CategoryPage = ({
     );
 
     setSelectedPost((currentPost) =>
-      currentPost && currentPost.id === postId
+        currentPost && currentPost.id === postId
         ? { ...currentPost, title, content }
         : currentPost,
     );
@@ -195,12 +174,7 @@ const CategoryPage = ({
         {selectedPost && (
           <PostDetailModal
             post={selectedPost}
-            currentUserId={currentUserId}
-            onClose={() => {
-              detailRequestId.current += 1;
-              setSelectedPost(null);
-              setIsDetailLoading(false);
-            }}
+            onClose={() => setSelectedPost(null)}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
           />
@@ -216,6 +190,6 @@ const CategoryPage = ({
       </S.Content>
     </S.PageContainer>
   );
-};
+}
 
 export default CategoryPage;
