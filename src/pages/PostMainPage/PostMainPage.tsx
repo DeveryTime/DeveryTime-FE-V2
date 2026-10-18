@@ -185,7 +185,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {error && <p role="alert">{error}</p>}
 
         {!isLoading && !error && (
-          <PostTable posts={posts} onPostClick={handlePostClick} />
+          posts.length === 0 ? (
+            <p>게시글이 없습니다.</p>
+          ) : (
+            <PostTable posts={posts} onPostClick={handlePostClick} />
+          )
         )}
 
         {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
