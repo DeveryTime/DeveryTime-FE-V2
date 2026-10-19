@@ -25,7 +25,7 @@ interface PostDetailModalProps {
   post: PostDetailData;
   currentUserId: number;
   onClose: () => void;
-  onDelete: (postId: number, userId: number) => void;
+  onDelete: (postId: number) => void;
   onUpdate?: (postId: number, title: string, content: string) => void;
   isLikeEnabled?: boolean;
   isMyPost?: boolean;
@@ -259,7 +259,7 @@ const PostDetailModal = ({
                       <S.CommentDeleteButton
                         type="button"
                         aria-label="게시글 삭제"
-                        onClick={() => onDelete(post.id, currentUserId)}
+                        onClick={() => onDelete(post.id)}
                       >
                         삭제하기
                       </S.CommentDeleteButton>
