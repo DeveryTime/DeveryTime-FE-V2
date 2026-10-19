@@ -11,7 +11,6 @@ const S = {
     border: none;
     background-color: ${colors.gray[0]};
 
-    position: relative;
     overflow-x: hidden;
     overflow-y: auto;
 

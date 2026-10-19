@@ -6,9 +6,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger";
 }
 
-const Button = ({ children, variant = "primary", ...props }: ButtonProps) => {
+const Button = ({
+  children,
+  variant = "primary",
+  type = "button",
+  ...props
+}: ButtonProps) => {
   return (
-    <S.Button $variant={variant} {...props} type="submit">
+    <S.Button $variant={variant} {...props} type={type}>
       {children}
     </S.Button>
   );
