@@ -7,13 +7,13 @@ const S = {
     column-gap: 56px;
     align-items: start;
 
-    width: min(1479px, calc(100% - 32px));
-    margin: 108px auto 0;
-
     @media (max-width: 900px) {
       grid-template-columns: minmax(0, 1fr);
       row-gap: 24px;
     }
+
+    width: min(1479px, calc(100% - 48px));
+    margin: 108px auto 0;
   `,
 
   SortMenuArea: styled.aside`
@@ -25,7 +25,6 @@ const S = {
   `,
 
   Content: styled.section`
-    width: 100%;
     min-width: 0;
   `,
 
