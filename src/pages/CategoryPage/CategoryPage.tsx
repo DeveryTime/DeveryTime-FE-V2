@@ -131,9 +131,9 @@ const CategoryPage = ({
   };
 
   //게시글 삭제 함수
-  const handlePostDelete = async (postId: number, userId: number) => {
+  const handlePostDelete = async (postId: number) => {
     try {
-      await postsApi.deletePost(postId, userId);
+      await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
         currentPosts.filter((post) => post.id !== postId),
       );
@@ -199,6 +199,7 @@ const CategoryPage = ({
           <PostDetailModal
             post={selectedPost}
             currentUserId={currentUserId}
+            isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);
