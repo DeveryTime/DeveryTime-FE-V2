@@ -364,7 +364,7 @@ const S = {
     background-color: ${colors.gray[0]};
     border: 1px solid ${colors.gray[200]};
     border-radius: 10px;
-    box-shadow: 0 4px 12px ${colors.alpha.black12};
+    box-shadow: 0 4px 12px ${colors.alpha.black45};
   `,
 
   CommentMenuPopoverLink: styled.a`
@@ -433,7 +433,7 @@ const S = {
     background-color: ${colors.gray[0]};
     border: 1px solid ${colors.gray[200]};
     border-radius: 10px;
-    box-shadow: 0px 4px 12px ${colors.alpha.black12};
+    box-shadow: 0px 4px 12px ${colors.alpha.black45};
     top: calc(100% + 8px);
     right: 5px;
   `,
