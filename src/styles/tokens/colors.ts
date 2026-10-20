@@ -1,4 +1,4 @@
-export const colors = {
+const colors = {
   green: {
     50: "#eef5ee",
     100: "#cbe1cc",
@@ -49,3 +49,5 @@ export const colors = {
     black45: "rgba(0, 0, 0, 0.45)",
   },
 };
+
+export default colors;

@@ -1,7 +1,5 @@
 import type { ChangeEvent } from "react";
-import {Input} from "../inputBox/InputBoxStyle"
-import { InputBoxWrapper } from "./InputBoxStyle";
-
+import S from "./InputBoxStyle";
 
 interface InputBoxProps {
   placeholder: string;
@@ -10,23 +8,22 @@ interface InputBoxProps {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const InputBox = ({
+const InputBox = ({
   placeholder,
   ariaLabel,
   value,
   onChange,
 }: InputBoxProps) => {
   return (
-    <InputBoxWrapper>
-      <Input
+    <S.InputBoxWrapper>
+      <S.Input
         placeholder={placeholder}
         aria-label={ariaLabel}
         value={value}
         onChange={onChange}
       />
-    </InputBoxWrapper>
+    </S.InputBoxWrapper>
   );
 };
 
-
-
+export default InputBox;
