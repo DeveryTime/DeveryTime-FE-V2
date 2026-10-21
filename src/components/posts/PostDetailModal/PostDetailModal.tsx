@@ -19,7 +19,8 @@ import type {
   PostDetailData,
 } from "../../../types/posts.types";
 import postsApi from "../../../api/posts.api";
-import getApiErrorMessage from "../../../api/errorMessages";
+import commentsApi from "../../../api/comments/comments.api";
+import likesApi from "../../../api/likes/likes.api";
 
 interface PostDetailModalProps {
   post: PostDetailData;
@@ -68,16 +69,16 @@ const PostDetailModal = ({
   isMyPost = false,
 }: PostDetailModalProps) => {
   // 좋아요 상태와 게시글의 좋아요 개수를 관리한다.
-  const [isLiked, setIsLiked] = useState(post.liked);
-  const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [isLiked, setIsLiked] = useState(post.liked ?? false);
+  const [likeCount, setLikeCount] = useState(post.likeCount ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
 
   useLayoutEffect(() => {
     currentPostRef.current = post;
-    setIsLiked(post.liked);
-    setLikeCount(post.likeCount);
+    setIsLiked(post.liked ?? false);
+    setLikeCount(post.likeCount ?? 0);
     setIsLikeLoading(false);
     setLikeError(null);
   }, [post.id, post.liked, post.likeCount]);
@@ -120,8 +121,8 @@ const PostDetailModal = ({
 
     try {
       const likeResult = isLiked
-        ? await postsApi.unlikePost(requestedPostId)
-        : await postsApi.likePost(requestedPostId);
+        ? await likesApi.unlikePost(requestedPostId)
+        : await likesApi.likePost(requestedPostId);
 
       if (currentPostRef.current.id !== requestedPostId) {
         return;
@@ -135,9 +136,9 @@ const PostDetailModal = ({
         return likeResult.liked ? previous + 1 : Math.max(0, previous - 1);
       });
       setIsLiked(likeResult.liked);
-    } catch (error) {
+    } catch {
       if (currentPostRef.current.id === requestedPostId) {
-        setLikeError(getApiErrorMessage(error, "좋아요 처리에 실패했습니다."));
+        setLikeError("좋아요 처리에 실패했습니다.");
       }
     } finally {
       if (currentPostRef.current.id === requestedPostId) {
@@ -162,12 +163,10 @@ const PostDetailModal = ({
       setIsCommentError(null);
 
       try {
-        const response = await postsApi.getComments(post.id);
+        const response = await commentsApi.getComments(post.id);
         setComments(response.data);
-      } catch (error) {
-        setIsCommentError(
-          getApiErrorMessage(error, "댓글을 조회하는데 실패했습니다."),
-        );
+      } catch {
+        setIsCommentError("댓글을 조회하는데 실패했습니다.");
       } finally {
         setIsCommentLoading(false);
       }
@@ -198,10 +197,8 @@ const PostDetailModal = ({
       setDisplayedPostContent(trimmedPostContent);
       onUpdate?.(post.id, trimmedPostTitle, trimmedPostContent);
       setIsPostEditing(false);
-    } catch (error) {
-      setPostUpdateError(
-        getApiErrorMessage(error, "게시물을 수정하는데 실패하였습니다."),
-      );
+    } catch {
+      setPostUpdateError("게시물을 수정하는데 실패하였습니다.");
     }
   };
 
@@ -212,21 +209,21 @@ const PostDetailModal = ({
       closeIcon={<X aria-hidden="true" />}
     >
       {/* 게시글 카테고리 */}
-      <S.CategoryLabel> {post.categoryName} </S.CategoryLabel>
+      <S.CategoryLabel> {post.category.name} </S.CategoryLabel>
 
       <S.ModalScrollArea>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>
-            {post.writerProfileImageUrl ? (
-              <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
+            {post.writer.profileImageUrl ? (
+              <S.ProfileImage src={post.writer.profileImageUrl} alt="" />
             ) : (
               <S.DefaultProfileImage>
                 <UserRound aria-hidden="true" />
               </S.DefaultProfileImage>
             )}
             <S.WriterInfo>
-              <S.WriterName> {post.writerNickname} </S.WriterName>
+              <S.WriterName> {post.writer.nickname} </S.WriterName>
               <S.PostMeta>
                 {formatPostDate(post.createdAt)} - {post.viewCount} 조회
               </S.PostMeta>
@@ -331,12 +328,12 @@ const PostDetailModal = ({
               <S.PostContent>
                 <ReactMarkdown>{displayedPostContent}</ReactMarkdown>
               </S.PostContent>
-              {post.imageUrls.length > 0 && (
+              {post.images.length > 0 && (
                 <S.ImageList>
-                  {post.imageUrls.map((imageUrl, index) => (
+                  {post.images.map((image, index) => (
                     <S.ContentImage
-                      key={`${imageUrl}-${index}`}
-                      src={imageUrl}
+                      key={`${image.id}-${index}`}
+                      src={image.imageUrl}
                       alt={`${displayedPostTitle} 첨부된 이미지`}
                     />
                   ))}

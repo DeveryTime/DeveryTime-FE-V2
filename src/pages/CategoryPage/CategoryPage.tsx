@@ -14,7 +14,6 @@ import type {
 } from "../../types/posts.types";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
-import getApiErrorMessage from "../../api/errorMessages";
 
 interface CategoryPageProps {
   categoryId: number;
@@ -83,11 +82,9 @@ const CategoryPage = ({
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
-      } catch (error) {
+      } catch {
         if (isActive) {
-          setError(
-            getApiErrorMessage(error, "카테고리 게시글을 불러오지 못했습니다."),
-          );
+          setError("카테고리 게시글을 불러오지 못했습니다.");
         }
       } finally {
         if (isActive) {
@@ -115,14 +112,12 @@ const CategoryPage = ({
       }
 
       setSelectedPost(postDetail);
-    } catch (error) {
+    } catch {
       if (requestId !== detailRequestId.current) {
         return;
       }
 
-      setDetailError(
-        getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
-      );
+      setDetailError("게시글 상세 정보를 불러오지 못했습니다.");
     } finally {
       if (requestId === detailRequestId.current) {
         setIsDetailLoading(false);
@@ -139,10 +134,8 @@ const CategoryPage = ({
       );
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
-    } catch (error) {
-      setDetailError(
-        getApiErrorMessage(error, "게시글을 삭제하지 못했습니다."),
-      );
+    } catch {
+      setDetailError("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -199,7 +192,7 @@ const CategoryPage = ({
           <PostDetailModal
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writerId === currentUserId}
+            isMyPost={selectedPost.writer.userId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);
