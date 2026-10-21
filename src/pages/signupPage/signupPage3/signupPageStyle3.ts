@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import colors from "../../../styles/tokens/colors";
 import { Link } from "react-router-dom";
 
+
 const Signup3S = {
   SignupWrapper: styled.div`
     display: flex;
@@ -17,13 +18,10 @@ const Signup3S = {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: min(660px, calc(100% - 32px));
-    min-height: 700px;
-    height: auto;
-    box-sizing: border-box;
-    padding: 32px 24px;
+    width: 660px;
+    height: 700px;
     background-color: #ffffff;
-    gap: clamp(20px, 3vw, 28px);
+    gap: 28px;
     box-shadow: 6px 4px 12px 8px #00000040;
     border-radius: 15px;
   `,
@@ -39,7 +37,7 @@ const Signup3S = {
 
   BackButton: styled.button`
     position: absolute;
-    left: 0;
+    left: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -64,8 +62,7 @@ const Signup3S = {
     display: flex;
     align-items: center;
     position: relative;
-    width: min(564px, 100%);
-    box-sizing: border-box;
+    width: 564px;
     height: 64px;
     border-bottom: 2px solid #6f6f6f;
   `,
@@ -73,7 +70,6 @@ const Signup3S = {
   PasswordInput: styled.input`
     width: 100%;
     height: 64px;
-    box-sizing: border-box;
     padding: 0;
     padding-right: 45px;
     border: none;
@@ -84,12 +80,6 @@ const Signup3S = {
 
     &::placeholder {
       color: #6f6f6f;
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${colors.blue[400]};
-      outline-offset: 2px;
-      border-radius: 4px;
     }
   `,
 
@@ -108,11 +98,7 @@ const Signup3S = {
   `,
 
   PasswordText: styled.div`
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    width: min(564px, 100%);
-    box-sizing: border-box;
+    width: 564px;
     margin-top: -15px;
     color: #606060;
     font-family: Pretendard;
@@ -124,11 +110,9 @@ const Signup3S = {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: min(564px, 100%);
-    box-sizing: border-box;
+    width: 564px;
     height: 64px;
     margin-top: 20px;
-    padding: 0;
     border: none;
     border-radius: 15px;
     background-color: ${colors.blue[400]};
@@ -137,10 +121,6 @@ const Signup3S = {
     font-size: 20px;
     font-weight: 500;
     cursor: pointer;
-
-    &:hover {
-      background-color: ${colors.blue[500]};
-    }
   `,
 
   LinkText: styled(Link)`
@@ -165,12 +145,8 @@ const Signup3S = {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 100%;
-    box-sizing: border-box;
-    flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
-    text-align: center;
   `,
 };
 
