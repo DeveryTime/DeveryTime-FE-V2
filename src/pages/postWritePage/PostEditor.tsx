@@ -6,6 +6,9 @@ import Image from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
 import { IoClose, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
+import axios from "axios";
+import { createPostApi } from "../../api/postApi";
+import type { CreatePostErrorResponse } from "../../types/posts.types";
 
 import S from "./PostEditorStyle";
 
@@ -100,7 +103,7 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
     if (url) editor.chain().focus().setImage({ src: url }).run();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) {
       alert("제목을 입력해주세요.");
       return;
@@ -112,12 +115,23 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
     }
 
     setIsSubmitting(true);
-    // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
-    console.log("게시글 제목:", title.trim());
-    console.log("게시글 내용:", content);
-    alert("게시글이 작성되었습니다.");
-    setIsSubmitting(false);
-    onClose();
+    try {
+      // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
+      await createPostApi({ title: title.trim(), content });
+      alert("게시글이 작성되었습니다.");
+      onClose();
+    } catch (error: unknown) {
+      if (axios.isAxiosError<CreatePostErrorResponse>(error)) {
+        alert(
+          error.response?.data.error?.message ??
+            "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        );
+      } else {
+        alert("게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
