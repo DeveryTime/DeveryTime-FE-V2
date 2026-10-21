@@ -1,8 +1,6 @@
 import { useEffect, useRef } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { Markdown } from "@tiptap/markdown";
@@ -22,13 +20,13 @@ const MarkdownEditor = ({
   const latestValueRef = useRef(value);
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
-      Markdown,
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
+      StarterKit.configure({
+        link: {
+          openOnClick: false,
+          autolink: true,
+        },
       }),
+      Markdown,
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
@@ -48,6 +46,22 @@ const MarkdownEditor = ({
       latestValueRef.current = nextMarkdown;
       onChange(nextMarkdown);
     },
+  });
+  const toolbarState = useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => ({
+      isBold: currentEditor.isActive("bold"),
+      isItalic: currentEditor.isActive("italic"),
+      isUnderline: currentEditor.isActive("underline"),
+      isStrike: currentEditor.isActive("strike"),
+      isLeftAligned: currentEditor.isActive({ textAlign: "left" }),
+      isCenterAligned: currentEditor.isActive({ textAlign: "center" }),
+      isRightAligned: currentEditor.isActive({ textAlign: "right" }),
+      isBulletList: currentEditor.isActive("bulletList"),
+      isOrderedList: currentEditor.isActive("orderedList"),
+      isBlockquote: currentEditor.isActive("blockquote"),
+      isLink: currentEditor.isActive("link"),
+    }),
   });
 
   //외부 Markdown 값이 바뀔 때 에디터 내용을 동기화하는 useEffect
@@ -107,9 +121,9 @@ const MarkdownEditor = ({
       <S.Toolbar aria-label="게시글 본문 서식">
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("bold")}
+          $isActive={toolbarState.isBold}
           aria-label="굵게"
-          aria-pressed={editor.isActive("bold")}
+          aria-pressed={toolbarState.isBold}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
@@ -117,9 +131,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("italic")}
+          $isActive={toolbarState.isItalic}
           aria-label="기울임"
-          aria-pressed={editor.isActive("italic")}
+          aria-pressed={toolbarState.isItalic}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
@@ -127,9 +141,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("underline")}
+          $isActive={toolbarState.isUnderline}
           aria-label="밑줄"
-          aria-pressed={editor.isActive("underline")}
+          aria-pressed={toolbarState.isUnderline}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
         >
@@ -137,9 +151,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("strike")}
+          $isActive={toolbarState.isStrike}
           aria-label="취소선"
-          aria-pressed={editor.isActive("strike")}
+          aria-pressed={toolbarState.isStrike}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
@@ -148,9 +162,9 @@ const MarkdownEditor = ({
         <S.Divider />
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive({ textAlign: "left" })}
+          $isActive={toolbarState.isLeftAligned}
           aria-label="왼쪽 정렬"
-          aria-pressed={editor.isActive({ textAlign: "left" })}
+          aria-pressed={toolbarState.isLeftAligned}
           disabled={disabled}
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
         >
@@ -158,9 +172,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive({ textAlign: "center" })}
+          $isActive={toolbarState.isCenterAligned}
           aria-label="가운데 정렬"
-          aria-pressed={editor.isActive({ textAlign: "center" })}
+          aria-pressed={toolbarState.isCenterAligned}
           disabled={disabled}
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
         >
@@ -168,9 +182,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive({ textAlign: "right" })}
+          $isActive={toolbarState.isRightAligned}
           aria-label="오른쪽 정렬"
-          aria-pressed={editor.isActive({ textAlign: "right" })}
+          aria-pressed={toolbarState.isRightAligned}
           disabled={disabled}
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
         >
@@ -179,9 +193,9 @@ const MarkdownEditor = ({
         <S.Divider />
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("bulletList")}
+          $isActive={toolbarState.isBulletList}
           aria-label="글머리 목록"
-          aria-pressed={editor.isActive("bulletList")}
+          aria-pressed={toolbarState.isBulletList}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
@@ -189,9 +203,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("orderedList")}
+          $isActive={toolbarState.isOrderedList}
           aria-label="번호 목록"
-          aria-pressed={editor.isActive("orderedList")}
+          aria-pressed={toolbarState.isOrderedList}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
@@ -199,9 +213,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("blockquote")}
+          $isActive={toolbarState.isBlockquote}
           aria-label="인용문"
-          aria-pressed={editor.isActive("blockquote")}
+          aria-pressed={toolbarState.isBlockquote}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
@@ -209,9 +223,9 @@ const MarkdownEditor = ({
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
-          $isActive={editor.isActive("link")}
+          $isActive={toolbarState.isLink}
           aria-label="링크 추가 또는 제거"
-          aria-pressed={editor.isActive("link")}
+          aria-pressed={toolbarState.isLink}
           disabled={disabled}
           onClick={handleLink}
         >
