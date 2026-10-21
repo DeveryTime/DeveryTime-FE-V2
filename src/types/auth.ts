@@ -18,7 +18,7 @@ export interface LoginData {
 }
 
 export interface LoginResponse {
-  success: true;
+  success: true | "true";
   data: LoginData;
   message: string;
 }
@@ -59,7 +59,7 @@ export interface VerifyEmailResponse {
 export type LoginErrorCode =
   | "INVALID_CREDENTIALS"
   | "VALIDATION_ERROR"
-  | "INTERNAL_SERVER_ERROR";
+  | "INTERNAL_SERVER_ERR";
 
 export type SignupErrorCode =
   | "EMAIL_NOT_VERIFIED"
@@ -69,7 +69,7 @@ export type SignupErrorCode =
   | "SCHOOL_NUMBER_ALREADY_EXISTS"
   | "EMAIL_VERIFICATION_NOT_FOUND"
   | "VALIDATION_ERROR"
-  | "INTERNAL_SERVER_ERROR";
+  | "INTERNAL_SERVER_ERR";
 
 export interface AuthApiError {
   success: false;
