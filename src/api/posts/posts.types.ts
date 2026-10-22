@@ -38,7 +38,7 @@ export interface PostImage {
   sortOrder: number;
 }
 
-export interface PostDetailData {
+export interface PostDetailResponseData {
   id: number;
   title: string;
   content: string;

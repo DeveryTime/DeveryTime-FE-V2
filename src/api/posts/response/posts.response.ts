@@ -1,6 +1,6 @@
 import type {
-  PostDetailData,
   PostListResponseItem,
+  PostDetailResponseData,
   UploadPostImageData,
 } from "../posts.types";
 
@@ -18,7 +18,10 @@ export interface UpdatePostResponse {
   updatedAt: string;
 }
 
-export type PostDetailResponse = PostDetailData;
+export interface PostDetailResponse {
+  success: boolean;
+  data: PostDetailResponseData;
+}
 
 export interface UploadPostImageResponse {
   success: boolean;
