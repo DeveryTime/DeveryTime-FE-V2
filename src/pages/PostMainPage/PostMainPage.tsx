@@ -26,7 +26,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
+    null,
+  );
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -58,6 +60,14 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           return;
         }
 
+        const nextTotalPages = Math.max(1, response.totalPages);
+        setTotalPages(nextTotalPages);
+
+        if (currentPage > nextTotalPages) {
+          setCurrentPage(nextTotalPages);
+          return;
+        }
+
         setPosts(
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
@@ -69,12 +79,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
             }),
           ),
         );
-        const nextTotalPages = Math.max(1, response.totalPages);
-        setTotalPages(nextTotalPages);
-        setCurrentPage((page) => Math.min(page, nextTotalPages));
       } catch (error) {
         if (isActive) {
-          setError(getApiErrorMessage(error, "게시글을 불러오지 못했습니다."));
+          setError(
+            getApiErrorMessage(error, "게시글을 불러오지 못했습니다."),
+          );
         }
       } finally {
         if (isActive) {
@@ -118,20 +127,17 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
     }
   };
 
-  const handlePostDetailClose = () => {
-    detailRequestId.current += 1;
-    setSelectedPost(null);
-    setIsDetailLoading(false);
-  };
-
   // 삭제 성공 후 현재 목록을 갱신하고 상세 모달을 닫는다.
-  const handlePostDelete = async (postId: number, userId: number) => {
+  const handlePostDelete = async (postId: number) => {
+    detailRequestId.current += 1;
+    setIsDetailLoading(false);
+
     try {
-      await postsApi.deletePost(postId, userId);
+      await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
         currentPosts.filter((post) => post.id !== postId),
       );
-      handlePostDetailClose();
+      setSelectedPost(null);
       setReloadKey((current) => current + 1);
     } catch (error) {
       setDetailError(
@@ -141,7 +147,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   };
 
   // 수정 성공 후 목록 제목과 열린 상세 게시글을 함께 갱신한다.
-  const handlePostUpdate = (postId: number, title: string, content: string) => {
+  const handlePostUpdate = (
+    postId: number,
+    title: string,
+    content: string,
+  ) => {
     setPosts((currentPosts) =>
       currentPosts.map((post) =>
         post.id === postId ? { ...post, title } : post,
@@ -156,7 +166,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   return (
     // 정렬 메뉴, 게시글 목록, 상세 모달, 페이지네이션을 배치한다.
-    <S.PageContainer>
+      <S.PageContainer>
       <S.SortMenuArea>
         <PostSortMenu
           selectedSort={selectedSort}
@@ -174,13 +184,13 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {isLoading && <p>게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
 
-        {!isLoading &&
-          !error &&
-          (posts.length > 0 ? (
-            <PostTable posts={posts} onPostClick={handlePostClick} />
-          ) : (
+        {!isLoading && !error && (
+          posts.length === 0 ? (
             <p>게시글이 없습니다.</p>
-          ))}
+          ) : (
+            <PostTable posts={posts} onPostClick={handlePostClick} />
+          )
+        )}
 
         {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
         {detailError && <p role="alert">{detailError}</p>}
@@ -190,7 +200,12 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           <PostDetailModal
             post={selectedPost}
             currentUserId={currentUserId}
-            onClose={handlePostDetailClose}
+            isMyPost={selectedPost.writerId === currentUserId}
+            onClose={() => {
+              detailRequestId.current += 1;
+              setSelectedPost(null);
+              setIsDetailLoading(false);
+            }}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
           />
@@ -205,6 +220,6 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       </S.Content>
     </S.PageContainer>
   );
-};
+}
 
 export default PostMainPage;

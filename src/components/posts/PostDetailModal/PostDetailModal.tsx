@@ -9,10 +9,10 @@ import ReactMarkdown from "react-markdown";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
-import commentIcon from "../../../assets/icons/comment.svg";
-import likeDefaultIcon from "../../../assets/icons/Like.svg";
-import likeActiveIcon from "../../../assets/icons/Like-active.svg";
-import KebabMenu from "../../../assets/icons/Kebab-menu.svg";
+import commentIcon from "../../../assets/comment.svg";
+import likeDefaultIcon from "../../../assets/Like.svg";
+import likeActiveIcon from "../../../assets/Like-active.svg";
+import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type {
   PostComment,
   UpdatePostRequest,
@@ -25,7 +25,7 @@ interface PostDetailModalProps {
   post: PostDetailData;
   currentUserId: number;
   onClose: () => void;
-  onDelete: (postId: number, userId: number) => void;
+  onDelete: (postId: number) => void;
   onUpdate?: (postId: number, title: string, content: string) => void;
   isLikeEnabled?: boolean;
   isMyPost?: boolean;
@@ -259,7 +259,7 @@ const PostDetailModal = ({
                       <S.CommentDeleteButton
                         type="button"
                         aria-label="게시글 삭제"
-                        onClick={() => onDelete(post.id, currentUserId)}
+                        onClick={() => onDelete(post.id)}
                       >
                         삭제하기
                       </S.CommentDeleteButton>

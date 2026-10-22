@@ -89,3 +89,7 @@ const LoginPage = () => {
     </LoginS.SignupWrapper>
   );
 };
+
+
+
+export default LoginPage;
