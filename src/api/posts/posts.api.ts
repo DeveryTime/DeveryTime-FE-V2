@@ -13,9 +13,7 @@ import type {
 } from "./response/posts.response";
 import type { PostDetailData } from "./posts.types";
 
-const getPosts = async (
-  params: PostListParams,
-): Promise<PostListResponse> => {
+const getPosts = async (params: PostListParams): Promise<PostListResponse> => {
   const response = await client.get<PostListResponse>("/posts", { params });
 
   return response.data;
@@ -53,6 +51,7 @@ const uploadPostImage = async (
   const response = await client.post<UploadPostImageResponse>(
     `/posts/${postId}/images`,
     formData,
+    { headers: { "content-Type": undefined } },
   );
 
   return response.data.data;
