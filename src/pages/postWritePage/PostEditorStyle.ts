@@ -22,12 +22,27 @@ const S = {
   Title: styled.h2`
     margin: 0; font-size: 18px; font-weight: 700; color: #222;
   `,
-  CloseButton: styled.button`
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  BackButton: styled.button`
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
     width: 30px; height: 30px; display: flex; align-items: center;
     justify-content: center; padding: 0; border: 0; background: transparent;
     font-size: 20px; cursor: pointer; color: #333;
     &:hover { color: #000; }
+    &:disabled { color: #aaa; cursor: not-allowed; }
+  `,
+  CategoryField: styled.div`
+    display: flex; align-items: center; gap: 12px; padding: 12px 18px 0;
+  `,
+  CategoryLabel: styled.label`
+    flex: 0 0 auto; color: #555; font-size: 14px; font-weight: 600;
+  `,
+  CategorySelect: styled.select`
+    min-width: 0; padding: 9px 34px 9px 12px;
+    border: 1px solid #d8d8d8; border-radius: 6px;
+    background: #fff; color: #222; font: inherit; font-size: 14px;
+    cursor: pointer;
+    &:focus-visible { outline: 2px solid #3769ed; outline-offset: 2px; }
+    &:disabled { color: #888; cursor: not-allowed; }
   `,
   TitleInput: styled.input`
     width: 100%; box-sizing: border-box; padding: 14px 18px; border: 0;
