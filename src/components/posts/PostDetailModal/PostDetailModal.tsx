@@ -209,21 +209,21 @@ const PostDetailModal = ({
       closeIcon={<X aria-hidden="true" />}
     >
       {/* 게시글 카테고리 */}
-      <S.CategoryLabel> {post.category.name} </S.CategoryLabel>
+      <S.CategoryLabel> {post.categoryName} </S.CategoryLabel>
 
       <S.ModalScrollArea>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>
-            {post.writer.profileImageUrl ? (
-              <S.ProfileImage src={post.writer.profileImageUrl} alt="" />
+            {post.writerProfileImageUrl ? (
+              <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
             ) : (
               <S.DefaultProfileImage>
                 <UserRound aria-hidden="true" />
               </S.DefaultProfileImage>
             )}
             <S.WriterInfo>
-              <S.WriterName> {post.writer.nickname} </S.WriterName>
+              <S.WriterName> {post.writerNickname} </S.WriterName>
               <S.PostMeta>
                 {formatPostDate(post.createdAt)} - {post.viewCount} 조회
               </S.PostMeta>
@@ -328,12 +328,12 @@ const PostDetailModal = ({
               <S.PostContent>
                 <ReactMarkdown>{displayedPostContent}</ReactMarkdown>
               </S.PostContent>
-              {post.images.length > 0 && (
+              {post.imageUrls.length > 0 && (
                 <S.ImageList>
-                  {post.images.map((image, index) => (
+                  {post.imageUrls.map((imageUrl, index) => (
                     <S.ContentImage
-                      key={`${image.id}-${index}`}
-                      src={image.imageUrl}
+                      key={`${imageUrl}-${index}`}
+                      src={imageUrl}
                       alt={`${displayedPostTitle} 첨부된 이미지`}
                     />
                   ))}

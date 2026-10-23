@@ -7,8 +7,9 @@ export default defineConfig({
     // 프론트의 /api 요청을 백엔드 서버로 전달한다.
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "https://3.36.87.221",
         changeOrigin: true,
+        secure: false,
       },
     },
   },

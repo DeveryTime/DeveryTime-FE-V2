@@ -4,8 +4,14 @@ import  colors from "../../../styles/tokens/colors";
 
 
 const S = {
-  PaginationContainer: styled.nav`
+  PaginationWrapper: styled.div`
     width: 360px;
+    margin: 32px auto 0;
+    transform: translateX(-80px);
+  `,
+
+  PaginationContainer: styled.nav`
+    width: 100%;
     height: 22px;
 
     display: flex;
@@ -13,9 +19,7 @@ const S = {
     justify-content: center;
     gap: 4px;
 
-    margin: 32px auto 0;
-
-    transform: translateX(-80px);
+    margin: 0;
   `,
 
   PageButton: styled.button`
