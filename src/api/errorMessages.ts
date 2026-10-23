@@ -5,14 +5,6 @@ interface ApiErrorDefinition {
   message: string;
 }
 
-interface ApiErrorResponse {
-  error?: {
-    code?: string;
-    message?: string;
-  };
-  errorcode?: string;
-  message?: string;
-}
 // 공통 에러 메시지
 const GLOBAL_ERROR_MESSAGES: Record<string, ApiErrorDefinition> = {
   UNAUTHORIZED: {
@@ -105,10 +97,13 @@ const HTTP_STATUS_MESSAGES: Record<number, string> = {
 };
 
 interface ApiErrorResponse {
+  error?: {
+    code?: string;
+    message?: string;
+  };
   errorCode?: string;
   message?: string;
 }
-
 // 서버 에러를 화면용 메시지로 변환한다.
 const getApiErrorMessage = (
   error: unknown,
