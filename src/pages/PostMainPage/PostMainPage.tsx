@@ -12,7 +12,6 @@ import S from "./PostMainPage.styles";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
-import getApiErrorMessage from "../../api/errorMessages";
 
 interface PostMainPageProps {
   currentUserId: number;
@@ -79,11 +78,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
             }),
           ),
         );
-      } catch (error) {
+      } catch {
         if (isActive) {
-          setError(
-            getApiErrorMessage(error, "게시글을 불러오지 못했습니다."),
-          );
+          setError("게시글을 불러오지 못했습니다.");
         }
       } finally {
         if (isActive) {
@@ -112,14 +109,12 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       }
 
       setSelectedPost(postDetail);
-    } catch (error) {
+    } catch {
       if (requestId !== detailRequestId.current) {
         return;
       }
 
-      setDetailError(
-        getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
-      );
+      setDetailError("게시글 상세 정보를 불러오지 못했습니다.");
     } finally {
       if (requestId === detailRequestId.current) {
         setIsDetailLoading(false);
@@ -139,10 +134,8 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       );
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
-    } catch (error) {
-      setDetailError(
-        getApiErrorMessage(error, "게시글을 삭제하지 못했습니다."),
-      );
+    } catch {
+      setDetailError("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -200,7 +193,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           <PostDetailModal
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writerId === currentUserId}
+            isMyPost={selectedPost.writer.userId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);
