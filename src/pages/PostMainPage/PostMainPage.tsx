@@ -3,7 +3,7 @@ import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import type {
-  PostDetailData,
+  PostDetailResponseData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
@@ -25,9 +25,8 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
-    null,
-  );
+  const [selectedPost, setSelectedPost] =
+    useState<PostDetailResponseData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);

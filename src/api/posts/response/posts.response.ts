@@ -1,4 +1,3 @@
-import type { PostListResponseItem } from "../posts.types";
 import type {
   PostListResponseItem,
   PostDetailResponseData,

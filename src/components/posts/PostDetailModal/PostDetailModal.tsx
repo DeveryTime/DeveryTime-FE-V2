@@ -1,7 +1,6 @@
 import {
   useState,
   useEffect,
-  useLayoutEffect,
   useRef,
   type ChangeEvent,
 } from "react";
@@ -15,15 +14,15 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type {
   PostComment,
+  PostDetailResponseData,
   UpdatePostRequest,
-  PostDetailData,
 } from "../../../types/posts.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 
 interface PostDetailModalProps {
-  post: PostDetailData;
+  post: PostDetailResponseData;
   currentUserId: number;
   onClose: () => void;
   onDelete: (postId: number) => void;
@@ -75,13 +74,9 @@ const PostDetailModal = ({
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     currentPostRef.current = post;
-    setIsLiked(post.liked ?? false);
-    setLikeCount(post.likeCount ?? 0);
-    setIsLikeLoading(false);
-    setLikeError(null);
-  }, [post.id, post.liked, post.likeCount]);
+  }, [post]);
 
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
@@ -103,11 +98,6 @@ const PostDetailModal = ({
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
   );
-
-  useLayoutEffect(() => {
-    setDisplayedPostTitle(post.title);
-    setDisplayedPostContent(post.content);
-  }, [post.id, post.title, post.content]);
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {

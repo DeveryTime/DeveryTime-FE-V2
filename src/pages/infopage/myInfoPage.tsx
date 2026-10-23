@@ -1,5 +1,5 @@
 import { useState } from "react";
-import InfoContainer from "../components/info/infoContainer";
+import InfoContainer from "../../components/info/infoContainer";
 import S from "./myInfoPage.style";
 
 // 사용자 정보 타입
