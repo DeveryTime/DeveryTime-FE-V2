@@ -54,6 +54,7 @@ export interface PostDetailData {
   content: string;
   status: string;
   viewCount: number;
+  writerId: number;
   writerNickname: string;
   writerProfileImageUrl: string | null;
   categoryName: string;
