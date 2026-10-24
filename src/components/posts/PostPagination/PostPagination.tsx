@@ -35,7 +35,7 @@ const PostPagination = ({
   );
 
   return (
-    <>
+    <S.PaginationWrapper>
       {/* 첫 페이지, 이전 페이지, 페이지 번호, 다음 페이지, 마지막 페이지를 제공한다. */}
       <S.PaginationContainer aria-label="게시글 페이지 이동">
         <S.PageButton
@@ -91,7 +91,7 @@ const PostPagination = ({
           현재 페이지 {currentPage} / 전체 페이지 {totalPages}
         </S.PageSummary>
       )}
-    </>
+    </S.PaginationWrapper>
   );
 };
 

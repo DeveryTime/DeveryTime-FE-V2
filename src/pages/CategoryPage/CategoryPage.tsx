@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import S from "./CategoryPage.styles";
 
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
@@ -26,7 +27,8 @@ const CategoryPage = ({
   categoryName,
   currentUserId,
 }: CategoryPageProps) => {
-  const [selectedSort, setSelectedSort] = useState<PostSort>("latest");
+  const navigate = useNavigate();
+  const [selectedSort, setSelectedSort] = useState<PostSort>("createdAt,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
@@ -45,6 +47,8 @@ const CategoryPage = ({
       previousCategoryId.current = categoryId;
 
       if (currentPage !== 1) {
+        // 카테고리가 바뀌면 첫 페이지부터 조회해야 한다.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         return;
       }
@@ -72,8 +76,8 @@ const CategoryPage = ({
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.page * response.size + index + 1,
-              category: post.category,
+              number: response.number * response.size + index + 1,
+              category: post.categoryName,
               title: post.title,
               createdAt: post.createdAt,
             }),
@@ -101,6 +105,11 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
+    if (!localStorage.getItem("accessToken")) {
+      navigate("/login");
+      return;
+    }
+
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -192,7 +201,7 @@ const CategoryPage = ({
           <PostDetailModal
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writer.userId === currentUserId}
+            isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);

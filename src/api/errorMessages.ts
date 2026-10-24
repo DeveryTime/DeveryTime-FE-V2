@@ -19,6 +19,18 @@ const GLOBAL_ERROR_MESSAGES: Record<string, ApiErrorDefinition> = {
     status: 404,
     message: "사용자를 찾을 수 없습니다.",
   },
+  PROFILE_NOT_FOUND: {
+    status: 404,
+    message: "프로필을 찾을 수 없습니다.",
+  },
+  USERNAME_CHANGE_LIMIT_EXCEEDED: {
+    status: 429,
+    message: "아이디 변경 가능 횟수를 초과했습니다.",
+  },
+  INVALID_IMAGE_TYPE: {
+    status: 400,
+    message: "지원하지 않는 이미지 형식입니다.",
+  },
   TOO_MANY_REQUESTS: {
     status: 429,
     message: "일정 시간 동안 허용된 요청 횟수를 초과했습니다.",
