@@ -19,8 +19,6 @@ const Profile = () => {
 
   // 새 프로필 이미지
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
-
-  // 이미지 미리보기 URL
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // 파일 input에 접근하기 위한 ref
@@ -63,6 +61,12 @@ const Profile = () => {
     };
 
     void fetchProfile();
+  useEffect(() => {
+    if (!newProfileImage) return;
+
+    const objectUrl = URL.createObjectURL(newProfileImage);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPreviewUrl(objectUrl);
 
     return () => {
       isActive = false;

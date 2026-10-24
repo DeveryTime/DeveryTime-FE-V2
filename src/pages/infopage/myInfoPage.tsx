@@ -3,6 +3,8 @@ import InfoContainer from "../../components/info/infoContainer";
 import profileApi from "../../api/profile/profile.api";
 import getApiErrorMessage from "../../api/errorMessages";
 import type { ProfileData } from "../../api/profile/profile.types";
+import { useState } from "react";
+import InfoContainer from "../../components/info/infoContainer";
 import S from "./myInfoPage.style";
 
 const Info = () => {
@@ -42,6 +44,14 @@ const Info = () => {
       isActive = false;
     };
   }, []);
+  // 사용자 정보
+  const [user] = useState<User>({
+    name: "대마",
+    schoolNumber: 1206,
+    userName: "GreenApple",
+    email: "1234@example.com",
+    profileImageUrl: "",
+  });
 
   return (
     <S.InfoLayout>
