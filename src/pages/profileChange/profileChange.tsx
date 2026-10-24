@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import S from "./profileChange.style";
@@ -29,27 +29,22 @@ const Profile = () => {
   // 새로 선택한 프로필 이미지 파일
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
 
-  // 이미지 미리보기 URL
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
   // 파일 input에 접근하기 위한 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 이미지 파일이 변경될 때 미리보기 URL 생성 및 해제
+  // 이미지 미리보기 URL은 선택된 파일에서 계산하고, 컴포넌트가 사라질 때 해제한다.
+  const previewUrl = useMemo(
+    () => (newProfileImage ? URL.createObjectURL(newProfileImage) : null),
+    [newProfileImage],
+  );
+
   useEffect(() => {
-    if (!newProfileImage) {
-      setPreviewUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(newProfileImage);
-    setPreviewUrl(objectUrl);
-
-    // 이미지가 변경되거나 컴포넌트가 사라질 때 URL 해제
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
-  }, [newProfileImage]);
+  }, [previewUrl]);
 
   // 로그아웃
   const handleLogout = () => {

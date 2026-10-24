@@ -9,7 +9,6 @@ export default defineConfig({
       "/api": {
         target: "https://3.36.87.221",
         changeOrigin: true,
-        secure: false,
       },
     },
   },

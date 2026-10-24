@@ -77,11 +77,14 @@ const PostDetailModal = ({
 
   useLayoutEffect(() => {
     currentPostRef.current = post;
+    // 선택된 게시글이 바뀌면 모달 내부 상태를 새 게시글 기준으로 초기화한다.
+    // 이 상태들은 외부 시스템이 아닌 모달의 표시 상태를 동기화하므로 의도적인 업데이트다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLiked(post.liked ?? false);
     setLikeCount(post.likeCount ?? 0);
     setIsLikeLoading(false);
     setLikeError(null);
-  }, [post.id, post.liked, post.likeCount]);
+  }, [post]);
 
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
@@ -105,9 +108,11 @@ const PostDetailModal = ({
   );
 
   useLayoutEffect(() => {
+    // 게시글 상세 표시값을 새 게시글 데이터와 동기화한다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDisplayedPostTitle(post.title);
     setDisplayedPostContent(post.content);
-  }, [post.id, post.title, post.content]);
+  }, [post]);
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {

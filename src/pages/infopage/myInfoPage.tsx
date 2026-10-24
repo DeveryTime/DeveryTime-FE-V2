@@ -1,5 +1,5 @@
 import { useState } from "react";
-import InfoContainer from "../components/info/infoContainer";
+import InfoContainer from "../../components/info/infoContainer";
 import S from "./myInfoPage.style";
 
 // 사용자 정보 타입
@@ -16,7 +16,7 @@ const Info = () => {
   const [user] = useState<User>({
     name: "대마",
     schoolNumber: 1206,
-    userName: "dkfjslej",
+    userName: "GreenApple",
     email: "1234@example.com",
     profileImageUrl: "",
   });

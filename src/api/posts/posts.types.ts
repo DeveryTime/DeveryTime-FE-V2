@@ -43,6 +43,8 @@ export interface PostDetailResponseData {
   updatedAt: string | null;
 }
 
+export type PostDetailData = PostDetailResponseData;
+
 export interface UploadPostImageData {
   id: number;
   imageUrl: string;

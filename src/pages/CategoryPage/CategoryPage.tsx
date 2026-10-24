@@ -47,6 +47,8 @@ const CategoryPage = ({
       previousCategoryId.current = categoryId;
 
       if (currentPage !== 1) {
+        // 카테고리가 바뀌면 첫 페이지부터 조회해야 한다.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         return;
       }
