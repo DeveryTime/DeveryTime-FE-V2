@@ -17,7 +17,6 @@ import type {
   UploadPostImageResponse,
 } from "./response/posts.response";
 import type { PostDetailResponseData } from "./posts.types";
-import type { PostDetailData } from "../../types/posts.types";
 
 const getPosts = async (params: PostListParams): Promise<PostPageData> => {
   const response = await client.get<PostListResponse>("/posts", { params });
@@ -41,24 +40,6 @@ const getPost = async (
   const response = await client.get<PostDetailResponse>(`/posts/${postId}`);
 
   return response.data.data;
-  const { data } = response.data;
-
-  return {
-    id: data.id,
-    title: data.title,
-    content: data.content,
-    status: data.status,
-    viewCount: data.viewCount,
-    writerId: data.writerId,
-    writerNickname: data.writerNickname,
-    writerProfileImageUrl: data.writerProfileImageUrl,
-    categoryName: data.categoryName,
-    imageUrls: data.imageUrls,
-    likeCount: data.likeCount ?? 0,
-    liked: data.liked ?? false,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
-  };
 };
 
 const likePost = (postId: number): Promise<PostLikeData> =>
