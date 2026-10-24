@@ -76,14 +76,16 @@ const PostDetailModal = ({
   const currentPostRef = useRef(post);
 
   useLayoutEffect(() => {
+    const postChanged = currentPostRef.current.id !== post.id;
     currentPostRef.current = post;
-    // 선택된 게시글이 바뀌면 모달 내부 상태를 새 게시글 기준으로 초기화한다.
-    // 이 상태들은 외부 시스템이 아닌 모달의 표시 상태를 동기화하므로 의도적인 업데이트다.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsLiked(post.liked ?? false);
-    setLikeCount(post.likeCount ?? 0);
-    setIsLikeLoading(false);
-    setLikeError(null);
+
+    if (postChanged) {
+      // 선택된 게시글이 바뀌면 모달 내부 상태를 새 게시글 기준으로 초기화한다.
+      setIsLiked(post.liked ?? false);
+      setLikeCount(post.likeCount ?? 0);
+      setIsLikeLoading(false);
+      setLikeError(null);
+    }
   }, [post]);
 
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
