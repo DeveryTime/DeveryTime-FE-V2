@@ -92,6 +92,7 @@ const Profile = () => {
     const file = e.target.files?.[0];
 
     if (file) {
+      setSaveError(null);
       setNewProfileImage(file);
       setDeleteProfileImage(false);
       setPreviewUrl(URL.createObjectURL(file));
@@ -118,23 +119,44 @@ const Profile = () => {
     setSaveError(null);
 
     try {
-      await profileApi.updateMyProfile({
-        username: trimmedUsername,
-        deleteProfileImage,
-        ...(newProfileImage ? { profileImage: newProfileImage } : {}),
-      });
+      try {
+        await profileApi.updateMyProfile({
+          username: trimmedUsername,
+          deleteProfileImage,
+          ...(newProfileImage ? { profileImage: newProfileImage } : {}),
+        });
+      } catch (requestError) {
+        setSaveError(
+          getApiErrorMessage(requestError, "프로필을 수정하지 못했습니다."),
+        );
+        return;
+      }
 
-      const updatedProfile = await profileApi.getMyProfile();
-      setUser(updatedProfile);
-      setUsername(updatedProfile.userName);
-      setNewProfileImage(null);
-      setPreviewUrl(null);
-      setDeleteProfileImage(false);
-      toast.success("변경사항이 저장되었습니다.");
-    } catch (requestError) {
-      setSaveError(
-        getApiErrorMessage(requestError, "프로필을 수정하지 못했습니다."),
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              userName: trimmedUsername,
+              ...(deleteProfileImage ? { profileImageUrl: null } : {}),
+            }
+          : currentUser,
       );
+      setUsername(trimmedUsername);
+      setNewProfileImage(null);
+      setDeleteProfileImage(false);
+      if (deleteProfileImage) {
+        setPreviewUrl(null);
+      }
+
+      try {
+        const updatedProfile = await profileApi.getMyProfile();
+        setUser(updatedProfile);
+        setUsername(updatedProfile.userName);
+        setPreviewUrl(null);
+        toast.success("변경사항이 저장되었습니다.");
+      } catch {
+        toast.error("프로필은 저장되었지만 최신 정보를 불러오지 못했습니다.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -186,12 +208,15 @@ const Profile = () => {
                   <span>프로필 이미지</span>
                 )}
               </S.ProfileImage>
-              {user.profileImageUrl && !newProfileImage && (
+              {user.profileImageUrl && (
                 <S.RemoveProfileImageBtn
                   type="button"
-                  onClick={() =>
-                    setDeleteProfileImage((isDeleting) => !isDeleting)
-                  }
+                  onClick={() => {
+                    setSaveError(null);
+                    setNewProfileImage(null);
+                    setPreviewUrl(null);
+                    setDeleteProfileImage((isDeleting) => !isDeleting);
+                  }}
                 >
                   {deleteProfileImage
                     ? "이미지 삭제 취소"
@@ -228,7 +253,10 @@ const Profile = () => {
 
             <S.NameInput
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setSaveError(null);
+                setUsername(e.target.value);
+              }}
               placeholder="10글자 이내로 입력해 주세요"
             />
           </div>
