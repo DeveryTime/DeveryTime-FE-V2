@@ -1,7 +1,6 @@
 import {
   useState,
   useEffect,
-  useLayoutEffect,
   useRef,
   type ChangeEvent,
 } from "react";
@@ -15,15 +14,15 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type {
   PostComment,
+  PostDetailResponseData,
   UpdatePostRequest,
-  PostDetailData,
 } from "../../../types/posts.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 
 interface PostDetailModalProps {
-  post: PostDetailData;
+  post: PostDetailResponseData;
   currentUserId: number;
   onClose: () => void;
   onDelete: (postId: number) => void;
