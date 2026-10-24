@@ -191,9 +191,10 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {/* 게시글을 선택했을 때만 상세 모달을 표시한다. */}
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writer.userId === currentUserId}
+            isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);

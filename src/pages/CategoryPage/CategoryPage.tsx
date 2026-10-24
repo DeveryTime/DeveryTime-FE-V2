@@ -45,6 +45,8 @@ const CategoryPage = ({
       previousCategoryId.current = categoryId;
 
       if (currentPage !== 1) {
+        // 카테고리 변경 시 첫 페이지로 초기화하는 의도적인 상태 변경이다.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         return;
       }
@@ -190,9 +192,10 @@ const CategoryPage = ({
 
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writer.userId === currentUserId}
+            isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);
