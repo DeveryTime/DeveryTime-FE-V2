@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import S from "./searchPage.style";
-import { SearchPostResult } from "../components/searchPostResult";
+import { SearchPostResult } from "../../components/searchPostResult/searchPostResult";
 
 // 검색 결과 게시글 타입
 interface SearchPost {
@@ -31,7 +31,6 @@ export function SearchPage() {
       <S.Title>'{keyword}' 검색 결과</S.Title>
       <S.Description>입력하신 키워드가 포함된 게시글 목록입니다.</S.Description>
       <S.CategoryMeta>검색 결과 {totalElements}개</S.CategoryMeta>
-      // 검색 결과가 있으면 목록 표시
       {posts.length > 0 ? (
         <SearchPostResult
           posts={posts}

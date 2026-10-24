@@ -1,4 +1,5 @@
 import { Slide } from "react-awesome-reveal";
+import { Link } from "react-router-dom";
 import S from "./landingText.style";
 
 const Text = () => {
@@ -47,7 +48,9 @@ const Text = () => {
       </S.Text>
 
       {/* 서비스 시작 버튼 */}
-      <S.StartBtn>시작하기</S.StartBtn>
+      <Link to="/main">
+        <S.StartBtn>시작하기</S.StartBtn>
+      </Link>
     </>
   );
 };

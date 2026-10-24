@@ -1,11 +1,8 @@
-import Info from "./pages/infopage/myInfoPage";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
 
 function App() {
-  return (
-    <div>
-      <Info />
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import S from "../../BackgroundAct/BackgroundActStyle";
 import Background from "../../BackgroundAct/BackgroundAct";
-import  InputBox  from "../../../components/loginPage/inputBox/InputBox";
+import InputBox from "../../../components/loginPage/inputBox/InputBox";
 import SignupS from "./signupPageStyle1";
 
 const SignupPage1 = () => {
@@ -90,12 +90,8 @@ const SignupPage1 = () => {
           </SignupS.Button>
 
           <SignupS.QuestionText>
-            <SignupS.Qusetion>
-              이미 계정을 가지고 계신가요?
-            </SignupS.Qusetion>
-            <SignupS.LinkText to="/login">
-              로그인
-            </SignupS.LinkText>
+            <SignupS.Qusetion>이미 계정을 가지고 계신가요?</SignupS.Qusetion>
+            <SignupS.LinkText to="/login">로그인</SignupS.LinkText>
           </SignupS.QuestionText>
         </SignupS.CardBox>
       </S.ContentLayer>

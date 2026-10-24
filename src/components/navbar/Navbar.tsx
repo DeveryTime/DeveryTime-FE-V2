@@ -2,15 +2,12 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import S from "./Navbar.style";
-import logoIcon from "../assets/logoIcon.svg";
-import profile from "../assets/profile.svg";
-import searchIcon from "../assets/searchIcon.svg";
+import logoIcon from "../../assets/logoIcon.svg";
+import profile from "../../assets/profile.svg";
+import searchIcon from "../../assets/searchIcon.svg";
 
 const NavBar = () => {
-  // 검색어 입력값 관리
   const [searchValue, setSearchValue] = useState("");
-
-  // 페이지 이동을 위한 navigate
   const navigate = useNavigate();
 
   // localStorage에 token이 있으면 로그인 상태로 판단
@@ -29,13 +26,11 @@ const NavBar = () => {
 
   // 검색 실행
   const handleSearch = () => {
-    // 검색어가 비어 있으면 검색하지 않음
-    if (!searchValue.trim()) return;
+    const keyword = searchValue.trim();
 
-    // 검색어를 URL Query Parameter로 전달
-    navigate(`/search?keyword=${encodeURIComponent(searchValue)}`);
+    if (!keyword) return;
 
-    // 검색 후 입력창 초기화
+    navigate(`/searchPage?keyword=${encodeURIComponent(keyword)}`);
     setSearchValue("");
   };
 
@@ -57,7 +52,6 @@ const NavBar = () => {
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => {
-              // Enter 키를 누르면 검색 실행
               if (e.key === "Enter") {
                 handleSearch();
               }
@@ -75,14 +69,17 @@ const NavBar = () => {
         {/* 카테고리 메뉴 */}
         <S.Category>
           {CATEGORIES.map((category) => (
-            <Link key={category.id} to={`/category/${category.id}`}>
+            <Link
+              key={category.id}
+              to={`/Categorypage?categoryId=${category.id}&categoryName=${encodeURIComponent(category.name)}`}
+            >
               {category.name}
             </Link>
           ))}
         </S.Category>
 
+        {/* 로그인 상태에 따라 프로필 또는 로그인 버튼 표시 */}
         <div>
-          {/* 로그인 상태에 따라 프로필 이미지 또는 로그인 버튼 표시 */}
           {isLoggedIn ? (
             <S.ProfileImage src={profile} alt="프로필" />
           ) : (

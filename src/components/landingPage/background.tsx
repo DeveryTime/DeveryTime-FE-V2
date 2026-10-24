@@ -91,7 +91,7 @@ const Background = () => {
         LineComponent={S.Line1}
         d="M-15 63.1419C28.8333 147.475 298.222 484.17 726 255.53C1026.5 94.918 1532.3 -163.57 1989.5 144.03"
         stroke="#013DE2"
-        duration={20}
+        duration={10}
       />
 
       <Line
