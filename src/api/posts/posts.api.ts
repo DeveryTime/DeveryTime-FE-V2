@@ -11,49 +11,35 @@ import type {
 } from "./request/posts.request";
 import type {
   PostDetailResponse,
+  PostPageData,
   PostListResponse,
   UpdatePostResponse,
   UploadPostImageResponse,
 } from "./response/posts.response";
-import type { PostImage } from "./posts.types";
-import type { PostDetailData } from "../../types/posts.types";
+import type { PostDetailResponseData } from "./posts.types";
 
-const getPosts = async (params: PostListParams): Promise<PostListResponse> => {
+const getPosts = async (params: PostListParams): Promise<PostPageData> => {
   const response = await client.get<PostListResponse>("/posts", { params });
 
-  return response.data;
+  return response.data.data;
 };
 
 const getMyPosts = async (
   params: GetMyPostsRequest,
-): Promise<PostListResponse> => {
+): Promise<PostPageData> => {
   const response = await client.get<PostListResponse>("/users/me/posts", {
     params,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
-const getPost = async (postId: number): Promise<PostDetailData> => {
+const getPost = async (
+  postId: number,
+): Promise<PostDetailResponseData> => {
   const response = await client.get<PostDetailResponse>(`/posts/${postId}`);
-  const { data } = response.data;
 
-  return {
-    id: data.id,
-    title: data.title,
-    content: data.content,
-    status: data.status,
-    viewCount: data.viewCount,
-    writerId: data.writer.userId,
-    writerNickname: data.writer.nickname,
-    writerProfileImageUrl: data.writer.profileImageUrl,
-    categoryName: data.category.name,
-    imageUrls: data.images.map((image: PostImage) => image.imageUrl),
-    likeCount: data.likeCount ?? 0,
-    liked: data.liked ?? false,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
-  };
+  return response.data.data;
 };
 
 const likePost = (postId: number): Promise<PostLikeData> =>
@@ -81,7 +67,6 @@ const uploadPostImage = async (
   const response = await client.post<UploadPostImageResponse>(
     `/posts/${postId}/images`,
     formData,
-    { headers: { "content-Type": undefined } },
   );
 
   return response.data.data;
