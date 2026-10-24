@@ -33,6 +33,7 @@ const CategoryPage = ({
   const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] =
@@ -87,6 +88,7 @@ const CategoryPage = ({
         );
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
+        setTotalElements(response.totalElements);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
       } catch {
         if (isActive) {
@@ -179,8 +181,8 @@ const CategoryPage = ({
 
       <S.Content>
         <S.Title>{categoryName}</S.Title>
-        <S.Description>{categoryName} 전공 게시판입니다.</S.Description>
-        <S.CategoryMeta>게시글 {posts.length}개</S.CategoryMeta>
+        <S.Description>{categoryName} 게시판입니다.</S.Description>
+        <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
         {isLoading && <p>카테고리 게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}

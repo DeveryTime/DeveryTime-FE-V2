@@ -74,8 +74,6 @@ const PostDetailModal = ({
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
 
-  useEffect(() => {
-    currentPostRef.current = post;
   useLayoutEffect(() => {
     const postChanged = currentPostRef.current.id !== post.id;
     currentPostRef.current = post;
