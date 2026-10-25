@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import S from "./searchPage.style";
-import { SearchPostResult } from "../../components/searchPostResult/searchPostResult";
+import { SearchPostResult } from "../components/searchPostResult";
 
 // 검색 결과 게시글 타입
 interface SearchPost {

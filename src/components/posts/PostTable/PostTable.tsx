@@ -28,7 +28,7 @@ const PostTable = ({ posts, onPostClick }: PostTableProps) => {
             tabIndex={0}
 
             onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
+              if (event.key === "Enter" || event.key == " ") {
                 event.preventDefault();
                 onPostClick(post.id);
               }

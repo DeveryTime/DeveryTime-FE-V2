@@ -1,4 +1,4 @@
-import Info from "./pages/infopage/myInfoPage";
+import Info from "./pages/myInfoPage";
 
 function App() {
   return (

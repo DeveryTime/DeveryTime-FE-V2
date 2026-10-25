@@ -14,7 +14,7 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type {
   PostComment,
-  PostDetailResponseData,
+  PostDetailData,
   UpdatePostRequest,
 } from "../../../types/posts.types";
 import postsApi from "../../../api/posts.api";
@@ -22,7 +22,7 @@ import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 
 interface PostDetailModalProps {
-  post: PostDetailResponseData;
+  post: PostDetailData;
   currentUserId: number;
   onClose: () => void;
   onDelete: (postId: number) => void;
@@ -144,20 +144,33 @@ const PostDetailModal = ({
 
   // post.id가 마운트 될 때 댓글 목록을 불러오는 코드
   useEffect(() => {
+    let isActive = true;
+
     const fetchComments = async () => {
       setIsCommentLoading(true);
       setIsCommentError(null);
 
       try {
         const response = await commentsApi.getComments(post.id);
-        setComments(response.data);
+        if (isActive) {
+          setComments(response.data);
+        }
       } catch {
-        setIsCommentError("댓글을 조회하는데 실패했습니다.");
+        if (isActive) {
+          setIsCommentError("댓글을 조회하는데 실패했습니다.");
+        }
       } finally {
-        setIsCommentLoading(false);
+        if (isActive) {
+          setIsCommentLoading(false);
+        }
       }
     };
-    fetchComments();
+
+    void fetchComments();
+
+    return () => {
+      isActive = false;
+    };
   }, [post.id]);
 
   //게시글 수정 저장 함수 로직

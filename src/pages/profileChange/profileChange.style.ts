@@ -88,27 +88,6 @@ const S = {
     }
   `,
 
-  ProfileImageActions: styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  `,
-
-  RemoveProfileImageBtn: styled.button`
-    padding: 0;
-    border: none;
-    background: none;
-    color: #666;
-    font-size: 12px;
-    cursor: pointer;
-
-    &:hover {
-      color: #111;
-      text-decoration: underline;
-    }
-  `,
-
   NameInput: styled.input`
     width: 100%;
     padding: 12px;
