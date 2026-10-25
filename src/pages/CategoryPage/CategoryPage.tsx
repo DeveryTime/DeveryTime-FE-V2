@@ -8,7 +8,7 @@ import PostPagination from "../../components/posts/PostPagination/PostPagination
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 
 import type {
-  PostDetailResponseData,
+  PostDetailData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
@@ -36,8 +36,7 @@ const CategoryPage = ({
   const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] =
-    useState<PostDetailResponseData | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -49,8 +48,7 @@ const CategoryPage = ({
       previousCategoryId.current = categoryId;
 
       if (currentPage !== 1) {
-        // 카테고리가 바뀌면 첫 페이지부터 보여주는 의도적인 상태 초기화다.
-        // 카테고리가 바뀌면 첫 페이지부터 조회해야 한다.
+        // 카테고리 변경 시 첫 페이지로 초기화하는 의도적인 상태 변경이다.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         return;
@@ -203,6 +201,7 @@ const CategoryPage = ({
 
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
