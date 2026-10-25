@@ -11,27 +11,27 @@ import type {
 } from "./request/posts.request";
 import type {
   PostDetailResponse,
-  PostPageData,
   PostListResponse,
   UpdatePostResponse,
   UploadPostImageResponse,
 } from "./response/posts.response";
+import type { PostImage } from "./posts.types";
 import type { PostDetailData } from "../../types/posts.types";
 
-const getPosts = async (params: PostListParams): Promise<PostPageData> => {
+const getPosts = async (params: PostListParams): Promise<PostListResponse> => {
   const response = await client.get<PostListResponse>("/posts", { params });
 
-  return response.data.data;
+  return response.data;
 };
 
 const getMyPosts = async (
   params: GetMyPostsRequest,
-): Promise<PostPageData> => {
+): Promise<PostListResponse> => {
   const response = await client.get<PostListResponse>("/users/me/posts", {
     params,
   });
 
-  return response.data.data;
+  return response.data;
 };
 
 const getPost = async (postId: number): Promise<PostDetailData> => {
@@ -44,11 +44,11 @@ const getPost = async (postId: number): Promise<PostDetailData> => {
     content: data.content,
     status: data.status,
     viewCount: data.viewCount,
-    writerId: data.writerId,
-    writerNickname: data.writerNickname,
-    writerProfileImageUrl: data.writerProfileImageUrl,
-    categoryName: data.categoryName,
-    imageUrls: data.imageUrls,
+    writerId: data.writer.userId,
+    writerNickname: data.writer.nickname,
+    writerProfileImageUrl: data.writer.profileImageUrl,
+    categoryName: data.category.name,
+    imageUrls: data.images.map((image: PostImage) => image.imageUrl),
     likeCount: data.likeCount ?? 0,
     liked: data.liked ?? false,
     createdAt: data.createdAt,
@@ -81,6 +81,7 @@ const uploadPostImage = async (
   const response = await client.post<UploadPostImageResponse>(
     `/posts/${postId}/images`,
     formData,
+    { headers: { "content-Type": undefined } },
   );
 
   return response.data.data;

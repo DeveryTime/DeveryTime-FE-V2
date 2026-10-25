@@ -28,11 +28,13 @@ const CategoryPage = ({
   currentUserId,
 }: CategoryPageProps) => {
   const navigate = useNavigate();
-  const [selectedSort, setSelectedSort] = useState<PostSort>("createdAt,desc");
+  const [selectedSort, setSelectedSort] =
+    useState<PostSort>("createdAt,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
@@ -47,7 +49,7 @@ const CategoryPage = ({
       previousCategoryId.current = categoryId;
 
       if (currentPage !== 1) {
-        // 카테고리가 바뀌면 첫 페이지부터 조회해야 한다.
+        // 카테고리 변경 시 첫 페이지로 초기화하는 의도적인 상태 변경이다.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         return;
@@ -76,8 +78,11 @@ const CategoryPage = ({
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.number * response.size + index + 1,
-              category: post.categoryName,
+              number:
+                (response.page ?? response.number ?? 0) * response.size +
+                index +
+                1,
+              category: post.categoryName ?? post.category ?? "",
               title: post.title,
               createdAt: post.createdAt,
             }),
@@ -85,6 +90,7 @@ const CategoryPage = ({
         );
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
+        setTotalElements(response.totalElements);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
       } catch {
         if (isActive) {
@@ -177,8 +183,8 @@ const CategoryPage = ({
 
       <S.Content>
         <S.Title>{categoryName}</S.Title>
-        <S.Description>{categoryName} 전공 게시판입니다.</S.Description>
-        <S.CategoryMeta>게시글 {posts.length}개</S.CategoryMeta>
+        <S.Description>{categoryName} 게시판입니다.</S.Description>
+        <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
         {isLoading && <p>카테고리 게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
@@ -199,6 +205,7 @@ const CategoryPage = ({
 
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}

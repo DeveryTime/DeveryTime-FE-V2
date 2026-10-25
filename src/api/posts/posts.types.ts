@@ -13,20 +13,24 @@ export interface PostListItemType extends PostTableItem {
 }
 
 export type PostSort =
-  | "likeCount,desc"
+  | "likes"
+  | "latest"
+  | "views"
   | "createdAt,desc"
-  | "viewCount,desc";
+  | "viewCount,desc"
+  | "likeCount,desc";
 
 export interface PostListResponseItem {
   id: number;
   title: string;
-  writerId: number;
-  categoryName: string;
+  category?: string;
+  categoryName?: string;
+  writerId?: number;
+  likeCount?: number;
   createdAt: string;
-  likeCount: number;
 }
 
-export interface PostDetailResponseData {
+export interface PostDetailData {
   id: number;
   title: string;
   content: string;
@@ -43,7 +47,37 @@ export interface PostDetailResponseData {
   updatedAt: string | null;
 }
 
-export type PostDetailData = PostDetailResponseData;
+export interface PostWriter {
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
+export interface PostCategory {
+  id: number;
+  name: string;
+}
+
+export interface PostImage {
+  id: number;
+  imageUrl: string;
+  sortOrder: number;
+}
+
+export interface PostDetailResponseData {
+  id: number;
+  title: string;
+  content: string;
+  status: string;
+  viewCount: number;
+  writer: PostWriter;
+  category: PostCategory;
+  images: PostImage[];
+  likeCount?: number;
+  liked?: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
 
 export interface UploadPostImageData {
   id: number;

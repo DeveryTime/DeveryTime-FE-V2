@@ -4,36 +4,13 @@ import type {
   UploadPostImageData,
 } from "../posts.types";
 
-export interface PageSort {
-  empty: boolean;
-  sorted: boolean;
-  unsorted: boolean;
-}
-
-export interface PostPageData {
+export interface PostListResponse {
   content: PostListResponseItem[];
-  empty: boolean;
-  first: boolean;
-  last: boolean;
-  number: number;
-  numberOfElements: number;
-  pageable: {
-    offset: number;
-    pageNumber: number;
-    pageSize: number;
-    paged: boolean;
-    sort: PageSort;
-    unpaged: boolean;
-  };
+  page?: number;
+  number?: number;
   size: number;
-  sort: PageSort;
   totalElements: number;
   totalPages: number;
-}
-
-export interface PostListResponse {
-  success: boolean;
-  data: PostPageData;
 }
 
 export interface UpdatePostResponse {

@@ -1,25 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InfoContainer from "../../components/info/infoContainer";
+import profileApi from "../../api/profile/profile.api";
+import getApiErrorMessage from "../../api/errorMessages";
+import type { ProfileData } from "../../api/profile/profile.types";
 import S from "./myInfoPage.style";
 
-// 사용자 정보 타입
-type User = {
-  profileImageUrl: string;
-  name: string;
-  schoolNumber: number;
-  userName: string;
-  email: string;
-};
-
 const Info = () => {
-  // 사용자 정보
-  const [user] = useState<User>({
-    name: "대마",
-    schoolNumber: 1206,
-    userName: "GreenApple",
-    email: "1234@example.com",
-    profileImageUrl: "",
-  });
+  const [user, setUser] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchProfile = async () => {
+      try {
+        const profile = await profileApi.getMyProfile();
+
+        if (isActive) {
+          setUser(profile);
+        }
+      } catch (requestError) {
+        if (isActive) {
+          setError(
+            getApiErrorMessage(
+              requestError,
+              "사용자 정보를 불러오지 못했습니다.",
+            ),
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchProfile();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <S.InfoLayout>
@@ -36,8 +58,10 @@ const Info = () => {
         <S.InfoContainer>
           <S.InfoTitle>내 정보</S.InfoTitle>
 
-          {/* 사용자 정보가 있을 때 표시 */}
-          {user && (
+          {isLoading && <p>사용자 정보를 불러오는 중입니다...</p>}
+          {error && <p role="alert">{error}</p>}
+
+          {!isLoading && !error && user && (
             <S.UserInfo>
               <S.ProfileImage>
                 {user.profileImageUrl ? (
