@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import type {
-  PostDetailData,
+  PostDetailResponseData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
@@ -18,16 +19,16 @@ interface PostMainPageProps {
 }
 
 const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
+  const navigate = useNavigate();
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
-  const [selectedSort, setSelectedSort] = useState<PostSort>("likes");
+  const [selectedSort, setSelectedSort] = useState<PostSort>("likeCount,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
-    null,
-  );
+  const [selectedPost, setSelectedPost] =
+    useState<PostDetailResponseData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -35,9 +36,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 정렬 기준별로 화면 제목을 연결한다.
   const sortTitles: Record<PostSort, string> = {
-    likes: "인기순",
-    latest: "최신순",
-    views: "조회순",
+    "likeCount,desc": "인기순",
+    "createdAt,desc": "최신순",
+    "viewCount,desc": "조회순",
   };
 
   // 정렬 기준과 페이지가 바뀌면 서버에서 해당 목록을 다시 조회한다.
@@ -71,8 +72,8 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.page * response.size + index + 1,
-              category: post.category,
+              number: response.number * response.size + index + 1,
+              category: post.categoryName,
               title: post.title,
               createdAt: post.createdAt,
             }),
@@ -98,6 +99,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 표의 게시글을 선택하면 상세 정보를 조회한다.
   const handlePostClick = async (postId: number) => {
+    if (!localStorage.getItem("accessToken")) {
+      navigate("/login");
+      return;
+    }
+
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -191,9 +197,10 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {/* 게시글을 선택했을 때만 상세 모달을 표시한다. */}
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writer.userId === currentUserId}
+            isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
               setSelectedPost(null);

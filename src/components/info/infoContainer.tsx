@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import arrowIcon from "../../assets/arrowIcon.svg";
 import postsApi from "../../api/posts.api";
 import getApiErrorMessage from "../../api/errorMessages";
-import type { MyPostListResponseItem } from "../../api/posts/posts.types";
+import type { PostListResponseItem } from "../../api/posts/posts.types";
 import S from "./infoContainer.style";
 
 const InfoContainer = () => {
-  const [posts, setPosts] = useState<MyPostListResponseItem[]>([]);
+  const [posts, setPosts] = useState<PostListResponseItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

@@ -1,7 +1,6 @@
 import {
   useState,
   useEffect,
-  useLayoutEffect,
   useRef,
   type ChangeEvent,
 } from "react";
@@ -15,15 +14,15 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type {
   PostComment,
+  PostDetailResponseData,
   UpdatePostRequest,
-  PostDetailData,
 } from "../../../types/posts.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 
 interface PostDetailModalProps {
-  post: PostDetailData;
+  post: PostDetailResponseData;
   currentUserId: number;
   onClose: () => void;
   onDelete: (postId: number) => void;
@@ -75,14 +74,6 @@ const PostDetailModal = ({
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
 
-  useLayoutEffect(() => {
-    currentPostRef.current = post;
-    setIsLiked(post.liked ?? false);
-    setLikeCount(post.likeCount ?? 0);
-    setIsLikeLoading(false);
-    setLikeError(null);
-  }, [post.id, post.liked, post.likeCount]);
-
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(
@@ -103,11 +94,6 @@ const PostDetailModal = ({
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
   );
-
-  useLayoutEffect(() => {
-    setDisplayedPostTitle(post.title);
-    setDisplayedPostContent(post.content);
-  }, [post.id, post.title, post.content]);
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {
@@ -209,21 +195,21 @@ const PostDetailModal = ({
       closeIcon={<X aria-hidden="true" />}
     >
       {/* 게시글 카테고리 */}
-      <S.CategoryLabel> {post.category.name} </S.CategoryLabel>
+      <S.CategoryLabel> {post.categoryName} </S.CategoryLabel>
 
       <S.ModalScrollArea>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>
-            {post.writer.profileImageUrl ? (
-              <S.ProfileImage src={post.writer.profileImageUrl} alt="" />
+            {post.writerProfileImageUrl ? (
+              <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
             ) : (
               <S.DefaultProfileImage>
                 <UserRound aria-hidden="true" />
               </S.DefaultProfileImage>
             )}
             <S.WriterInfo>
-              <S.WriterName> {post.writer.nickname} </S.WriterName>
+              <S.WriterName> {post.writerNickname} </S.WriterName>
               <S.PostMeta>
                 {formatPostDate(post.createdAt)} - {post.viewCount} 조회
               </S.PostMeta>
@@ -328,12 +314,12 @@ const PostDetailModal = ({
               <S.PostContent>
                 <ReactMarkdown>{displayedPostContent}</ReactMarkdown>
               </S.PostContent>
-              {post.images.length > 0 && (
+              {post.imageUrls.length > 0 && (
                 <S.ImageList>
-                  {post.images.map((image, index) => (
+                  {post.imageUrls.map((imageUrl, index) => (
                     <S.ContentImage
-                      key={`${image.id}-${index}`}
-                      src={image.imageUrl}
+                      key={`${imageUrl}-${index}`}
+                      src={imageUrl}
                       alt={`${displayedPostTitle} 첨부된 이미지`}
                     />
                   ))}
