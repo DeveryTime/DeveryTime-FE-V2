@@ -6,7 +6,8 @@ import type {
 
 export interface PostListResponse {
   content: PostListResponseItem[];
-  page: number;
+  page?: number;
+  number?: number;
   size: number;
   totalElements: number;
   totalPages: number;
