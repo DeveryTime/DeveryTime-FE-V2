@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import S from "./CategoryPage.styles";
 
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
@@ -8,7 +7,7 @@ import PostPagination from "../../components/posts/PostPagination/PostPagination
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 
 import type {
-  PostDetailResponseData,
+  PostDetailData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
@@ -27,17 +26,14 @@ const CategoryPage = ({
   categoryName,
   currentUserId,
 }: CategoryPageProps) => {
-  const navigate = useNavigate();
-  const [selectedSort, setSelectedSort] = useState<PostSort>("createdAt,desc");
+  const [selectedSort, setSelectedSort] = useState<PostSort>("latest");
   const [currentPage, setCurrentPage] = useState(1);
   const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] =
-    useState<PostDetailResponseData | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -78,8 +74,8 @@ const CategoryPage = ({
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.number * response.size + index + 1,
-              category: post.categoryName,
+              number: response.page * response.size + index + 1,
+              category: post.category,
               title: post.title,
               createdAt: post.createdAt,
             }),
@@ -87,7 +83,6 @@ const CategoryPage = ({
         );
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
-        setTotalElements(response.totalElements);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
       } catch {
         if (isActive) {
@@ -108,11 +103,6 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
-    if (!localStorage.getItem("accessToken")) {
-      navigate("/login");
-      return;
-    }
-
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -180,8 +170,8 @@ const CategoryPage = ({
 
       <S.Content>
         <S.Title>{categoryName}</S.Title>
-        <S.Description>{categoryName} 게시판입니다.</S.Description>
-        <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
+        <S.Description>{categoryName} 전공 게시판입니다.</S.Description>
+        <S.CategoryMeta>게시글 {posts.length}개</S.CategoryMeta>
 
         {isLoading && <p>카테고리 게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
@@ -205,7 +195,6 @@ const CategoryPage = ({
             key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writerId === currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
