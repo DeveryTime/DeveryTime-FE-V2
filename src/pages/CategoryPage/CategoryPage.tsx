@@ -28,7 +28,8 @@ const CategoryPage = ({
   currentUserId,
 }: CategoryPageProps) => {
   const navigate = useNavigate();
-  const [selectedSort, setSelectedSort] = useState<PostSort>("createdAt,desc");
+  const [selectedSort, setSelectedSort] =
+    useState<PostSort>("createdAt,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
@@ -77,8 +78,11 @@ const CategoryPage = ({
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.number * response.size + index + 1,
-              category: post.categoryName,
+              number:
+                (response.page ?? response.number ?? 0) * response.size +
+                index +
+                1,
+              category: post.categoryName ?? post.category ?? "",
               title: post.title,
               createdAt: post.createdAt,
             }),

@@ -6,6 +6,7 @@ export * from "../api/comments/request/comments.request";
 export * from "../api/comments/response/comments.response";
 export * from "../api/likes/likes.types";
 export * from "../api/likes/response/likes.response";
+import type { PostDetailData, PostSort } from "../api/posts/posts.types";
 export interface PostTableItem {
   id: number;
   number: number;
@@ -20,28 +21,11 @@ export interface PostListItemType extends PostTableItem {
   likeCount: number;
 }
 
-export type PostSort = "likes" | "latest" | "views";
-
 export interface PostListParams {
   page: number;
   size: number;
   sort: PostSort;
   categoryId?: number;
-}
-
-export interface PostListResponseItem {
-  id: number;
-  title: string;
-  category: string;
-  createdAt: string;
-}
-
-export interface PostListResponse {
-  content: PostListResponseItem[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
 }
 
 export interface UpdatePostRequest {
@@ -54,23 +38,6 @@ export interface UpdatePostResponse {
   id: number;
   title: string;
   updatedAt: string;
-}
-
-export interface PostDetailData {
-  id: number;
-  title: string;
-  content: string;
-  status: string;
-  viewCount: number;
-  writerId: number;
-  writerNickname: string;
-  writerProfileImageUrl: string | null;
-  categoryName: string;
-  imageUrls: string[];
-  likeCount: number;
-  liked: boolean;
-  createdAt: string;
-  updatedAt: string | null;
 }
 
 export interface PostDetailResponse {

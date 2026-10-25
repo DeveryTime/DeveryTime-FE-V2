@@ -19,7 +19,8 @@ interface PostMainPageProps {
 
 const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
-  const [selectedSort, setSelectedSort] = useState<PostSort>("likes");
+  const [selectedSort, setSelectedSort] =
+    useState<PostSort>("likeCount,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -38,6 +39,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
     likes: "인기순",
     latest: "최신순",
     views: "조회순",
+    "createdAt,desc": "최신순",
+    "viewCount,desc": "조회순",
+    "likeCount,desc": "인기순",
   };
 
   // 정렬 기준과 페이지가 바뀌면 서버에서 해당 목록을 다시 조회한다.
@@ -71,8 +75,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.page * response.size + index + 1,
-              category: post.category,
+              number:
+                (response.page ?? response.number ?? 0) * response.size +
+                index +
+                1,
+              category: post.categoryName ?? post.category ?? "",
               title: post.title,
               createdAt: post.createdAt,
             }),
