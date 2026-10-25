@@ -11,6 +11,7 @@ import type {
 } from "./request/posts.request";
 import type {
   PostDetailResponse,
+  MyPostsResponse,
   PostListResponse,
   UpdatePostResponse,
   UploadPostImageResponse,
@@ -26,8 +27,8 @@ const getPosts = async (params: PostListParams): Promise<PostListResponse> => {
 
 const getMyPosts = async (
   params: GetMyPostsRequest,
-): Promise<PostListResponse> => {
-  const response = await client.get<PostListResponse>("/users/me/posts", {
+): Promise<MyPostsResponse> => {
+  const response = await client.get<MyPostsResponse>("/users/me/posts", {
     params,
   });
 

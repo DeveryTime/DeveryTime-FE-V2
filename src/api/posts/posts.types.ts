@@ -21,6 +21,13 @@ export interface PostListResponseItem {
   createdAt: string;
 }
 
+export interface MyPostListResponseItem {
+  id: number;
+  title: string;
+  categoryName: string;
+  createdAt: string;
+}
+
 export interface PostWriter {
   userId: number;
   nickname: string;

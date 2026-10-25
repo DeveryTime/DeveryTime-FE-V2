@@ -1,55 +1,73 @@
 import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import getApiErrorMessage from "../../api/errorMessages";
+import profileApi from "../../api/profile/profile.api";
+import type { ProfileData } from "../../api/profile/profile.types";
 import S from "./profileChange.style";
-
-type User = {
-  name: string;
-  schoolNumber: string;
-  username: string;
-  email: string;
-  profileImageUrl: string;
-};
 
 const Profile = () => {
   const navigate = useNavigate();
 
-  // 임시 사용자 데이터
-  const [user, setUser] = useState<User | null>({
-    name: "대마",
-    schoolNumber: "20241234",
-    username: "dfs123",
-    email: "1234@example.com",
-    profileImageUrl: "",
-  });
+  const [user, setUser] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // 수정할 아이디
-  const [username, setUsername] = useState(user?.username ?? "");
-
-  // 새로 선택한 프로필 이미지 파일
-  const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
+  const [username, setUsername] = useState("");
 
   // 이미지 미리보기 URL
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
 
   // 파일 input에 접근하기 위한 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 이미지 파일이 변경될 때 미리보기 URL 생성 및 해제
+  const previewUrlRef = useRef<string | null>(null);
+
+  // 컴포넌트가 사라질 때 현재 미리보기 URL 해제
   useEffect(() => {
-    if (!newProfileImage) {
-      setPreviewUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(newProfileImage);
-    setPreviewUrl(objectUrl);
-
-    // 이미지가 변경되거나 컴포넌트가 사라질 때 URL 해제
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
     };
-  }, [newProfileImage]);
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchProfile = async () => {
+      try {
+        const profile = await profileApi.getMyProfile();
+
+        if (isActive) {
+          setUser(profile);
+          setUsername(profile.userName);
+        }
+      } catch (requestError) {
+        if (isActive) {
+          setError(
+            getApiErrorMessage(
+              requestError,
+              "사용자 정보를 불러오지 못했습니다.",
+            ),
+          );
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchProfile();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   // 로그아웃
   const handleLogout = () => {
@@ -60,26 +78,36 @@ const Profile = () => {
     navigate("/login");
   };
 
-  // 아이디가 변경되었는지 확인
+  const trimmedUsername = username.trim();
+  const isUsernameValid =
+    trimmedUsername.length > 0 && trimmedUsername.length <= 10;
+  const hasUsernameChanged = trimmedUsername !== user?.userName;
   const canSave =
     Boolean(user) &&
-    username.trim() !== user?.username &&
-    username.trim().length > 0 &&
-    username.trim().length <= 10;
+    !isLoading &&
+    !isSaving &&
+    isUsernameValid &&
+    (hasUsernameChanged || Boolean(newProfileImage));
 
   // 이미지 변경
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (file) {
+      const objectUrl = URL.createObjectURL(file);
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+
+      previewUrlRef.current = objectUrl;
+      setPreviewUrl(objectUrl);
       setNewProfileImage(file);
     }
   };
 
-  // 아이디 변경사항 저장
-  const handleSave = () => {
-    const trimmedUsername = username.trim();
-
+  // 프로필 변경사항 저장
+  const handleSave = async () => {
     if (!trimmedUsername) {
       toast.error("아이디를 입력해주세요.");
       return;
@@ -92,17 +120,37 @@ const Profile = () => {
 
     if (!user) return;
 
-    setUser((prevUser) => {
-      if (!prevUser) return prevUser;
+    setIsSaving(true);
 
-      return {
-        ...prevUser,
+    try {
+      await profileApi.updateMyProfile({
         username: trimmedUsername,
-      };
-    });
+        deleteProfileImage: false,
+        ...(newProfileImage ? { profileImage: newProfileImage } : {}),
+      });
 
-    setUsername(trimmedUsername);
-    toast.success("변경사항이 저장되었습니다.");
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              userName: trimmedUsername,
+              profileImageUrl: previewUrl ?? currentUser.profileImageUrl,
+            }
+          : currentUser,
+      );
+      setUsername(trimmedUsername);
+      setNewProfileImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      toast.success("변경사항이 저장되었습니다.");
+    } catch (requestError) {
+      toast.error(
+        getApiErrorMessage(requestError, "변경사항 저장에 실패했습니다."),
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -121,6 +169,9 @@ const Profile = () => {
       {/* 프로필 수정 영역 */}
       <S.ProfileContainer>
         <S.ProfileTitle>프로필 수정</S.ProfileTitle>
+
+        {isLoading && <p>사용자 정보를 불러오는 중입니다...</p>}
+        {error && <p role="alert">{error}</p>}
 
         {/* 사용자 정보 */}
         {user && (
@@ -162,7 +213,7 @@ const Profile = () => {
                 {user.name} | {user.schoolNumber}
               </S.UserName>
 
-              <S.UserIdEmail>{user.username}</S.UserIdEmail>
+              <S.UserIdEmail>{user.userName}</S.UserIdEmail>
               <S.UserIdEmail>{user.email}</S.UserIdEmail>
             </div>
           </S.UserInfo>
@@ -181,7 +232,7 @@ const Profile = () => {
 
         {/* 저장 버튼 */}
         <S.SaveBtn onClick={handleSave} disabled={!canSave}>
-          변경사항 저장
+          {isSaving ? "저장 중..." : "변경사항 저장"}
         </S.SaveBtn>
       </S.ProfileContainer>
     </S.ProfileLayout>

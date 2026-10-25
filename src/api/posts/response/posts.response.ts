@@ -1,4 +1,5 @@
 import type {
+  MyPostListResponseItem,
   PostListResponseItem,
   PostDetailResponseData,
   UploadPostImageData,
@@ -10,6 +11,10 @@ export interface PostListResponse {
   size: number;
   totalElements: number;
   totalPages: number;
+}
+
+export interface MyPostsResponse extends Omit<PostListResponse, "content"> {
+  content: MyPostListResponseItem[];
 }
 
 export interface UpdatePostResponse {
