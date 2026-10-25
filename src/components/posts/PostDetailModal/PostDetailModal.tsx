@@ -14,15 +14,15 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type {
   PostComment,
+  PostDetailResponseData,
   UpdatePostRequest,
-  PostDetailData,
 } from "../../../types/posts.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 
 interface PostDetailModalProps {
-  post: PostDetailData;
+  post: PostDetailResponseData;
   currentUserId: number;
   onClose: () => void;
   onDelete: (postId: number) => void;
@@ -209,11 +209,14 @@ const PostDetailModal = ({
     >
       {/* 게시글 카테고리 */}
       <S.CategoryLabel> {post.categoryName} </S.CategoryLabel>
+      <S.CategoryLabel> {post.categoryName} </S.CategoryLabel>
 
       <S.ModalScrollArea>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>
+            {post.writerProfileImageUrl ? (
+              <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
             {post.writerProfileImageUrl ? (
               <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
             ) : (
@@ -222,6 +225,7 @@ const PostDetailModal = ({
               </S.DefaultProfileImage>
             )}
             <S.WriterInfo>
+              <S.WriterName> {post.writerNickname} </S.WriterName>
               <S.WriterName> {post.writerNickname} </S.WriterName>
               <S.PostMeta>
                 {formatPostDate(post.createdAt)} - {post.viewCount} 조회
@@ -328,9 +332,13 @@ const PostDetailModal = ({
                 <ReactMarkdown>{displayedPostContent}</ReactMarkdown>
               </S.PostContent>
               {post.imageUrls.length > 0 && (
+              {post.imageUrls.length > 0 && (
                 <S.ImageList>
                   {post.imageUrls.map((imageUrl, index) => (
+                  {post.imageUrls.map((imageUrl, index) => (
                     <S.ContentImage
+                      key={`${imageUrl}-${index}`}
+                      src={imageUrl}
                       key={`${imageUrl}-${index}`}
                       src={imageUrl}
                       alt={`${displayedPostTitle} 첨부된 이미지`}
