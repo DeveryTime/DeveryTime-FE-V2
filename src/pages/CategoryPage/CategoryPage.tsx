@@ -8,7 +8,7 @@ import PostPagination from "../../components/posts/PostPagination/PostPagination
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 
 import type {
-  PostDetailResponseData,
+  PostDetailData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
@@ -36,8 +36,7 @@ const CategoryPage = ({
   const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] =
-    useState<PostDetailResponseData | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -205,7 +204,6 @@ const CategoryPage = ({
             key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
-            isMyPost={selectedPost.writerId === currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
             onClose={() => {
               detailRequestId.current += 1;
