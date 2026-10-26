@@ -87,10 +87,6 @@ const LoginPage = () => {
               </LoginS.EyeButton>
             </LoginS.PasswordArea>
 
-            <LoginS.QuestionPasswordText>
-              <LoginS.Qusetion>비밀번호를 잊으셨나요?</LoginS.Qusetion>
-              <LoginS.LinkText to="/FindPassword">여기</LoginS.LinkText>
-            </LoginS.QuestionPasswordText>
           </LoginS.PasswordWrapper>
 
           <LoginS.Button
@@ -98,7 +94,7 @@ const LoginPage = () => {
             onClick={handleNext}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "로그인 중..." : "다음"}
+            {isSubmitting ? "로그인 중..." : "로그인"}
           </LoginS.Button>
 
           <LoginS.QuestionText>
