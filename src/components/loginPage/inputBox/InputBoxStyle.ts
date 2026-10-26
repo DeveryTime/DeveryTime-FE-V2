@@ -18,9 +18,10 @@ const Input = styled.input`
   border: none;
   outline: none;
   box-sizing: border-box;
-  padding: 0;
+  padding: 10px;
   font-size: 24px;
   color: #333;
+  gap-right: 10px;
 
   &:focus-visible {
     outline: 2px solid ${colors.blue[400]};

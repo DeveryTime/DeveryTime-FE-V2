@@ -17,13 +17,12 @@ const Signup2S = {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: min(660px, calc(100% - 32px));
+    width: 660px;
     min-height: 700px;
-    height: auto;
     box-sizing: border-box;
-    padding: 32px 24px;
+    padding: 30px;
     background-color: #ffffff;
-    gap: clamp(24px, 5vw, 64px);
+    gap: 40px;
     box-shadow: 6px 4px 12px 8px #00000040;
     border-radius: 15px;
   `,
@@ -38,7 +37,7 @@ const Signup2S = {
 
   BackButton: styled.button`
     position: absolute;
-    left: 0;
+    left: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -63,8 +62,7 @@ const Signup2S = {
     display: flex;
     align-items: center;
     position: relative;
-    width: min(564px, 100%);
-    box-sizing: border-box;
+    width: 564px;
     height: 64px;
     transform: translateY(30px);
     border-bottom: 2px solid #6f6f6f;
@@ -74,8 +72,7 @@ const Signup2S = {
     width: 100%;
     height: 64px;
     box-sizing: border-box;
-    padding: 0;
-    padding-right: 135px;
+    padding: 0 135px 0 0;
     border: none;
     outline: none;
     color: #333333;
@@ -84,12 +81,6 @@ const Signup2S = {
 
     &::placeholder {
       color: #6f6f6f;
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${colors.blue[400]};
-      outline-offset: 2px;
-      border-radius: 4px;
     }
   `,
 
@@ -109,25 +100,33 @@ const Signup2S = {
     font-size: 18px;
     font-weight: 600;
     cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background-color: ${colors.blue[400]};
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   `,
 
-  VerificationArea: styled.div`
-    display: flex;
-    align-items: center;
-    position: relative;
-    width: min(564px, 100%);
-    box-sizing: border-box;
-    height: 64px;
-    border-bottom: 2px solid #6f6f6f;
-    transform: translateY(30px);
-  `,
+VerificationArea: styled.div`
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 564px;
+  height: 64px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #6f6f6f;
+  transform: translateY(30px);
+`,
 
   VerificationInput: styled.input`
     width: 100%;
     height: 64px;
     box-sizing: border-box;
-    padding: 0;
-    padding-right: 80px;
+    padding: 0 80px 0 0;
     border: none;
     outline: none;
     color: #333333;
@@ -151,24 +150,23 @@ const Signup2S = {
     color: #000000;
     font-family: Pretendard;
     font-size: 20px;
+    font-variant-numeric: tabular-nums;
   `,
 
   VerificationText: styled.div`
-    width: min(564px, 100%);
-    box-sizing: border-box;
-    color: #000000;
-    font-family: Pretendard;
-    font-size: 18px;
-    font-weight: 500;
-    transform: translateY(-30px);
-  `,
+  width: 564px;
+  color: #000000;
+  font-family: Pretendard;
+  font-size: 18px;
+  font-weight: 500;
+  transform: translateY(-10px);
+`,
 
   Button: styled.button`
     display: flex;
     justify-content: center;
     align-items: center;
-    width: min(564px, 100%);
-    box-sizing: border-box;
+    width: 564px;
     height: 64px;
     padding: 0;
     border: none;
@@ -180,8 +178,13 @@ const Signup2S = {
     font-family: Pretendard;
     cursor: pointer;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: ${colors.blue[500]};
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   `,
 
@@ -207,11 +210,7 @@ const Signup2S = {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 100%;
-    box-sizing: border-box;
-    flex-wrap: wrap;
     gap: 8px;
-    text-align: center;
   `,
 };
 
