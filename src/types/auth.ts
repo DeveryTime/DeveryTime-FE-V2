@@ -18,7 +18,8 @@ export interface LoginData {
 }
 
 export interface LoginResponse {
-  success: true;
+  // The API documentation has represented this value as both true and "true".
+  success: boolean | "true";
   data: LoginData;
   message: string;
 }
@@ -56,10 +57,21 @@ export interface VerifyEmailResponse {
   message: string;
 }
 
+export interface TokenReissueRequest {
+  refreshToken: string;
+}
+
+export interface TokenReissueResponse {
+  success: boolean;
+  data: LoginData;
+  message?: string;
+}
+
 export type LoginErrorCode =
   | "INVALID_CREDENTIALS"
   | "VALIDATION_ERROR"
-  | "INTERNAL_SERVER_ERROR";
+  | "INTERNAL_SERVER_ERROR"
+  | "INTERNAL_SERVER_ERR";
 
 export type SignupErrorCode =
   | "EMAIL_NOT_VERIFIED"
@@ -69,14 +81,22 @@ export type SignupErrorCode =
   | "SCHOOL_NUMBER_ALREADY_EXISTS"
   | "EMAIL_VERIFICATION_NOT_FOUND"
   | "VALIDATION_ERROR"
-  | "INTERNAL_SERVER_ERROR";
+  | "INTERNAL_SERVER_ERROR"
+  | "INTERNAL_SERVER_ERR";
+
+export type TokenErrorCode = "TOKEN_INVALID";
+
+export interface ValidationErrorDetail {
+  field: string;
+  message: string;
+}
 
 export interface AuthApiError {
   success: false;
   status?: number;
   error: {
-    code: LoginErrorCode | SignupErrorCode;
+    code: LoginErrorCode | SignupErrorCode | TokenErrorCode;
     message: string;
-    details?: Array<{ field: string; message: string }>;
+    details?: ValidationErrorDetail[];
   };
 }

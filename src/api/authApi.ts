@@ -1,30 +1,31 @@
 import client from "./client";
-
 import type {
+  CheckUsernameResponse,
   LoginRequest,
   LoginResponse,
-  SignupRequest,
-  SignupResponse,
-  CheckUsernameResponse,
   SendEmailVerificationRequest,
   SendEmailVerificationResponse,
+  SignupRequest,
+  SignupResponse,
+  TokenReissueRequest,
+  TokenReissueResponse,
   VerifyEmailRequest,
   VerifyEmailResponse,
 } from "../types/auth";
 
-// 로그인
+const saveTokens = (accessToken: string, refreshToken: string): void => {
+  localStorage.setItem("accessToken", accessToken);
+  localStorage.setItem("refreshToken", refreshToken);
+};
+
 export const loginApi = async (
-  data: LoginRequest,
+  request: LoginRequest,
 ): Promise<LoginResponse> => {
-  const response = await client.post<LoginResponse>("/auth/login", data);
-
-  localStorage.setItem("accessToken", response.data.data.accessToken);
-  localStorage.setItem("refreshToken", response.data.data.refreshToken);
-
+  const response = await client.post<LoginResponse>("/auth/login", request);
+  saveTokens(response.data.data.accessToken, response.data.data.refreshToken);
   return response.data;
 };
 
-// 아이디 중복 확인
 export const checkUsernameApi = async (
   username: string,
 ): Promise<CheckUsernameResponse> => {
@@ -32,40 +33,43 @@ export const checkUsernameApi = async (
     "/auth/check-username",
     { params: { username } },
   );
-
   return response.data;
 };
 
-// 이메일 인증번호 발송
 export const sendEmailVerificationApi = async (
-  data: SendEmailVerificationRequest,
+  request: SendEmailVerificationRequest,
 ): Promise<SendEmailVerificationResponse> => {
-  const response =
-    await client.post<SendEmailVerificationResponse>(
-      "/auth/email-verifications",
-      data,
-    );
-
+  const response = await client.post<SendEmailVerificationResponse>(
+    "/auth/email-verifications",
+    request,
+  );
   return response.data;
 };
 
-// 이메일 인증번호 확인
 export const verifyEmailApi = async (
-  data: VerifyEmailRequest,
+  request: VerifyEmailRequest,
 ): Promise<VerifyEmailResponse> => {
   const response = await client.post<VerifyEmailResponse>(
     "/auth/email-verifications/verify",
-    data,
+    request,
   );
-
   return response.data;
 };
 
-// 회원가입
 export const signupApi = async (
-  data: SignupRequest,
+  request: SignupRequest,
 ): Promise<SignupResponse> => {
-  const response = await client.post<SignupResponse>("/auth/signup", data);
+  const response = await client.post<SignupResponse>("/auth/signup", request);
+  return response.data;
+};
 
+export const reissueTokenApi = async (
+  request: TokenReissueRequest,
+): Promise<TokenReissueResponse> => {
+  const response = await client.post<TokenReissueResponse>(
+    "/auth/reissue",
+    request,
+  );
+  saveTokens(response.data.data.accessToken, response.data.data.refreshToken);
   return response.data;
 };
