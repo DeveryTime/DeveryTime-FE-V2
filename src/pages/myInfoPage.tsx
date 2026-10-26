@@ -12,8 +12,9 @@ type User = {
   userName: string;
   email: string;
 };
-const navigate = useNavigate();
+
 const Info = () => {
+  const navigate = useNavigate();
   // 사용자 정보
   const [user] = useState<User>({
     name: "대마",
@@ -27,6 +28,14 @@ const Info = () => {
   const handleLogout = () => {
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("accessToken");
+    try {
+          localStorage.removeItem("refreshToken");
+            localStorage.removeItem("accessToken");
+          } catch (error) {
+            console.warn("로그아웃 중 토큰 삭제에 실패했습니다.", error);
+            toast.error("로그아웃하지 못했습니다. 다시 시도해 주세요.");
+         return;
+          }
 
     toast.success("로그아웃되었습니다.");
     navigate("/login");
