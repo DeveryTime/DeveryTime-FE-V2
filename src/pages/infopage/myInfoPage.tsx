@@ -1,14 +1,34 @@
 import { useEffect, useState } from "react";
 import InfoContainer from "../../components/info/infoContainer";
+import toast from "react-hot-toast";
 import profileApi from "../../api/profile/profile.api";
 import getApiErrorMessage from "../../api/errorMessages";
 import type { ProfileData } from "../../api/profile/profile.types";
 import S from "./myInfoPage.style";
+import {useNavigate} from "react-router-dom";
 
 const Info = () => {
   const [user, setUser] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+    try {
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("accessToken");
+    } catch (error) {
+      console.warn("로그아웃 중 토큰 삭제에 실패했습니다.", error);
+      toast.error("로그아웃하지 못했습니다. 다시 시도해 주세요.");
+      return;
+    }
+
+    toast.custom(<S.LogoutToast>로그아웃 되었습니다.</S.LogoutToast>);
+    navigate("/login");
+  };
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isActive = true;
@@ -50,7 +70,7 @@ const Info = () => {
         <p className="active">내 정보</p>
         <p>내가 쓴 글</p>
         <p>프로필 수정</p>
-        <p>로그아웃</p>
+        <button onClick={handleLogout}>로그아웃</button>
       </S.Menu>
 
       {/* 오른쪽 내용 */}

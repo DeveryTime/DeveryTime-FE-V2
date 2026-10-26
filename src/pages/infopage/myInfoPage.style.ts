@@ -11,34 +11,49 @@ export const S = {
 
   // 왼쪽 메뉴
   Menu: styled.div`
-    border: 1px solid #cbcbcb;
-    padding: 7px 5px 10px 8px;
-    width: 168px;
-    height: 200px;
-
-    p {
-      margin: 0;
-      padding: 11px 5px;
-
-      font-size: 16px;
-      font-weight: 500;
-      border-bottom: 2px solid #dddddd;
-      cursor: pointer;
-
-      &:hover {
-        color: #666;
+      border: 1px solid #cbcbcb;
+      padding: 7px 5px 10px 8px;
+      width: 168px;
+      height: 200px;
+      p,
+      button {
+          margin: 0;
+          padding: 11px 5px;
+          font-family: inherit;
+          font-size: 16px;
+          font-weight: 500;
+          border-bottom: 2px solid #dddddd;
+          cursor: pointer;
       }
-
-      &.active {
-        color: #555;
+      button {
+          width: 100%;
+          background: none;
+          border: none;
+          text-align: left;
+          color: inherit;
       }
-
-      &:last-child {
-        border-bottom: none;
+      p {
+          &:hover {
+              color: #666;
+          }
+          &.active {
+              color: #555;
+          }
+          &:last-child {
+              border-bottom: none;
+          }
       }
-    }
   `,
 
+  LogoutToast: styled.div`
+  padding: 16px 24px;
+  background-color: #ffffff;
+  color: #333333;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  font-weight: 500;
+`,
   // 내 정보 영역
   InfoContainer: styled.div`
     position: relative;
