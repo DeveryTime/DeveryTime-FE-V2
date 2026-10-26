@@ -12,7 +12,6 @@ import S from "./PostMainPage.styles";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
-import getApiErrorMessage from "../../api/errorMessages";
 
 interface PostMainPageProps {
   currentUserId: number;
@@ -20,7 +19,8 @@ interface PostMainPageProps {
 
 const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
-  const [selectedSort, setSelectedSort] = useState<PostSort>("likes");
+  const [selectedSort, setSelectedSort] =
+    useState<PostSort>("likeCount,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,9 +36,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 정렬 기준별로 화면 제목을 연결한다.
   const sortTitles: Record<PostSort, string> = {
-    likes: "인기순",
-    latest: "최신순",
-    views: "조회순",
+    "createdAt,desc": "최신순",
+    "viewCount,desc": "조회순",
+    "likeCount,desc": "인기순",
   };
 
   // 정렬 기준과 페이지가 바뀌면 서버에서 해당 목록을 다시 조회한다.
@@ -72,18 +72,16 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.page * response.size + index + 1,
-              category: post.category,
+              number: response.number * response.size + index + 1,
+              category: post.categoryName,
               title: post.title,
               createdAt: post.createdAt,
             }),
           ),
         );
-      } catch (error) {
+      } catch {
         if (isActive) {
-          setError(
-            getApiErrorMessage(error, "게시글을 불러오지 못했습니다."),
-          );
+          setError("게시글을 불러오지 못했습니다.");
         }
       } finally {
         if (isActive) {
@@ -112,14 +110,12 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       }
 
       setSelectedPost(postDetail);
-    } catch (error) {
+    } catch {
       if (requestId !== detailRequestId.current) {
         return;
       }
 
-      setDetailError(
-        getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
-      );
+      setDetailError("게시글 상세 정보를 불러오지 못했습니다.");
     } finally {
       if (requestId === detailRequestId.current) {
         setIsDetailLoading(false);
@@ -139,10 +135,8 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       );
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
-    } catch (error) {
-      setDetailError(
-        getApiErrorMessage(error, "게시글을 삭제하지 못했습니다."),
-      );
+    } catch {
+      setDetailError("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -198,6 +192,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {/* 게시글을 선택했을 때만 상세 모달을 표시한다. */}
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
