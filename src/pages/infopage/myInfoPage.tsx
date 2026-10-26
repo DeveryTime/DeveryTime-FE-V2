@@ -13,8 +13,6 @@ const Info = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("accessToken");
     try {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("accessToken");
