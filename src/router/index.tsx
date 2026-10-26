@@ -11,15 +11,10 @@ import Profile from "../pages/profileChange/profileChange";
 import Landing from "../pages/landingPage/landingPage";
 import Info from "../pages/infopage/myInfoPage";
 import CategoryPage from "../pages/CategoryPage/CategoryPage";
-
 import MainLayout from "../components/layout/mainLayout";
 
 export const router = createBrowserRouter([
   // 네비바가 없는 페이지
-  {
-    path: "/",
-    Component: Landing,
-  },
   {
     path: "/signup/1",
     Component: SignupPage1,
@@ -41,6 +36,10 @@ export const router = createBrowserRouter([
   {
     element: <MainLayout />,
     children: [
+      {
+        path: "/",
+        Component: Landing,
+      },
       {
         path: "/main",
         element: <PostMainPage currentUserId={0} />,

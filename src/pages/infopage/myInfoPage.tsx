@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import {useNavigate} from "react-router-dom";
 import InfoContainer from "../../components/info/infoContainer";
 import profileApi from "../../api/profile/profile.api";
 import getApiErrorMessage from "../../api/errorMessages";
@@ -9,7 +10,7 @@ const Info = () => {
   const [user, setUser] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+const navigate = useNavigate();
   useEffect(() => {
     let isActive = true;
 
@@ -49,7 +50,7 @@ const Info = () => {
       <S.Menu>
         <p className="active">내 정보</p>
         <p>내가 쓴 글</p>
-        <p>프로필 수정</p>
+        <p onClick={() => navigate("/Profile")}>프로필 수정</p>
         <p>로그아웃</p>
       </S.Menu>
 
