@@ -1,16 +1,12 @@
 import type {
-  PostListResponseItem,
+  PostListData,
   PostDetailResponseData,
   UploadPostImageData,
 } from "../posts.types";
 
 export interface PostListResponse {
-  content: PostListResponseItem[];
-  page?: number;
-  number?: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
+  success: boolean;
+  data: PostListData;
 }
 
 export interface UpdatePostResponse {

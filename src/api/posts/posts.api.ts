@@ -15,23 +15,23 @@ import type {
   UpdatePostResponse,
   UploadPostImageResponse,
 } from "./response/posts.response";
-import type { PostImage } from "./posts.types";
+import type { PostImage, PostListData } from "./posts.types";
 import type { PostDetailData } from "../../types/posts.types";
 
-const getPosts = async (params: PostListParams): Promise<PostListResponse> => {
+const getPosts = async (params: PostListParams): Promise<PostListData> => {
   const response = await client.get<PostListResponse>("/posts", { params });
 
-  return response.data;
+  return response.data.data;
 };
 
 const getMyPosts = async (
   params: GetMyPostsRequest,
-): Promise<PostListResponse> => {
+): Promise<PostListData> => {
   const response = await client.get<PostListResponse>("/users/me/posts", {
     params,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 const getPost = async (postId: number): Promise<PostDetailData> => {

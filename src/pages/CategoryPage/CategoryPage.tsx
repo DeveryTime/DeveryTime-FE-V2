@@ -78,11 +78,8 @@ const CategoryPage = ({
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number:
-                (response.page ?? response.number ?? 0) * response.size +
-                index +
-                1,
-              category: post.categoryName ?? post.category ?? "",
+              number: response.number * response.size + index + 1,
+              category: post.categoryName,
               title: post.title,
               createdAt: post.createdAt,
             }),
