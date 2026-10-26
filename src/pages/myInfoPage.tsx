@@ -1,5 +1,7 @@
 import { useState } from "react";
+import {useNavigate} from "react-router-dom";
 import InfoContainer from "../components/info/infoContainer";
+import toast from "react-hot-toast";
 import S from "./myInfoPage.style";
 
 // 사용자 정보 타입
@@ -10,7 +12,7 @@ type User = {
   userName: string;
   email: string;
 };
-
+const navigate = useNavigate();
 const Info = () => {
   // 사용자 정보
   const [user] = useState<User>({
@@ -21,6 +23,16 @@ const Info = () => {
     profileImageUrl: "",
   });
 
+  // 로그아웃
+  const handleLogout = () => {
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+
+    toast.success("로그아웃되었습니다.");
+    navigate("/login");
+  };
+
+
   return (
     <S.InfoLayout>
       {/* 왼쪽 메뉴 */}
@@ -28,7 +40,7 @@ const Info = () => {
         <p className="active">내 정보</p>
         <p>내가 쓴 글</p>
         <p>프로필 수정</p>
-        <p>로그아웃</p>
+        <button type="button" onClick={handleLogout}>로그아웃</button>
       </S.Menu>
 
       {/* 오른쪽 내용 */}

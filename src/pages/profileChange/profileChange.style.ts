@@ -20,8 +20,10 @@ const S = {
       font-size: 16px;
       font-weight: 500;
       border-bottom: 2px solid #dddddd;
+        cursor: pointer;
 
-      &:hover {
+
+        &:hover {
         color: #666;
       }
 
