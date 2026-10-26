@@ -13,8 +13,6 @@ const Info = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("accessToken");
     try {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("accessToken");
@@ -24,7 +22,7 @@ const Info = () => {
       return;
     }
 
-    toast.success("로그아웃되었습니다.");
+    toast.custom(<S.LogoutToast>로그아웃 되었습니다.</S.LogoutToast>);
     navigate("/login");
   };
 
