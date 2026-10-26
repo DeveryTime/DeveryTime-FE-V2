@@ -14,8 +14,6 @@ const S = {
     gap: 4px;
 
     margin: 32px auto 0;
-
-    transform: translateX(-80px);
   `,
 
   PageButton: styled.button`
