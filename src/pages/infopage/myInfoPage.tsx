@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {useNavigate} from "react-router-dom";
 import InfoContainer from "../../components/info/infoContainer";
+import toast from "react-hot-toast";
 import profileApi from "../../api/profile/profile.api";
 import getApiErrorMessage from "../../api/errorMessages";
 import type { ProfileData } from "../../api/profile/profile.types";
@@ -11,6 +12,23 @@ const Info = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessToken");
+    try {
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("accessToken");
+    } catch (error) {
+      console.warn("로그아웃 중 토큰 삭제에 실패했습니다.", error);
+      toast.error("로그아웃하지 못했습니다. 다시 시도해 주세요.");
+      return;
+    }
+
+    toast.success("로그아웃되었습니다.");
+    navigate("/login");
+  };
+
   useEffect(() => {
     let isActive = true;
 
@@ -51,7 +69,7 @@ const navigate = useNavigate();
         <p className="active">내 정보</p>
         <p>내가 쓴 글</p>
         <p onClick={() => navigate("/Profile")}>프로필 수정</p>
-        <p>로그아웃</p>
+        <button onClick={handleLogout}>로그아웃</button>
       </S.Menu>
 
       {/* 오른쪽 내용 */}
