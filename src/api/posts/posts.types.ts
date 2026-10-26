@@ -13,9 +13,6 @@ export interface PostListItemType extends PostTableItem {
 }
 
 export type PostSort =
-  | "likes"
-  | "latest"
-  | "views"
   | "createdAt,desc"
   | "viewCount,desc"
   | "likeCount,desc";
@@ -23,11 +20,18 @@ export type PostSort =
 export interface PostListResponseItem {
   id: number;
   title: string;
-  category?: string;
-  categoryName?: string;
-  writerId?: number;
-  likeCount?: number;
+  writerId: number;
+  categoryName: string;
   createdAt: string;
+  likeCount: number;
+}
+
+export interface PostListData {
+  content: PostListResponseItem[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface PostDetailData {

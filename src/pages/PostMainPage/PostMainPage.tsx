@@ -36,9 +36,6 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 정렬 기준별로 화면 제목을 연결한다.
   const sortTitles: Record<PostSort, string> = {
-    likes: "인기순",
-    latest: "최신순",
-    views: "조회순",
     "createdAt,desc": "최신순",
     "viewCount,desc": "조회순",
     "likeCount,desc": "인기순",
@@ -75,11 +72,8 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number:
-                (response.page ?? response.number ?? 0) * response.size +
-                index +
-                1,
-              category: post.categoryName ?? post.category ?? "",
+              number: response.number * response.size + index + 1,
+              category: post.categoryName,
               title: post.title,
               createdAt: post.createdAt,
             }),
