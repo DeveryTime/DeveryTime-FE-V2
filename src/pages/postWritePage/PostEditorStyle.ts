@@ -37,9 +37,18 @@ const S = {
     flex: 0 0 auto; color: #555; font-size: 14px; font-weight: 600;
   `,
   CategorySelect: styled.select`
-    min-width: 0; padding: 9px 34px 9px 12px;
+    flex: 1 1 228px; min-width: 0; max-width: 228px; height: 36px;
+    padding: 0 34px 0 12px; appearance: none;
     border: 1px solid #d8d8d8; border-radius: 6px;
-    background: #fff; color: #222; font: inherit; font-size: 14px;
+    background-color: #fff; color: #222; font: inherit; font-size: 14px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #555 50%),
+      linear-gradient(135deg, #555 50%, transparent 50%);
+    background-position:
+      calc(100% - 13px) 15px,
+      calc(100% - 8px) 15px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
     cursor: pointer;
     &:focus-visible { outline: 2px solid #3769ed; outline-offset: 2px; }
     &:disabled { color: #888; cursor: not-allowed; }

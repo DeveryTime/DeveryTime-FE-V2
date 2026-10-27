@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -101,7 +101,7 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
     },
   });
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (isSubmitting) return;
 
     if (editor && (categoryId || title.trim() || hasMeaningfulContent(editor.getJSON()))) {
@@ -121,8 +121,11 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
     }
 
     onClose();
-  };
-  backHandlerRef.current = handleBack;
+  }, [categoryId, editor, isSubmitting, onClose, title]);
+
+  useEffect(() => {
+    backHandlerRef.current = handleBack;
+  }, [handleBack]);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
