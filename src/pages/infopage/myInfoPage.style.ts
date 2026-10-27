@@ -11,38 +11,36 @@ export const S = {
 
   // 왼쪽 메뉴
   Menu: styled.div`
-      border: 1px solid #cbcbcb;
-      padding: 7px 5px 10px 8px;
-      width: 168px;
-      height: 200px;
-      p,
-      button {
-          margin: 0;
-          padding: 11px 5px;
-          font-family: inherit;
-          font-size: 16px;
-          font-weight: 500;
-          border-bottom: 2px solid #dddddd;
-          cursor: pointer;
-      }
-      button {
-          width: 100%;
-          background: none;
-          border: none;
-          text-align: left;
-          color: inherit;
-      }
-      p {
-          &:hover {
-              color: #666;
-          }
-          &.active {
-              color: #555;
-          }
-          &:last-child {
-              border-bottom: none;
-          }
-      }
+    border: 1px solid #cbcbcb;
+    padding: 7px 5px 10px 8px;
+    width: 168px;
+    height: 200px;
+  `,
+
+  MenuItem: styled.button`
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 11px 5px;
+
+    color: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+    border-bottom: 2px solid #dddddd;
+    cursor: pointer;
+
+    &:hover {
+      color: #666;
+    }
+
+    &[data-active="true"] {
+      color: #555;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
   `,
 
   LogoutToast: styled.div`

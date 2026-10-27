@@ -1,6 +1,7 @@
 import {
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   type ChangeEvent,
 } from "react";
@@ -74,6 +75,16 @@ const PostDetailModal = ({
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
 
+  // 의도적으로 게시글 상태 변경 시점에만 동기화한다.
+  useLayoutEffect(() => {
+    currentPostRef.current = post;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLiked(post.liked ?? false);
+    setLikeCount(post.likeCount ?? 0);
+    setIsLikeLoading(false);
+    setLikeError(null);
+  }, [post.id, post.liked, post.likeCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(
@@ -94,6 +105,12 @@ const PostDetailModal = ({
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
   );
+
+  useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDisplayedPostTitle(post.title);
+    setDisplayedPostContent(post.content);
+  }, [post.id, post.title, post.content]);
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {
