@@ -26,6 +26,8 @@ const S = {
     width: 22px;
     height: 22px;
     padding: 0;
+    border: none;
+    background: transparent;
 
     display: flex;
     align-items: center;
@@ -50,13 +52,6 @@ const S = {
     }
   `,
 
-  PageSummary: styled.p`
-    margin: 8px 0 0;
-    color: ${colors.gray[1000]};
-    font-size: 12px;
-    line-height: 18px;
-    text-align: center;
-  `,
 };
 
 export default S;
