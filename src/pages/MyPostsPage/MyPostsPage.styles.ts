@@ -18,8 +18,35 @@ const S = {
     background: transparent;
   `,
 
+  PageHeader: styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: clamp(7px, 1.2vw, 16px);
+  `,
+
+  BackButton: styled.button`
+    position: relative;
+    left: -32px;
+    padding: 0;
+    color: #000000;
+    background: transparent;
+    font-size: 16px;
+    line-height: 1.4;
+
+    &:hover {
+      color: #555555;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #000000;
+      outline-offset: 2px;
+    }
+  `,
+
   Title: styled.h1`
-    margin: 0 0 clamp(7px, 1.2vw, 16px);
+    margin: 0;
     font-size: clamp(28px, 3.55vw, 48px);
     font-weight: 500;
     line-height: 1.25;
