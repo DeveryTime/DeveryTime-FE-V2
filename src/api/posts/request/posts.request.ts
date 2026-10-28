@@ -18,6 +18,12 @@ export interface UpdatePostRequest {
   content: string;
 }
 
+export interface CreatePostRequest {
+  title: string;
+  content: unknown;
+  categoryId?: number;
+}
+
 export interface UploadPostImageRequest {
   file: File;
   sortOrder?: number;
