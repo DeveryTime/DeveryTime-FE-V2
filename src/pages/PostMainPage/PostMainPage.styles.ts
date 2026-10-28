@@ -13,7 +13,7 @@ const S = {
     }
 
     width: min(1479px, calc(100% - 48px));
-    margin: 108px auto 0;
+    margin: 26px auto 0;
   `,
 
   SortMenuArea: styled.aside`

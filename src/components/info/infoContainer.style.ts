@@ -8,6 +8,8 @@ export const S = {
     min-height: 300px;
     padding: 12px 20px;
     box-sizing: border-box;
+    color: #000000;
+    background-color: transparent;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
   `,
 
@@ -35,6 +37,7 @@ export const S = {
   PostList: styled.div`
     display: flex;
     flex-direction: column;
+    color: #000000;
   `,
 
   // 게시글 하나의 영역
@@ -42,8 +45,13 @@ export const S = {
     display: flex;
     align-items: center;
     min-height: 36px;
+    padding: 0 12px;
     font-size: 16px;
     font-weight: 500;
+
+    &:hover {
+      background-color: transparent;
+    }
   `,
 
   // 게시글 번호
@@ -76,6 +84,12 @@ export const S = {
     text-align: right;
     font-size: 16px;
     font-weight: 500;
+  `,
+
+  Message: styled.p`
+    min-height: 36px;
+    margin: 0;
+    padding: 10px 12px;
   `,
 };
 
