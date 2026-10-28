@@ -13,8 +13,9 @@ import Info from "../pages/infopage/myInfoPage";
 import CategoryPage from "../pages/CategoryPage/CategoryPage";
 import MainLayout from "../components/layout/mainLayout";
 import PostWritePage from "../pages/postWritePage/PostWritePage";
-
+import myPostsPage from "../pages/MyPostsPage/MyPostsPage.tsx";
 import {Navigate} from "react-router-dom";
+
 
 export const router = createBrowserRouter([
   // 네비바가 없는 페이지
@@ -85,6 +86,10 @@ export const router = createBrowserRouter([
       {
         path: "*",
         element: <Navigate to="/posts" replace/>
+      },
+      {
+        path: "/myPostsPage",
+        Component: myPostsPage,
       },
     ],
   },

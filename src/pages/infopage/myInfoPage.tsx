@@ -87,7 +87,7 @@ const Info = () => {
         >
           내가 쓴 글
         </S.MenuItem>
-        <S.MenuItem type="button" data-active="false">
+        <S.MenuItem type="button" data-active="false" onClick={() => navigate("/profile")}>
           프로필 수정
         </S.MenuItem>
         <S.MenuItem
@@ -122,7 +122,7 @@ const Info = () => {
                   {user.name} | {user.schoolNumber}
                 </S.UserName>
 
-                <S.UserIdEmail>{user.userName}</S.UserIdEmail>
+                <S.UserIdEmail>{user.username}</S.UserIdEmail>
                 <S.UserIdEmail>{user.email}</S.UserIdEmail>
               </div>
             </S.UserInfo>

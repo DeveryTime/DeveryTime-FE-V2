@@ -3,6 +3,7 @@ import arrowIcon from "../../assets/arrowIcon.svg";
 import getApiErrorMessage from "../../api/errorMessages";
 import postsApi from "../../api/posts.api";
 import type { PostListResponseItem } from "../../types/posts.types";
+import {useNavigate} from "react-router-dom";
 import S from "./infoContainer.style";
 
 // 게시글 데이터 타입
@@ -12,7 +13,6 @@ type Post = {
   title: string;
   createdAt: string;
 };
-
 const formatPostDate = (dateString: string) => {
   const datePart = dateString.split("T")[0];
 
@@ -22,6 +22,7 @@ const formatPostDate = (dateString: string) => {
 };
 
 const InfoContainer = () => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +76,7 @@ const InfoContainer = () => {
       {/* 제목과 이동 화살표 */}
       <S.SectionTitle>
         <p>내가 쓴 글</p>
-        <S.Arrow src={arrowIcon} alt="이동" />
+        <S.Arrow src={arrowIcon} alt="이동"onClick={() => navigate("/mypostsPage")} />
       </S.SectionTitle>
 
       {/* 게시글 목록 */}

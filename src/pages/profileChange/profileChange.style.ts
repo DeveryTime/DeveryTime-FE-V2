@@ -1,3 +1,4 @@
+
 import styled from "@emotion/styled";
 
 const S = {
@@ -8,44 +9,49 @@ const S = {
     padding: 26px;
   `,
 
+  // 왼쪽 메뉴
   Menu: styled.div`
-      border: 1px solid #cbcbcb;
-      padding: 7px 5px 10px 8px;
-      width: 168px;
-      height: 200px;
-      p,
-      button {
-          margin: 0;
-          padding: 11px 5px;
-          font-family: inherit;
-          font-size: 16px;
-          font-weight: 500;
-          border-bottom: 2px solid #dddddd;
-          cursor: pointer;
-      }
-      button {
-          width: 100%;
-          background: none;
-          border: none;
-          text-align: left;
-          color: inherit;
-      }
-      p {
-          &:hover {
-              color: #666;
-          }
-          &.active {
-              color: #555;
-          }
-          &:last-child {
-              border-bottom: none;
-          }
-      }
+    border: 1px solid #cbcbcb;
+    padding: 7px 5px 10px 8px;
+    width: 168px;
+    height: 200px;
+    box-sizing: border-box;
+  `,
+
+  MenuItem: styled.button`
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 11px 5px;
+    box-sizing: border-box;
+
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+    color: inherit;
+
+    background: none;
+    border: none;
+    border-bottom: 2px solid #dddddd;
+    cursor: pointer;
+
+    &:hover {
+      color: #666;
+    }
+
+    &[data-active="true"] {
+      color: #555;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
   `,
 
   ProfileContainer: styled.div`
     position: relative;
-    width: 918px;
+    width: min(918px, 100%);
     min-height: 700px;
     padding: 12px 20px;
     box-sizing: border-box;
@@ -74,6 +80,7 @@ const S = {
     font-weight: 500;
     color: #999999;
   `,
+
   ProfileImage: styled.div`
     width: 143px;
     height: 143px;

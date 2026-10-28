@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -17,16 +18,13 @@ const Profile = () => {
   // 수정할 아이디
   const [username, setUsername] = useState("");
 
-  // 새로 선택한 프로필 이미지 파일
+  // 새로 선택한 프로필 이미지
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
-
-  // 이미지 미리보기 URL
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // 파일 input에 접근하기 위한 ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 미리보기 URL은 컴포넌트가 사라질 때 해제한다.
+  // 미리보기 URL 정리
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -35,6 +33,7 @@ const Profile = () => {
     };
   }, [previewUrl]);
 
+  // 사용자 프로필 불러오기
   useEffect(() => {
     let isActive = true;
 
@@ -42,10 +41,12 @@ const Profile = () => {
       try {
         const profile = await profileApi.getMyProfile();
 
-        if (isActive) {
-          setUser(profile);
-          setUsername(profile.userName);
-        }
+        if (!isActive) return;
+
+        setUser(profile);
+
+        // API 응답 필드명은 username으로 통일
+        setUsername(profile.username ?? "");
       } catch (requestError) {
         if (isActive) {
           setError(
@@ -78,27 +79,36 @@ const Profile = () => {
     navigate("/login");
   };
 
-  // 아이디가 변경되었는지 확인
+  // 아이디 입력값 검사
+  const trimmedUsername = (username ?? "").trim();
+
   const canSave =
     Boolean(user) &&
-    username.trim() !== user?.userName &&
-    username.trim().length > 0 &&
-    username.trim().length <= 10 &&
+    trimmedUsername.length > 0 &&
+    trimmedUsername.length <= 10 &&
     !isSaving;
 
-  // 이미지 변경
+  // 프로필 이미지 선택
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
-    if (file) {
-      setNewProfileImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+    if (!file) return;
+
+    // 이전에 선택한 파일의 미리보기 URL 정리
+    setPreviewUrl((previousUrl) => {
+      if (previousUrl) {
+        URL.revokeObjectURL(previousUrl);
+      }
+
+      return URL.createObjectURL(file);
+    });
+
+    setNewProfileImage(file);
   };
 
-  // 아이디 변경사항 저장
+  // 아이디 및 프로필 이미지 저장
   const handleSave = async () => {
-    const trimmedUsername = username.trim();
+    const trimmedUsername = (username ?? "").trim();
 
     if (!trimmedUsername) {
       toast.error("아이디를 입력해주세요.");
@@ -110,7 +120,7 @@ const Profile = () => {
       return;
     }
 
-    if (!user) return;
+    if (!user || isSaving) return;
 
     setIsSaving(true);
     setError(null);
@@ -119,18 +129,37 @@ const Profile = () => {
       await profileApi.updateMyProfile({
         username: trimmedUsername,
         deleteProfileImage: false,
-        ...(newProfileImage ? { profileImage: newProfileImage } : {}),
+        ...(newProfileImage
+          ? { profileImage: newProfileImage }
+          : {}),
       });
 
       const updatedProfile = await profileApi.getMyProfile();
+
       setUser(updatedProfile);
-      setUsername(updatedProfile.userName);
+      setUsername(updatedProfile.username ?? "");
       setNewProfileImage(null);
-      setPreviewUrl(null);
+
+      setPreviewUrl((previousUrl) => {
+        if (previousUrl) {
+          URL.revokeObjectURL(previousUrl);
+        }
+
+        return null;
+      });
+
+      // 같은 파일을 다시 선택할 수 있도록 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       toast.success("변경사항이 저장되었습니다.");
     } catch (requestError) {
       setError(
-        getApiErrorMessage(requestError, "프로필을 수정하지 못했습니다."),
+        getApiErrorMessage(
+          requestError,
+          "프로필을 수정하지 못했습니다.",
+        ),
       );
     } finally {
       setIsSaving(false);
@@ -141,89 +170,106 @@ const Profile = () => {
     <S.ProfileLayout>
       {/* 왼쪽 메뉴 */}
       <S.Menu>
-        <p onClick={() => navigate("/info")}>내 정보</p>
-        <p>내가 쓴 글</p>
-        <p className="active">프로필 수정</p>
+        <S.MenuItem
+          type="button"
+          data-active="false"
+          onClick={() => navigate("/info")}>내 정보</S.MenuItem>
 
-        <button type="button" onClick={handleLogout}>
-          로그아웃
-        </button>
+        <S.MenuItem
+          type="button"
+          data-active="false"
+          onClick={() => navigate("/mypostsPage")}>내가 쓴 글</S.MenuItem>
+        <S.MenuItem
+          type="button"
+          data-active="true">프로필 수정</S.MenuItem>
+        <S.MenuItem
+          type="button"
+          data-active="false"
+          onClick={handleLogout}>로그아웃</S.MenuItem>
       </S.Menu>
 
       {/* 프로필 수정 영역 */}
       <S.ProfileContainer>
         <S.ProfileTitle>프로필 수정</S.ProfileTitle>
 
-        {isLoading && <p>사용자 정보를 불러오는 중입니다...</p>}
+        {isLoading && (
+          <p>사용자 정보를 불러오는 중입니다...</p>
+        )}
+
         {error && <p role="alert">{error}</p>}
 
-        {/* 사용자 정보 */}
         {!isLoading && !error && user && (
-          <S.UserInfo>
-            {/* 프로필 이미지 */}
-            <S.ProfileImage
-              role="button"
-              tabIndex={0}
-              aria-label="프로필 이미지 변경"
-              onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  fileInputRef.current?.click();
-                }
-              }}
-            >
-              {previewUrl ? (
-                <img src={previewUrl} alt="프로필 이미지 미리보기" />
-              ) : user.profileImageUrl ? (
-                <img src={user.profileImageUrl} alt="프로필 이미지" />
-              ) : (
-                <span>프로필 이미지</span>
-              )}
-            </S.ProfileImage>
+          <>
+            {/* 사용자 정보 */}
+            <S.UserInfo>
+              <S.ProfileImage
+                role="button"
+                tabIndex={0}
+                aria-label="프로필 이미지 변경"
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+              >
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="프로필 이미지 미리보기"
+                  />
+                ) : user.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt="프로필 이미지"
+                  />
+                ) : (
+                  <span>프로필 이미지</span>
+                )}
+              </S.ProfileImage>
 
-            {/* 숨겨진 이미지 선택 input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              aria-label="프로필 이미지 파일 선택"
-              style={{ display: "none" }}
-              onChange={handleImageChange}
-            />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                aria-label="프로필 이미지 파일 선택"
+                style={{ display: "none" }}
+                onChange={handleImageChange}
+              />
 
+              <div>
+                <S.UserName>
+                  {user.name} | {user.schoolNumber}
+                </S.UserName>
+
+                <S.UserIdEmail>{user.username}</S.UserIdEmail>
+                <S.UserIdEmail>{user.email}</S.UserIdEmail>
+              </div>
+            </S.UserInfo>
+
+            {/* 아이디 수정 */}
             <div>
-              <S.UserName>
-                {user.name} | {user.schoolNumber}
-              </S.UserName>
+              <S.Id>아이디</S.Id>
 
-              <S.UserIdEmail>{user.userName}</S.UserIdEmail>
-              <S.UserIdEmail>{user.email}</S.UserIdEmail>
+              <S.NameInput
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="10글자 이내로 입력해 주세요"
+                maxLength={10}
+              />
             </div>
-          </S.UserInfo>
+
+            {/* 저장 버튼 */}
+            <S.SaveBtn
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={!canSave}
+            >
+              {isSaving ? "저장 중..." : "변경사항 저장"}
+            </S.SaveBtn>
+          </>
         )}
-
-        {/* 아이디 수정 */}
-        {!isLoading && !error && user && (
-          <div>
-            <S.Id>아이디</S.Id>
-
-            <S.NameInput
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="10글자 이내로 입력해 주세요"
-            />
-          </div>
-        )}
-
-        {/* 저장 버튼 */}
-        <S.SaveBtn
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={!canSave}
-        >
-          변경사항 저장
-        </S.SaveBtn>
       </S.ProfileContainer>
     </S.ProfileLayout>
   );

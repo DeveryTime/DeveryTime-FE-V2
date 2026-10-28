@@ -81,7 +81,7 @@ const NavBar = () => {
         {/* 로그인 상태에 따라 프로필 또는 로그인 버튼 표시 */}
         <div>
           {isLoggedIn ? (
-            <Link to="/profile"><S.ProfileImage src={profile} alt="프로필" /></Link>
+            <Link to="/info"><S.ProfileImage src={profile} alt="프로필" /></Link>
           ) : (
             <S.Login to="/login">로그인</S.Login>
           )}
