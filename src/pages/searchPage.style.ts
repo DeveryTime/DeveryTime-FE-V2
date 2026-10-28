@@ -32,6 +32,46 @@ export const S = {
     margin-bottom: 20px;
   `,
 
+  ResultSection: styled.section`
+    margin-top: 24px;
+  `,
+
+  SectionTitle: styled.h2`
+    margin-bottom: 12px;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+  `,
+
+  UserList: styled.ul`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  `,
+
+  UserItem: styled.li`
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+  `,
+
+  UserNickname: styled.span`
+    color: #1e293b;
+    font-weight: 600;
+  `,
+
+  UserUsername: styled.span`
+    color: #94a3b8;
+    font-size: 13px;
+  `,
+
   // 게시글 목록
   ListContainer: styled.div`
     display: flex;
