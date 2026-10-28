@@ -9,30 +9,38 @@ const S = {
   `,
 
   Menu: styled.div`
-    border: 1px solid #cbcbcb;
-    padding: 7px 5px 10px 8px;
-    width: 168px;
-    height: 200px;
-
-    p {
-      margin: 0;
-      padding: 11px 5px;
-      font-size: 16px;
-      font-weight: 500;
-      border-bottom: 2px solid #dddddd;
-
-        &:hover {
-        color: #666;
+      border: 1px solid #cbcbcb;
+      padding: 7px 5px 10px 8px;
+      width: 168px;
+      height: 200px;
+      p,
+      button {
+          margin: 0;
+          padding: 11px 5px;
+          font-family: inherit;
+          font-size: 16px;
+          font-weight: 500;
+          border-bottom: 2px solid #dddddd;
+          cursor: pointer;
       }
-
-      &.active {
-        color: #555;
+      button {
+          width: 100%;
+          background: none;
+          border: none;
+          text-align: left;
+          color: inherit;
       }
-
-      &:last-child {
-        border-bottom: none;
+      p {
+          &:hover {
+              color: #666;
+          }
+          &.active {
+              color: #555;
+          }
+          &:last-child {
+              border-bottom: none;
+          }
       }
-    }
   `,
 
   ProfileContainer: styled.div`

@@ -141,7 +141,7 @@ const Profile = () => {
     <S.ProfileLayout>
       {/* 왼쪽 메뉴 */}
       <S.Menu>
-        <p>내 정보</p>
+        <p onClick={() => navigate("/info")}>내 정보</p>
         <p>내가 쓴 글</p>
         <p className="active">프로필 수정</p>
 

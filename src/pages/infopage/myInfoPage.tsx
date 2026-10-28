@@ -6,7 +6,7 @@ import profileApi from "../../api/profile/profile.api";
 import getApiErrorMessage from "../../api/errorMessages";
 import type { ProfileData } from "../../api/profile/profile.types";
 import S from "./myInfoPage.style";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 const Info = () => {
   const [activeSection, setActiveSection] = useState<"info" | "posts">(
@@ -15,7 +15,6 @@ const Info = () => {
   const [user, setUser] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   const handleLogout = () => {
     try {
@@ -30,6 +29,8 @@ const Info = () => {
     toast.custom(<S.LogoutToast>로그아웃 되었습니다.</S.LogoutToast>);
     navigate("/login");
   };
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isActive = true;

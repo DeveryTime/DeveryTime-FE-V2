@@ -12,6 +12,9 @@ import Landing from "../pages/landingPage/landingPage";
 import Info from "../pages/infopage/myInfoPage";
 import CategoryPage from "../pages/CategoryPage/CategoryPage";
 import MainLayout from "../components/layout/mainLayout";
+import PostWritePage from "../pages/postWritePage/PostWritePage";
+
+import {Navigate} from "react-router-dom";
 
 export const router = createBrowserRouter([
   // 네비바가 없는 페이지
@@ -32,6 +35,7 @@ export const router = createBrowserRouter([
     Component: LoginPage,
   },
 
+
   // 네비바가 필요한 페이지
   {
     element: <MainLayout />,
@@ -50,7 +54,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/PostEditor",
-        element: <PostEditor onClose={() => {}} />,
+        element: <PostEditor userId={0} onClose={() => {}} />,
       },
       {
         path: "/Profile",
@@ -65,6 +69,22 @@ export const router = createBrowserRouter([
         element: (
           <CategoryPage categoryId={0} categoryName="" currentUserId={0} />
         ),
+      },
+      {
+        path: "/post",
+        element: <Navigate to="/posts" replace/>,
+      },
+      {
+        path: "/posts",
+        element: <PostMainPage currentUserId={0}/>
+      },
+      {
+        path: "/posts/new",
+        element: <PostWritePage />
+      },
+      {
+        path: "*",
+        element: <Navigate to="/posts" replace/>
       },
     ],
   },

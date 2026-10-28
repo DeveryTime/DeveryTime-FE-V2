@@ -39,7 +39,10 @@ const LoginPage = () => {
 
     setIsSubmitting(true);
     try {
-      await loginApi({ email: trimmedEmail, password });
+      const { data: {accessToken, refreshToken} } = await loginApi({ email: trimmedEmail, password });
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
       navigate("/main");
     } catch (error: unknown) {
       const message = axios.isAxiosError<AuthApiError>(error)
