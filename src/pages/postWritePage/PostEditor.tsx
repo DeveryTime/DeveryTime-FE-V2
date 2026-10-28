@@ -13,6 +13,7 @@ import client from "../../api/client";
 import S from "./PostEditorStyle";
 
 interface PostEditorProps {
+  userId: number;
   onClose: () => void;
 }
 
@@ -34,11 +35,11 @@ interface PostWriteDraft {
   content: JSONContent;
 }
 
-const POST_WRITE_DRAFT_KEY = "post-write-draft";
+const getPostWriteDraftKey = (userId: number) => `post-write-draft:${userId}`;
 
-const readPostWriteDraft = (): PostWriteDraft | null => {
+const readPostWriteDraft = (userId: number): PostWriteDraft | null => {
   try {
-    const rawDraft = localStorage.getItem(POST_WRITE_DRAFT_KEY);
+    const rawDraft = localStorage.getItem(getPostWriteDraftKey(userId));
     if (!rawDraft) return null;
 
     const draft: unknown = JSON.parse(rawDraft);
@@ -74,8 +75,8 @@ const hasMeaningfulContent = (node: EditorNode): boolean => {
   return node.content?.some(hasMeaningfulContent) ?? false;
 };
 
-const PostEditor = ({ onClose }: PostEditorProps) => {
-  const [initialDraft] = useState(readPostWriteDraft);
+const PostEditor = ({ userId, onClose }: PostEditorProps) => {
+  const [initialDraft] = useState(() => readPostWriteDraft(userId));
   const [categoryId, setCategoryId] = useState<PostCategoryId | "">(
     initialDraft?.categoryId ?? "",
   );
@@ -84,6 +85,22 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const backHandlerRef = useRef<() => void>(onClose);
+  const hasSubmittedRef = useRef(false);
+
+  const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
+    try {
+      localStorage.setItem(getPostWriteDraftKey(draftUserId), JSON.stringify(draft));
+    } catch {
+      // Draft storage is best-effort; it must not block navigation or submit success.
+    }
+  };
+  const removeDraft = (draftUserId: number) => {
+    try {
+      localStorage.removeItem(getPostWriteDraftKey(draftUserId));
+    } catch {
+      // Draft cleanup must not block navigation or submit success.
+    }
+  };
 
   const editor = useEditor({
     extensions: [
@@ -100,6 +117,8 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
       attributes: { class: "tiptap-editor" },
     },
   });
+  const latestDraftRef = useRef({ userId, categoryId, title, editor });
+  latestDraftRef.current = { userId, categoryId, title, editor };
 
   const handleBack = useCallback(() => {
     if (isSubmitting) return;
@@ -111,17 +130,25 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
         content: editor.getJSON(),
       };
 
-      try {
-        localStorage.setItem(POST_WRITE_DRAFT_KEY, JSON.stringify(draft));
-      } catch {
-        alert("임시저장에 실패했습니다. 브라우저 저장 공간을 확인해주세요.");
-      }
+      saveDraft(draft, userId);
     } else {
-      localStorage.removeItem(POST_WRITE_DRAFT_KEY);
+      removeDraft(userId);
     }
 
     onClose();
-  }, [categoryId, editor, isSubmitting, onClose, title]);
+  }, [categoryId, editor, isSubmitting, onClose, title, userId]);
+
+  useEffect(() => () => {
+    if (hasSubmittedRef.current) return;
+    const latest = latestDraftRef.current;
+    const currentContent = latest.editor?.getJSON();
+    if (!currentContent) return;
+    if (latest.categoryId || latest.title.trim() || hasMeaningfulContent(currentContent)) {
+      saveDraft({ categoryId: latest.categoryId, title: latest.title, content: currentContent }, latest.userId);
+    } else {
+      removeDraft(latest.userId);
+    }
+  }, []);
 
   useEffect(() => {
     backHandlerRef.current = handleBack;
@@ -201,7 +228,8 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
     void client
       .post("/posts", { title: title.trim(), content, categoryId })
       .then(() => {
-        localStorage.removeItem(POST_WRITE_DRAFT_KEY);
+        hasSubmittedRef.current = true;
+        removeDraft(userId);
         alert("게시글이 작성되었습니다.");
         onClose();
       })

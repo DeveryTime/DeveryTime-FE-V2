@@ -24,7 +24,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
     null,
@@ -136,7 +136,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
     } catch {
-      setDetailError("게시글을 삭제하지 못했습니다.");
+      throw new Error("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -200,6 +200,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
               detailRequestId.current += 1;
               setSelectedPost(null);
               setIsDetailLoading(false);
+              setDetailError(null);
             }}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
