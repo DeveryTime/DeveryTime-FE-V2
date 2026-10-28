@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import S from "./CategoryPage.styles";
 
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
@@ -14,7 +15,6 @@ import type {
 } from "../../types/posts.types";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
-import getApiErrorMessage from "../../api/errorMessages";
 
 interface CategoryPageProps {
   categoryId: number;
@@ -27,11 +27,14 @@ const CategoryPage = ({
   categoryName,
   currentUserId,
 }: CategoryPageProps) => {
-  const [selectedSort, setSelectedSort] = useState<PostSort>("latest");
+  const navigate = useNavigate();
+  const [selectedSort, setSelectedSort] =
+    useState<PostSort>("createdAt,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const previousCategoryId = useRef(categoryId);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
@@ -46,6 +49,8 @@ const CategoryPage = ({
       previousCategoryId.current = categoryId;
 
       if (currentPage !== 1) {
+        // 카테고리 변경 시 첫 페이지로 초기화하는 의도적인 상태 변경이다.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         return;
       }
@@ -73,8 +78,8 @@ const CategoryPage = ({
           response.content.map(
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
-              number: response.page * response.size + index + 1,
-              category: post.category,
+              number: response.number * response.size + index + 1,
+              category: post.categoryName,
               title: post.title,
               createdAt: post.createdAt,
             }),
@@ -82,12 +87,11 @@ const CategoryPage = ({
         );
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
+        setTotalElements(response.totalElements);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
-      } catch (error) {
+      } catch {
         if (isActive) {
-          setError(
-            getApiErrorMessage(error, "카테고리 게시글을 불러오지 못했습니다."),
-          );
+          setError("카테고리 게시글을 불러오지 못했습니다.");
         }
       } finally {
         if (isActive) {
@@ -104,6 +108,11 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
+    if (!localStorage.getItem("accessToken")) {
+      navigate("/login");
+      return;
+    }
+
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -115,14 +124,12 @@ const CategoryPage = ({
       }
 
       setSelectedPost(postDetail);
-    } catch (error) {
+    } catch {
       if (requestId !== detailRequestId.current) {
         return;
       }
 
-      setDetailError(
-        getApiErrorMessage(error, "게시글 상세 정보를 불러오지 못했습니다."),
-      );
+      setDetailError("게시글 상세 정보를 불러오지 못했습니다.");
     } finally {
       if (requestId === detailRequestId.current) {
         setIsDetailLoading(false);
@@ -139,10 +146,8 @@ const CategoryPage = ({
       );
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
-    } catch (error) {
-      setDetailError(
-        getApiErrorMessage(error, "게시글을 삭제하지 못했습니다."),
-      );
+    } catch {
+      setDetailError("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -175,8 +180,8 @@ const CategoryPage = ({
 
       <S.Content>
         <S.Title>{categoryName}</S.Title>
-        <S.Description>{categoryName} 전공 게시판입니다.</S.Description>
-        <S.CategoryMeta>게시글 {posts.length}개</S.CategoryMeta>
+        <S.Description>{categoryName} 게시판입니다.</S.Description>
+        <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
         {isLoading && <p>카테고리 게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
@@ -197,6 +202,7 @@ const CategoryPage = ({
 
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}

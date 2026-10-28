@@ -21,7 +21,7 @@ const S = {
       font-weight: 500;
       border-bottom: 2px solid #dddddd;
 
-      &:hover {
+        &:hover {
         color: #666;
       }
 

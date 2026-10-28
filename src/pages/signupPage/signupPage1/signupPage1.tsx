@@ -4,15 +4,16 @@ import S from "../../BackgroundAct/BackgroundActStyle";
 import Background from "../../BackgroundAct/BackgroundAct";
 import  InputBox  from "../../../components/loginPage/inputBox/InputBox";
 import SignupS from "./signupPageStyle1";
+import { readSignupDraft, saveSignupDraft } from "../signupDraft";
 
 const SignupPage1 = () => {
   const navigate = useNavigate();
 
-  const [schoolNumber, setSchoolNumber] = useState<string>("");
-  const [name, setName] = useState<string>("");
-  const [username, setUsername] = useState<string>("");
+  const [schoolNumber, setSchoolNumber] = useState<string>(() => readSignupDraft().schoolNumber ?? "");
+  const [name, setName] = useState<string>(() => readSignupDraft().name ?? "");
+  const [username, setUsername] = useState<string>(() => readSignupDraft().username ?? "");
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     // 학번 검사
     if (schoolNumber.trim() === "") {
       alert("학번을 입력해주세요.");
@@ -51,6 +52,12 @@ const SignupPage1 = () => {
       return;
     }
 
+    // 회원가입 단계 연결: 1단계 입력을 저장한 뒤 이메일 인증 단계로 이동합니다.
+    saveSignupDraft({
+      schoolNumber: schoolNumber.trim(),
+      name: name.trim(),
+      username: username.trim(),
+    });
     navigate("/signup/2");
   };
 
@@ -68,21 +75,34 @@ const SignupPage1 = () => {
             placeholder="학번"
             ariaLabel="학번"
             value={schoolNumber}
-            onChange={(e) => setSchoolNumber(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSchoolNumber(value);
+              // 회원가입 단계 연결: 입력 중에도 1단계 정보를 임시 저장합니다.
+              saveSignupDraft({ schoolNumber: value });
+            }}
           />
 
           <InputBox
             placeholder="이름"
             ariaLabel="이름"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setName(value);
+              saveSignupDraft({ name: value });
+            }}
           />
 
           <InputBox
             placeholder="아이디"
             ariaLabel="아이디"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setUsername(value);
+              saveSignupDraft({ username: value });
+            }}
           />
 
           <SignupS.Button type="button" onClick={handleNext}>

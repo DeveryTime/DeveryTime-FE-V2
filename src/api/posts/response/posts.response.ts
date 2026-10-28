@@ -1,5 +1,6 @@
 import type {
   PostListResponseItem,
+  PostListData,
   PostDetailResponseData,
   UploadPostImageData,
 } from "../posts.types";
@@ -38,6 +39,8 @@ export interface CreatePostErrorResponse {
     code: CreatePostErrorCode;
     message: string;
   };
+  success: boolean;
+  data: PostListData;
 }
 
 export interface UpdatePostResponse {

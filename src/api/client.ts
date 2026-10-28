@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAccessToken } from "./authSession";
 
 const client = axios.create({
   baseURL: "/api",
@@ -8,10 +9,7 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
-  const accessToken =
-    typeof window === "undefined"
-      ? null
-      : window.localStorage.getItem("accessToken");
+  const accessToken = getAccessToken();
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;

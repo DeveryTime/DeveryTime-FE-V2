@@ -8,8 +8,7 @@ import { Placeholder } from "@tiptap/extensions";
 import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
-import { createPostApi } from "../../api/postApi";
-import type { CreatePostErrorResponse } from "../../types/posts.types";
+import client from "../../api/client";
 
 import S from "./PostEditorStyle";
 
@@ -209,7 +208,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     if (url) editor.chain().focus().setImage({ src: url }).run();
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!categoryId) {
       alert("카테고리를 선택해주세요.");
       return;
@@ -225,30 +224,22 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     }
 
     setIsSubmitting(true);
-    try {
-      // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
-      const response = await createPostApi({
-        title: title.trim(),
-        content,
-        categoryId,
-      });
-      if (!response.success) {
-        alert(response.message || "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
-        return;
-      }
-
-      hasSubmittedRef.current = true;
-      removeDraft(userId);
-      alert("게시글이 작성되었습니다.");
-      onClose();
-    } catch (error: unknown) {
-      const message = axios.isAxiosError<CreatePostErrorResponse>(error)
-        ? error.response?.data?.error?.message
-        : undefined;
-      alert(message ?? "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
+    void client
+      .post("/posts", { title: title.trim(), content, categoryId })
+      .then(() => {
+        hasSubmittedRef.current = true;
+        removeDraft(userId);
+        alert("게시글이 작성되었습니다.");
+        onClose();
+      })
+      .catch((error: unknown) => {
+        const message = axios.isAxiosError<{ error?: { message?: string } }>(error)
+          ? error.response?.data.error?.message
+          : undefined;
+        alert(message ?? "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   return (

@@ -22,12 +22,36 @@ const S = {
   Title: styled.h2`
     margin: 0; font-size: 18px; font-weight: 700; color: #222;
   `,
-  CloseButton: styled.button`
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  BackButton: styled.button`
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
     width: 30px; height: 30px; display: flex; align-items: center;
     justify-content: center; padding: 0; border: 0; background: transparent;
     font-size: 20px; cursor: pointer; color: #333;
     &:hover { color: #000; }
+    &:disabled { color: #aaa; cursor: not-allowed; }
+  `,
+  CategoryField: styled.div`
+    display: flex; align-items: center; gap: 12px; padding: 12px 18px 0;
+  `,
+  CategoryLabel: styled.label`
+    flex: 0 0 auto; color: #555; font-size: 14px; font-weight: 600;
+  `,
+  CategorySelect: styled.select`
+    flex: 1 1 228px; min-width: 0; max-width: 228px; height: 36px;
+    padding: 0 34px 0 12px; appearance: none;
+    border: 1px solid #d8d8d8; border-radius: 6px;
+    background-color: #fff; color: #222; font: inherit; font-size: 14px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #555 50%),
+      linear-gradient(135deg, #555 50%, transparent 50%);
+    background-position:
+      calc(100% - 13px) 15px,
+      calc(100% - 8px) 15px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    &:focus-visible { outline: 2px solid #3769ed; outline-offset: 2px; }
+    &:disabled { color: #888; cursor: not-allowed; }
   `,
   TitleInput: styled.input`
     width: 100%; box-sizing: border-box; padding: 14px 18px; border: 0;

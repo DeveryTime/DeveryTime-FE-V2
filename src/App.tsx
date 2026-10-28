@@ -1,11 +1,7 @@
-import Info from "./pages/myInfoPage";
+import Info from "./pages/infopage/myInfoPage";
 
 function App() {
-  return (
-    <div>
-      <Info />
-    </div>
-  );
+  return <Info />;
 }
 
 export default App;
