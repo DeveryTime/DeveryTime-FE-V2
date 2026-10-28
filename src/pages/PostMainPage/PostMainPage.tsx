@@ -175,6 +175,11 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       </S.SortMenuArea>
 
       <S.Content>
+        <S.ContentHeader>
+          {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
+          <S.Title>{sortTitles[selectedSort]}</S.Title>
+          <S.WriteButton type="button">글쓰기</S.WriteButton>
+        </S.ContentHeader>
         {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
         <S.PageHeader>
           <S.Title>{sortTitles[selectedSort]}</S.Title>
