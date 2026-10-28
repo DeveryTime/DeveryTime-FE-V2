@@ -117,13 +117,17 @@ const PostEditor = ({ onClose }: PostEditorProps) => {
     setIsSubmitting(true);
     try {
       // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
-      await createPostApi({ title: title.trim(), content });
+      const response = await createPostApi({ title: title.trim(), content });
+      if (!response.success) {
+        alert(response.message || "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
       alert("게시글이 작성되었습니다.");
       onClose();
     } catch (error: unknown) {
       if (axios.isAxiosError<CreatePostErrorResponse>(error)) {
         alert(
-          error.response?.data.error?.message ??
+          error.response?.data?.error?.message ??
             "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.",
         );
       } else {
