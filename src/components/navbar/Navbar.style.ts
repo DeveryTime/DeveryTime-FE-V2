@@ -124,10 +124,14 @@ const S = {
   `,
 
   ProfileImage: styled.img`
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-  `,
+   width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  display: block;
+  object-fit: cover;
+  flex-shrink: 0;
+  `
 };
 
 export default S;
