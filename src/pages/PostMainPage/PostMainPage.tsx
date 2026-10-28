@@ -161,8 +161,11 @@ const PostMainPage = () => {
       </S.SortMenuArea>
 
       <S.Content>
-        {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
-        <S.Title>{sortTitles[selectedSort]}</S.Title>
+        <S.ContentHeader>
+          {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
+          <S.Title>{sortTitles[selectedSort]}</S.Title>
+          <S.WriteButton type="button">글쓰기</S.WriteButton>
+        </S.ContentHeader>
 
         {isLoading && <p>게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
