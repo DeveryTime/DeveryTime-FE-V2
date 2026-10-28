@@ -72,7 +72,7 @@ const MyPostsPage = () => {
           return;
         }
 
-        const responsePage = response.page ?? currentPage - 1;
+        const responsePage = response.number;
         const nextTotalPages = Math.max(1, response.totalPages);
 
         setPosts(
@@ -80,7 +80,7 @@ const MyPostsPage = () => {
             (post: PostListResponseItem, index: number) => ({
               id: post.id,
               number: responsePage * response.size + index + 1,
-              category: post.category,
+              category: post.categoryName,
               title: post.title,
               createdAt: formatPostDate(post.createdAt),
             }),

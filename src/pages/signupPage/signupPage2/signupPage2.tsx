@@ -92,13 +92,6 @@ const SignupPage2 = () => {
     return () => window.clearTimeout(timer);
   }, [time]);
 
-  // 인증번호 만료 처리
-  useEffect(() => {
-    if (time !== 0) return;
-
-    setVerificationCode("");
-  }, [time]);
-
   // 남은 시간 표시
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
@@ -226,7 +219,7 @@ const SignupPage2 = () => {
               inputMode="numeric"
               placeholder="인증번호 입력"
               aria-label="인증번호"
-              value={verificationCode}
+              value={time > 0 ? verificationCode : ""}
               onChange={handleVerificationCode}
               maxLength={6}
             />

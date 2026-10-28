@@ -118,7 +118,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     },
   });
   const latestDraftRef = useRef({ userId, categoryId, title, editor });
-  latestDraftRef.current = { userId, categoryId, title, editor };
+
+  useEffect(() => {
+    latestDraftRef.current = { userId, categoryId, title, editor };
+  }, [categoryId, editor, title, userId]);
 
   const handleBack = useCallback(() => {
     if (isSubmitting) return;

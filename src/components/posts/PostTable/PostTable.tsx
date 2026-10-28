@@ -6,6 +6,20 @@ interface PostTableProps {
   onPostClick: (postId: number) => void;
 }
 
+const formatPostDate = (dateString: string) => {
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateString;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}.${month}.${day}`;
+};
+
 const PostTable = ({ posts, onPostClick }: PostTableProps) => {
   return (
     // 게시글 번호, 카테고리, 제목, 작성일을 표 형태로 표시한다.
@@ -40,7 +54,7 @@ const PostTable = ({ posts, onPostClick }: PostTableProps) => {
             <S.TableCell> {post.number} </S.TableCell>
             <S.TableCell> {post.category} </S.TableCell>
             <S.TableCell> {post.title} </S.TableCell>
-            <S.TableCell> {post.createdAt} </S.TableCell>
+            <S.TableCell> {formatPostDate(post.createdAt)} </S.TableCell>
           </S.TableRow>
         ))}
       </tbody>

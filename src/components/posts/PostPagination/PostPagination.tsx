@@ -85,12 +85,6 @@ const PostPagination = ({
           <ChevronsRight aria-hidden="true" />
         </S.PageButton>
       </S.PaginationContainer>
-
-      {totalPages > 0 && (
-        <S.PageSummary role="status">
-          현재 페이지 {currentPage} / 전체 페이지 {totalPages}
-        </S.PageSummary>
-      )}
     </>
   );
 };

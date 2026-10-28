@@ -19,30 +19,31 @@ const S = {
     width: clamp(11px, 1.6vw, 22px);
     height: clamp(12px, 1.6vw, 22px);
     padding: 0;
+    border: none;
+    background: transparent;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    color: ${colors.gray[0]};
-    background-color: ${colors.gray[1000]};
+    color: ${colors.gray[1000]};
     font-size: clamp(8px, 1.1vw, 15px);
     line-height: 1;
     border-radius: 0;
 
     &:hover:not(:disabled) {
-      background-color: ${colors.gray[700]};
+      color: ${colors.blue[500]};
     }
 
     &[aria-current="page"] {
-      color: ${colors.gray[0]};
+      color: ${colors.blue[500]};
       font-weight: 700;
     }
 
     &:disabled {
-      color: ${colors.gray[0]};
-      background-color: ${colors.gray[1000]};
-      cursor: default;
+      color: ${colors.gray[400]};
+      background: transparent;
+      cursor: not-allowed;
     }
 
     svg {
@@ -51,14 +52,6 @@ const S = {
     }
   `,
 
-  PageSummary: styled.p`
-    display: none;
-    margin: 8px 0 0;
-    color: ${colors.gray[1000]};
-    font-size: 12px;
-    line-height: 18px;
-    text-align: center;
-  `,
 };
 
 export default S;
