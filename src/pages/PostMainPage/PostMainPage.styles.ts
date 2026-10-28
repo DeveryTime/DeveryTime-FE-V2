@@ -28,6 +28,13 @@ const S = {
     min-width: 0;
   `,
 
+  PageHeader: styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  `,
+
   Title: styled.h1`
     margin: 0 0 16px;
     font-size: 48px;

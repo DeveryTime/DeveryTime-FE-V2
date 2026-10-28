@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
@@ -9,6 +10,7 @@ import type {
   PostTableItem,
 } from "../../types/posts.types";
 import S from "./PostMainPage.styles";
+import Button from "../../components/common/Button/Button";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
@@ -18,13 +20,14 @@ interface PostMainPageProps {
 }
 
 const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
+  const navigate = useNavigate();
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
   const [selectedSort, setSelectedSort] =
     useState<PostSort>("likeCount,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
     null,
@@ -136,7 +139,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
     } catch {
-      setDetailError("게시글을 삭제하지 못했습니다.");
+      throw new Error("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -173,7 +176,10 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
       <S.Content>
         {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
-        <S.Title>{sortTitles[selectedSort]}</S.Title>
+        <S.PageHeader>
+          <S.Title>{sortTitles[selectedSort]}</S.Title>
+          <Button onClick={() => navigate("/posts/new")}>글쓰기</Button>
+        </S.PageHeader>
 
         {isLoading && <p>게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
@@ -200,6 +206,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
               detailRequestId.current += 1;
               setSelectedPost(null);
               setIsDetailLoading(false);
+              setDetailError(null);
             }}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}
