@@ -34,6 +34,9 @@ const PostTable = ({ posts, onPostClick }: PostTableProps) => {
       </thead>
 
       <tbody>
+        <S.TableSpacerRow aria-hidden="true">
+          <S.TableSpacerCell colSpan={4} />
+        </S.TableSpacerRow>
         {posts.map((post) => (
           // 행을 클릭하면 선택한 게시글의 ID를 부모 컴포넌트에 전달한다.
           <S.TableRow
@@ -42,7 +45,7 @@ const PostTable = ({ posts, onPostClick }: PostTableProps) => {
             tabIndex={0}
 
             onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
+              if (event.key === "Enter" || event.key == " ") {
                 event.preventDefault();
                 onPostClick(post.id);
               }

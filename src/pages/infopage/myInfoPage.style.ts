@@ -15,30 +15,43 @@ export const S = {
     padding: 7px 5px 10px 8px;
     width: 168px;
     height: 200px;
+  `,
 
-    p {
-      margin: 0;
-      padding: 11px 5px;
+  MenuItem: styled.button`
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 11px 5px;
 
-      font-size: 16px;
-      font-weight: 500;
-      border-bottom: 2px solid #dddddd;
-      cursor: pointer;
+    color: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+    border-bottom: 2px solid #dddddd;
+    cursor: pointer;
 
-      &:hover {
-        color: #666;
-      }
+    &:hover {
+      color: #666;
+    }
 
-      &.active {
-        color: #555;
-      }
+    &[data-active="true"] {
+      color: #555;
+    }
 
-      &:last-child {
-        border-bottom: none;
-      }
+    &:last-child {
+      border-bottom: none;
     }
   `,
 
+  LogoutToast: styled.div`
+  padding: 16px 24px;
+  background-color: #ffffff;
+  color: #333333;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  font-weight: 500;
+`,
   // 내 정보 영역
   InfoContainer: styled.div`
     position: relative;

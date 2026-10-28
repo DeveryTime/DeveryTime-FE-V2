@@ -28,11 +28,39 @@ const S = {
     min-width: 0;
   `,
 
+  ContentHeader: styled.div`
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  `,
+
   Title: styled.h1`
     margin: 0 0 16px;
     font-size: 48px;
     font-weight: 600;
     line-height: 1.3;
+  `,
+
+  WriteButton: styled.button`
+    flex: 0 0 auto;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 20px;
+    background: #3769ed;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #2f5edc;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #244fc1;
+      outline-offset: 3px;
+    }
   `,
 };
 

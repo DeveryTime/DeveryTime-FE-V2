@@ -4,7 +4,7 @@ import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import type {
-  PostDetailResponseData,
+  PostDetailData,
   PostListResponseItem,
   PostSort,
   PostTableItem,
@@ -21,14 +21,16 @@ interface PostMainPageProps {
 const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
   const navigate = useNavigate();
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
-  const [selectedSort, setSelectedSort] = useState<PostSort>("likeCount,desc");
+  const [selectedSort, setSelectedSort] =
+    useState<PostSort>("likeCount,desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] =
-    useState<PostDetailResponseData | null>(null);
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
+    null,
+  );
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -36,9 +38,9 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 정렬 기준별로 화면 제목을 연결한다.
   const sortTitles: Record<PostSort, string> = {
-    "likeCount,desc": "인기순",
     "createdAt,desc": "최신순",
     "viewCount,desc": "조회순",
+    "likeCount,desc": "인기순",
   };
 
   // 정렬 기준과 페이지가 바뀌면 서버에서 해당 목록을 다시 조회한다.
@@ -99,11 +101,6 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 표의 게시글을 선택하면 상세 정보를 조회한다.
   const handlePostClick = async (postId: number) => {
-    if (!localStorage.getItem("accessToken")) {
-      navigate("/login");
-      return;
-    }
-
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -141,7 +138,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       setSelectedPost(null);
       setReloadKey((current) => current + 1);
     } catch {
-      setDetailError("게시글을 삭제하지 못했습니다.");
+      throw new Error("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -177,8 +174,16 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       </S.SortMenuArea>
 
       <S.Content>
-        {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
-        <S.Title>{sortTitles[selectedSort]}</S.Title>
+        <S.ContentHeader>
+          {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
+          <S.Title>{sortTitles[selectedSort]}</S.Title>
+          <S.WriteButton
+            type="button"
+            onClick={() => navigate("/posts/new")}
+          >
+            글쓰기
+          </S.WriteButton>
+        </S.ContentHeader>
 
         {isLoading && <p>게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}
@@ -197,6 +202,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {/* 게시글을 선택했을 때만 상세 모달을 표시한다. */}
         {selectedPost && (
           <PostDetailModal
+            key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
             isMyPost={selectedPost.writerId === currentUserId}
@@ -204,6 +210,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
               detailRequestId.current += 1;
               setSelectedPost(null);
               setIsDetailLoading(false);
+              setDetailError(null);
             }}
             onDelete={handlePostDelete}
             onUpdate={handlePostUpdate}

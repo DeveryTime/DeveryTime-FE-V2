@@ -1,39 +1,40 @@
 import type {
-  PostListResponseItem,
+  PostListData,
   PostDetailResponseData,
   UploadPostImageData,
 } from "../posts.types";
 
-export interface PageSort {
-  empty: boolean;
-  sorted: boolean;
-  unsorted: boolean;
-}
-
-export interface PostPageData {
-  content: PostListResponseItem[];
-  empty: boolean;
-  first: boolean;
-  last: boolean;
-  number: number;
-  numberOfElements: number;
-  pageable: {
-    offset: number;
-    pageNumber: number;
-    pageSize: number;
-    paged: boolean;
-    sort: PageSort;
-    unpaged: boolean;
-  };
-  size: number;
-  sort: PageSort;
-  totalElements: number;
-  totalPages: number;
-}
-
 export interface PostListResponse {
   success: boolean;
-  data: PostPageData;
+  data: PostListData;
+}
+
+export interface CreatePostData {
+  id: number;
+  title: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CreatePostResponse {
+  success: boolean;
+  data: CreatePostData;
+  message: string;
+}
+
+export type CreatePostErrorCode =
+  | "USER_NOT_FOUND"
+  | "CATEGORY_NOT_FOUND"
+  | "UNAUTHORIZED"
+  | "VALIDATION_ERROR"
+  | "INTERNAL_SERVER_ERROR";
+
+export interface CreatePostErrorResponse {
+  success: false;
+  error: {
+    code: CreatePostErrorCode;
+    message: string;
+  };
 }
 
 export interface UpdatePostResponse {

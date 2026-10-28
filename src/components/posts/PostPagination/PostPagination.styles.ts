@@ -1,30 +1,23 @@
 import styled from "@emotion/styled";
 
-import  colors from "../../../styles/tokens/colors";
-
+import colors from "../../../styles/tokens/colors";
 
 const S = {
-  PaginationWrapper: styled.div`
-    width: 360px;
-    margin: 32px auto 0;
-    transform: translateX(-80px);
-  `,
-
   PaginationContainer: styled.nav`
-    width: 100%;
-    height: 22px;
+    width: fit-content;
+    height: clamp(12px, 1.6vw, 22px);
 
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
 
-    margin: 0;
+    margin: clamp(33px, 3.8vw, 52px) auto 0;
   `,
 
   PageButton: styled.button`
-    width: 22px;
-    height: 22px;
+    width: clamp(11px, 1.6vw, 22px);
+    height: clamp(12px, 1.6vw, 22px);
     padding: 0;
     border: none;
     background: transparent;
@@ -34,8 +27,9 @@ const S = {
     justify-content: center;
 
     color: ${colors.gray[1000]};
-    font-size: 16px;
+    font-size: clamp(8px, 1.1vw, 15px);
     line-height: 1;
+    border-radius: 0;
 
     &:hover:not(:disabled) {
       color: ${colors.blue[500]};
@@ -48,7 +42,13 @@ const S = {
 
     &:disabled {
       color: ${colors.gray[400]};
+      background: transparent;
       cursor: not-allowed;
+    }
+
+    svg {
+      width: 70%;
+      height: 70%;
     }
   `,
 

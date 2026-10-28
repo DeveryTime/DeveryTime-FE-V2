@@ -11,14 +11,14 @@ import type {
 } from "./request/posts.request";
 import type {
   PostDetailResponse,
-  PostPageData,
   PostListResponse,
   UpdatePostResponse,
   UploadPostImageResponse,
 } from "./response/posts.response";
-import type { PostDetailResponseData } from "./posts.types";
+import type { PostImage, PostListData } from "./posts.types";
+import type { PostDetailData } from "../../types/posts.types";
 
-const getPosts = async (params: PostListParams): Promise<PostPageData> => {
+const getPosts = async (params: PostListParams): Promise<PostListData> => {
   const response = await client.get<PostListResponse>("/posts", { params });
 
   return response.data.data;
@@ -26,7 +26,7 @@ const getPosts = async (params: PostListParams): Promise<PostPageData> => {
 
 const getMyPosts = async (
   params: GetMyPostsRequest,
-): Promise<PostPageData> => {
+): Promise<PostListData> => {
   const response = await client.get<PostListResponse>("/users/me/posts", {
     params,
   });
@@ -34,12 +34,26 @@ const getMyPosts = async (
   return response.data.data;
 };
 
-const getPost = async (
-  postId: number,
-): Promise<PostDetailResponseData> => {
+const getPost = async (postId: number): Promise<PostDetailData> => {
   const response = await client.get<PostDetailResponse>(`/posts/${postId}`);
+  const { data } = response.data;
 
-  return response.data.data;
+  return {
+    id: data.id,
+    title: data.title,
+    content: data.content,
+    status: data.status,
+    viewCount: data.viewCount,
+    writerId: data.writer.userId,
+    writerNickname: data.writer.nickname,
+    writerProfileImageUrl: data.writer.profileImageUrl,
+    categoryName: data.category.name,
+    imageUrls: data.images.map((image: PostImage) => image.imageUrl),
+    likeCount: data.likeCount ?? 0,
+    liked: data.liked ?? false,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
 };
 
 const likePost = (postId: number): Promise<PostLikeData> =>
@@ -67,6 +81,7 @@ const uploadPostImage = async (
   const response = await client.post<UploadPostImageResponse>(
     `/posts/${postId}/images`,
     formData,
+    { headers: { "content-Type": undefined } },
   );
 
   return response.data.data;

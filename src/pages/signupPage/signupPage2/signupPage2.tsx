@@ -1,10 +1,19 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import S from "../../BackgroundAct/BackgroundActStyle";
 import Background from "../../BackgroundAct/BackgroundAct";
 import Signup2S from "../signupPage2/signupPageStyle2";
+import {
+  sendEmailVerificationApi,
+  verifyEmailApi,
+} from "../../../api/authApi";
+import type { AuthApiError } from "../../../types/auth";
+import { readSignupDraft, saveSignupDraft } from "../signupDraft";
+
+const VERIFICATION_DURATION_SECONDS = 3 * 60;
 
 const isValidSchoolEmail = (value: string) => {
   const [localPart, domain, ...extraParts] = value.trim().split("@");
@@ -23,48 +32,67 @@ const isValidSchoolEmail = (value: string) => {
 const SignupPage2 = () => {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState<string>("");
+  const [email, setEmail] = useState<string>(
+    () => readSignupDraft().email ?? "",
+  );
   const [verificationCode, setVerificationCode] = useState<string>("");
   const [time, setTime] = useState<number>(0);
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // 인증번호 받기
-  const handleSendCode = () => {
-    if (email.trim() === "") {
+  const handleSendCode = async () => {
+    if (isSending) return;
+
+    const trimmedEmail = email.trim();
+
+    if (trimmedEmail === "") {
       alert("이메일을 입력해주세요.");
       return;
     }
 
-    if (!isValidSchoolEmail(email)) {
+    if (!isValidSchoolEmail(trimmedEmail)) {
       alert("학교 이메일(@dsm.hs.kr)을 입력해주세요.");
       return;
     }
 
-    setVerificationCode("");
-    setTime(300);
+    setIsSending(true);
 
-    // TODO: 백엔드 인증번호 API 연결
-    alert("인증번호가 전송되었습니다.");
+    try {
+      await sendEmailVerificationApi({ email: trimmedEmail });
+
+      saveSignupDraft({
+        email: trimmedEmail,
+        emailVerified: false,
+      });
+
+      setVerificationCode("");
+      // 인증번호 발송 API가 성공한 뒤 3분(180초) 타이머를 시작합니다.
+      setTime(VERIFICATION_DURATION_SECONDS);
+      alert("인증번호가 전송되었습니다.");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError<AuthApiError>(error)
+        ? error.response?.data.error.message
+        : undefined;
+
+      alert(message ?? "인증번호 전송에 실패했습니다.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  // 타이머
+  // 타이머: 인증번호 발급 성공 후 매초 남은 시간을 줄입니다.
   useEffect(() => {
     if (time <= 0) return;
 
-    const timer = setInterval(() => {
-      setTime((prev) => {
-        if (prev <= 1) {
-          setVerificationCode("");
-          alert("인증번호가 만료되었습니다. 이메일 인증을 다시 해주세요.");
-          return 0;
-        }
-
-        return prev - 1;
-      });
+    const timer = window.setTimeout(() => {
+      setTime((prev) => Math.max(0, prev - 1));
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => window.clearTimeout(timer);
   }, [time]);
 
+  // 남은 시간 표시
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
 
@@ -72,7 +100,7 @@ const SignupPage2 = () => {
     seconds,
   ).padStart(2, "0")}`;
 
-  // 인증번호 입력
+  // 인증번호 입력: 숫자 6자리
   const handleVerificationCode = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
@@ -81,8 +109,10 @@ const SignupPage2 = () => {
     setVerificationCode(value);
   };
 
-  // 회원가입 버튼
-  const handleSignup = () => {
+  // 이메일 인증
+  const handleVerifyEmail = async () => {
+    if (isVerifying) return;
+
     if (email.trim() === "") {
       alert("이메일을 입력해주세요.");
       return;
@@ -103,13 +133,35 @@ const SignupPage2 = () => {
       return;
     }
 
-    if (time === 0) {
+    if (time <= 0) {
       alert("인증번호가 만료되었습니다. 이메일 인증을 다시 해주세요.");
       return;
     }
 
-    // TODO: 실제 인증번호 검증 API 연결
-    navigate("/signup/3");
+    setIsVerifying(true);
+
+    try {
+      await verifyEmailApi({
+        email: email.trim(),
+        code: verificationCode,
+      });
+
+      saveSignupDraft({
+        email: email.trim(),
+        emailVerified: true,
+      });
+
+      setTime(0);
+      navigate("/signup/3");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError<AuthApiError>(error)
+        ? error.response?.data.error.message
+        : undefined;
+
+      alert(message ?? "이메일 인증에 실패했습니다.");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -124,7 +176,7 @@ const SignupPage2 = () => {
             <Signup2S.BackButton
               type="button"
               aria-label="이전 페이지"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/signup")}
             >
               <IoIosArrowBack />
             </Signup2S.BackButton>
@@ -141,17 +193,23 @@ const SignupPage2 = () => {
               onChange={(e) => {
                 const nextEmail = e.target.value;
 
-                if (nextEmail !== email) {
-                  setVerificationCode("");
-                  setTime(0);
-                }
-
                 setEmail(nextEmail);
+                setVerificationCode("");
+                setTime(0);
+
+                saveSignupDraft({
+                  email: nextEmail.trim(),
+                  emailVerified: false,
+                });
               }}
             />
 
-            <Signup2S.VerifyButton type="button" onClick={handleSendCode}>
-              인증번호 받기
+            <Signup2S.VerifyButton
+              type="button"
+              onClick={handleSendCode}
+              disabled={isSending}
+            >
+              {isSending ? "전송 중..." : "인증번호 받기"}
             </Signup2S.VerifyButton>
           </Signup2S.EmailArea>
 
@@ -161,7 +219,7 @@ const SignupPage2 = () => {
               inputMode="numeric"
               placeholder="인증번호 입력"
               aria-label="인증번호"
-              value={verificationCode}
+              value={time > 0 ? verificationCode : ""}
               onChange={handleVerificationCode}
               maxLength={6}
             />
@@ -177,12 +235,15 @@ const SignupPage2 = () => {
             type="button"
             onClick={
               verificationCode.length === 6
-                ? handleSignup
+                ? handleVerifyEmail
                 : handleSendCode
             }
+            disabled={isSending || isVerifying}
           >
             {verificationCode.length === 6
-              ? "회원가입"
+              ? isVerifying
+                ? "확인 중..."
+                : "인증하기"
               : "이메일 인증 다시하기"}
           </Signup2S.Button>
 
@@ -191,7 +252,9 @@ const SignupPage2 = () => {
               이미 계정을 가지고 계신가요?
             </Signup2S.Qusetion>
 
-            <Signup2S.LinkText to="/login">로그인</Signup2S.LinkText>
+            <Signup2S.LinkText to="/login">
+              로그인
+            </Signup2S.LinkText>
           </Signup2S.QuestionText>
         </Signup2S.CardBox>
       </S.ContentLayer>

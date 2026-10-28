@@ -21,7 +21,7 @@ const S = {
       font-weight: 500;
       border-bottom: 2px solid #dddddd;
 
-      &:hover {
+        &:hover {
         color: #666;
       }
 
@@ -85,27 +85,6 @@ const S = {
     span {
       font-size: 14px;
       font-weight: 500;
-    }
-  `,
-
-  ProfileImageActions: styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  `,
-
-  RemoveProfileImageBtn: styled.button`
-    padding: 0;
-    border: none;
-    background: none;
-    color: #666;
-    font-size: 12px;
-    cursor: pointer;
-
-    &:hover {
-      color: #111;
-      text-decoration: underline;
     }
   `,
 

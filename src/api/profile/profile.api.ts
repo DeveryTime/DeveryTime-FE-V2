@@ -18,10 +18,7 @@ const updateMyProfile = async (
   const formData = new FormData();
 
   formData.append("username", request.username);
-  formData.append(
-    "deleteProfileImage",
-    String(request.deleteProfileImage),
-  );
+  formData.append("deleteProfileImage", String(request.deleteProfileImage));
 
   if (request.profileImage) {
     formData.append("profileImage", request.profileImage);

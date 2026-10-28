@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { Markdown } from "@tiptap/markdown";
 import S from "./MarkdownEditor.styles";
@@ -27,9 +26,6 @@ const MarkdownEditor = ({
         },
       }),
       Markdown,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
       Image,
     ],
     content: value,
@@ -54,9 +50,6 @@ const MarkdownEditor = ({
       isItalic: currentEditor.isActive("italic"),
       isUnderline: currentEditor.isActive("underline"),
       isStrike: currentEditor.isActive("strike"),
-      isLeftAligned: currentEditor.isActive({ textAlign: "left" }),
-      isCenterAligned: currentEditor.isActive({ textAlign: "center" }),
-      isRightAligned: currentEditor.isActive({ textAlign: "right" }),
       isBulletList: currentEditor.isActive("bulletList"),
       isOrderedList: currentEditor.isActive("orderedList"),
       isBlockquote: currentEditor.isActive("blockquote"),
@@ -159,38 +152,6 @@ const MarkdownEditor = ({
         >
           <s>S</s>
         </S.ToolbarButton>
-        <S.Divider />
-        <S.ToolbarButton
-          type="button"
-          $isActive={toolbarState.isLeftAligned}
-          aria-label="왼쪽 정렬"
-          aria-pressed={toolbarState.isLeftAligned}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        >
-          좌
-        </S.ToolbarButton>
-        <S.ToolbarButton
-          type="button"
-          $isActive={toolbarState.isCenterAligned}
-          aria-label="가운데 정렬"
-          aria-pressed={toolbarState.isCenterAligned}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        >
-          중
-        </S.ToolbarButton>
-        <S.ToolbarButton
-          type="button"
-          $isActive={toolbarState.isRightAligned}
-          aria-label="오른쪽 정렬"
-          aria-pressed={toolbarState.isRightAligned}
-          disabled={disabled}
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        >
-          우
-        </S.ToolbarButton>
-        <S.Divider />
         <S.ToolbarButton
           type="button"
           $isActive={toolbarState.isBulletList}
