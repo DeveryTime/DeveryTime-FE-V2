@@ -13,17 +13,6 @@ import S from "./MyPostsPage.styles";
 
 const MY_POSTS_PAGE_SIZE = 10;
 
-const DESIGN_PREVIEW_POSTS: PostTableItem[] = Array.from(
-  { length: 11 },
-  (_, index) => ({
-    id: index + 1,
-    number: 1,
-    category: "전공",
-    title: "피그마 오토 레이아웃 할 줄 아시는 분 있나요?",
-    createdAt: "2026.05.24",
-  }),
-);
-
 const formatPostDate = (dateString: string) => {
   const datePart = dateString.split("T")[0];
 
@@ -53,14 +42,6 @@ const MyPostsPage = () => {
     const fetchMyPosts = async () => {
       setIsLoading(true);
       setError(null);
-
-      // 인증 전 로컬 디자인 확인을 위한 개발 전용 화면이다.
-      if (import.meta.env.DEV && !localStorage.getItem("accessToken")) {
-        setPosts(DESIGN_PREVIEW_POSTS);
-        setTotalPages(10);
-        setIsLoading(false);
-        return;
-      }
 
       try {
         const response = await postsApi.getMyPosts({

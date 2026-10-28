@@ -8,7 +8,7 @@ const S = {
     height: auto;
     table-layout: fixed;
     border-collapse: collapse;
-    background-color: #c6c6c6;
+    background-color: transparent;
     color: ${colors.gray[1000]};
     font-size: clamp(12px, 1.18vw, 16px);
     line-height: 1.25;
@@ -41,26 +41,11 @@ const S = {
   TableHeader: styled.th`
     padding: clamp(5px, 0.6vw, 8px) 12px;
     border-top: 2px solid ${colors.gray[1000]};
-    background-color: #d7d7d7;
+    background-color: transparent;
     text-align: left;
     font-size: clamp(11px, 1.1vw, 16px);
     font-weight: 500;
 
-    &:nth-of-type(1) {
-      padding-left: 13px;
-    }
-
-    &:nth-of-type(2) {
-      padding-left: 2px;
-    }
-
-    &:nth-of-type(3) {
-      padding-left: clamp(12px, 11.2vw, 152px);
-    }
-
-    &:nth-of-type(4) {
-      padding-left: clamp(12px, 6.9vw, 94px);
-    }
   `,
 
   TableCell: styled.td`
@@ -79,14 +64,14 @@ const S = {
   TableSpacerCell: styled.td`
     height: 8px;
     padding: 0;
-    background-color: #e9e9e9;
+    background-color: transparent;
   `,
 
   TableRow: styled.tr`
     cursor: pointer;
 
     &:hover {
-      background-color: #d7d7d7;
+      background-color: transparent;
     }
 
     &:focus-visible {
