@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Button from "../../components/common/Button/Button";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
@@ -20,7 +18,6 @@ interface PostMainPageProps {
 }
 
 const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
-  const navigate = useNavigate();
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
   const [selectedSort, setSelectedSort] =
     useState<PostSort>("likeCount,desc");
@@ -175,16 +172,8 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
       </S.SortMenuArea>
 
       <S.Content>
-        <S.PageHeader>
-          <S.Title>{sortTitles[selectedSort]}</S.Title>
-          <Button
-            type="button"
-            onClick={() => navigate("/posts/new")}
-            style={{ padding: "12px 20px", fontWeight: 600 }}
-          >
-            글쓰기
-          </Button>
-        </S.PageHeader>
+        {/* 현재 정렬 기준에 따른 게시글 목록 제목 */}
+        <S.Title>{sortTitles[selectedSort]}</S.Title>
 
         {isLoading && <p>게시글을 불러오는 중입니다...</p>}
         {error && <p role="alert">{error}</p>}

@@ -1,4 +1,5 @@
 import styled from "@emotion/styled";
+import colors from "../../../styles/tokens/colors";
 
 const InputBoxWrapper = styled.div`
   width: 560px;
@@ -9,8 +10,6 @@ const InputBoxWrapper = styled.div`
   padding-bottom: 12px;
   border-bottom: 2px solid #6f6f6f;
   box-sizing: border-box;
-  /* position: relative;
-  top: -30px; */
 `;
 
 const Input = styled.input`
@@ -18,9 +17,17 @@ const Input = styled.input`
   height: 40px;
   border: none;
   outline: none;
-  padding: 0;
+  box-sizing: border-box;
+  padding: 10px;
   font-size: 24px;
   color: #333;
+  gap-right: 10px;
+
+  &:focus-visible {
+    outline: 2px solid ${colors.blue[400]};
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 
   &::placeholder {
     color: #6f6f6f;

@@ -8,7 +8,7 @@ type AccessibleName =
 
 type ModalProps = Omit<
   DialogHTMLAttributes<HTMLDialogElement>,
-  "children" | "onClose" | "aria-label" | "aria-labelledby"
+  "children" | "onClose" | "open" | "aria-label" | "aria-labelledby"
 > &
   AccessibleName & {
     children: ReactNode;
