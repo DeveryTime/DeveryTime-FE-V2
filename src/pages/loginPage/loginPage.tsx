@@ -1,33 +1,22 @@
-import { useState, type ChangeEvent } from "react";
-import { InputBox } from "../../components/loginPage/inputBox/InputBox";
-import {
-  BackgroundLayer,
-  ContentLayer,
-} from "../BackgroundAct/BackgroundActStyle";
-import { Background } from "../BackgroundAct/BackgroundAct";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import InputBox from "../../components/loginPage/inputBox/InputBox";
+import S from "../BackgroundAct/BackgroundActStyle";
+import Background from "../BackgroundAct/BackgroundAct";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
+import LoginS from "./loginPageStyle";
+import { loginApi } from "../../api/authApi";
+import type { AuthApiError } from "../../types/auth";
 
-import {
-  SignupWrapper,
-  CardBox,
-  Title,
-  Button,
-  Qusetion,
-  LinkText,
-  QuestionText,
-  PasswordArea,
-  EyeButton,
-  PasswordInput,
-  PasswordWrapper,
-  QuestionPasswordText,
-} from "./loginPageStyle";
-
-export const LoginPage = () => {
+const LoginPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
@@ -46,18 +35,34 @@ export const LoginPage = () => {
       return;
     }
 
-    // API 연동 후 로그인 성공 시 페이지 이동
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const { data: {accessToken, refreshToken} } = await loginApi({ email: trimmedEmail, password });
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      navigate("/main");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError<AuthApiError>(error)
+        ? error.response?.data.error.message
+        : undefined;
+      alert(message ?? "로그인에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <SignupWrapper>
-      <BackgroundLayer>
+    <LoginS.SignupWrapper>
+      <S.BackgroundLayer>
         <Background />
-      </BackgroundLayer>
+      </S.BackgroundLayer>
 
-      <ContentLayer>
-        <CardBox>
-          <Title>로그인</Title>
+      <S.ContentLayer>
+        <LoginS.CardBox>
+          <LoginS.Title>로그인</LoginS.Title>
 
           <InputBox
             placeholder="이메일"
@@ -66,9 +71,9 @@ export const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <PasswordWrapper>
-            <PasswordArea>
-              <PasswordInput
+          <LoginS.PasswordWrapper>
+            <LoginS.PasswordArea>
+              <LoginS.PasswordInput
                 type={showPassword ? "text" : "password"}
                 placeholder="비밀번호"
                 aria-label="비밀번호"
@@ -76,31 +81,33 @@ export const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
 
-              <EyeButton
+              <LoginS.EyeButton
                 type="button"
                 aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? <IoEyeOutline /> : <IoEyeOffOutline />}
-              </EyeButton>
-            </PasswordArea>
+              </LoginS.EyeButton>
+            </LoginS.PasswordArea>
 
-            <QuestionPasswordText>
-              <Qusetion>비밀번호를 잊으셨나요?</Qusetion>
-              <LinkText to="/FindPassword">여기</LinkText>
-            </QuestionPasswordText>
-          </PasswordWrapper>
+          </LoginS.PasswordWrapper>
 
-          <Button type="button" onClick={handleNext}>
-            다음
-          </Button>
+          <LoginS.Button
+            type="button"
+            onClick={handleNext}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "로그인 중..." : "로그인"}
+          </LoginS.Button>
 
-          <QuestionText>
-            <Qusetion>계정이 없으신가요?</Qusetion>
-            <LinkText to="/signup/1">회원가입</LinkText>
-          </QuestionText>
-        </CardBox>
-      </ContentLayer>
-    </SignupWrapper>
+          <LoginS.QuestionText>
+            <LoginS.Qusetion>계정이 없으신가요?</LoginS.Qusetion>
+            <LoginS.LinkText to="/signup/1">회원가입</LoginS.LinkText>
+          </LoginS.QuestionText>
+        </LoginS.CardBox>
+      </S.ContentLayer>
+    </LoginS.SignupWrapper>
   );
 };
+
+export default LoginPage;

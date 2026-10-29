@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { colors } from "../../../styles/tokens/colors";
+import colors from "../../../styles/tokens/colors";
 
 const S = {
   Dialog: styled.dialog`
@@ -11,7 +11,6 @@ const S = {
     border: none;
     background-color: ${colors.gray[0]};
 
-    position: relative;
     overflow-x: hidden;
     overflow-y: auto;
 
