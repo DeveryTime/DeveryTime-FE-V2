@@ -66,7 +66,7 @@ const Info = () => {
   }, []);
 
   if (activeSection === "posts") {
-    return <MyPostsPage />;
+    return <MyPostsPage onBack={() => setActiveSection("info")} />;
   }
 
   return (

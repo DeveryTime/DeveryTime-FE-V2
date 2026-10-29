@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import postsApi from "../../api/posts.api";
 import getApiErrorMessage from "../../api/errorMessages";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
@@ -13,6 +14,10 @@ import S from "./MyPostsPage.styles";
 
 const MY_POSTS_PAGE_SIZE = 10;
 
+interface MyPostsPageProps {
+  onBack?: () => void;
+}
+
 const formatPostDate = (dateString: string) => {
   const datePart = dateString.split("T")[0];
 
@@ -23,7 +28,8 @@ const formatPostDate = (dateString: string) => {
   return dateString;
 };
 
-const MyPostsPage = () => {
+const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -35,6 +41,20 @@ const MyPostsPage = () => {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const detailRequestId = useRef(0);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/");
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -150,7 +170,12 @@ const MyPostsPage = () => {
 
   return (
     <S.PageContainer>
-      <S.Title>내가 쓴 글</S.Title>
+      <S.PageHeader>
+        <S.BackButton type="button" aria-label="뒤로가기" onClick={handleBack}>
+          &lt; 뒤로 가기
+        </S.BackButton>
+        <S.Title>내가 쓴 글</S.Title>
+      </S.PageHeader>
 
       {isLoading && (
         <S.StatusMessage role="status">
