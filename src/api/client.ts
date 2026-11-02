@@ -9,13 +9,6 @@ const client = axios.create({
 });
 
 client.interceptors.request.use((config) => {
-  // Login is a public endpoint. A stale token left in localStorage must not
-  // be sent with the credentials used to establish a new session.
-  if (config.url === "/auth/login") {
-    delete config.headers.Authorization;
-    return config;
-  }
-
   const accessToken = getAccessToken();
 
   if (accessToken) {
