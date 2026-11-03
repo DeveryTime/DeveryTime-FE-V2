@@ -11,7 +11,7 @@ const NavBar = () => {
   const navigate = useNavigate();
 
   // localStorage에 token이 있으면 로그인 상태로 판단
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const isLoggedIn = Boolean(localStorage.getItem("accesstoken"));
 
   // 카테고리 목록
   const CATEGORIES = [
