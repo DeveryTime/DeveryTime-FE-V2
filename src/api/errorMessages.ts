@@ -153,9 +153,12 @@ export const getLoginApiErrorMessage = (
     return "로그인 API 요청이 인증 설정에서 차단됐습니다. 백엔드의 /api/auth/login 공개 설정과 API 경로를 확인해주세요.";
   }
 
+  const status = error.response?.status;
+
   return (
     response?.error?.message ??
     response?.message ??
+    (status ? HTTP_STATUS_MESSAGES[status] : undefined) ??
     fallbackMessage
   );
 };
