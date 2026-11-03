@@ -5,7 +5,7 @@ import SignupPage2 from "../pages/signupPage/signupPage2/signupPage2";
 import SignupPage3 from "../pages/signupPage/signupPage3/signupPage3";
 import LoginPage from "../pages/loginPage/loginPage";
 import SearchPage from "../pages/searchPage/searchPage";
-import PostMainPage from "../pages/PostMainPage/PostMainPage";
+import PostMainRoute from "../pages/PostMainPage/PostMainRoute";
 import PostEditor from "../pages/postWritePage/PostEditor";
 import Profile from "../pages/profileChange/profileChange";
 import Landing from "../pages/landingPage/landingPage";
@@ -47,7 +47,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/main",
-        element: <PostMainPage currentUserId={0} />,
+        Component: PostMainRoute,
       },
       {
         path: "/searchPage",
@@ -77,7 +77,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/posts",
-        element: <PostMainPage currentUserId={0}/>
+        Component: PostMainRoute,
       },
       {
         path: "/posts/new",

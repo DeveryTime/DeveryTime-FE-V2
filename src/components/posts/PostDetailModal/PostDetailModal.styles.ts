@@ -359,9 +359,9 @@ const S = {
 
   CommentMenuPopover: styled.div`
     position: absolute;
-    top: calc(100% + 8px);
+    bottom: calc(100% + 8px);
     right: 0;
-    z-index: 20;
+    z-index: 30;
 
     display: flex;
     flex-direction: column;
@@ -534,6 +534,22 @@ const S = {
   CommentSubmitButton: styled(Button)`
     flex: 0 0 auto;
     padding: 0 16px;
+  `,
+
+  CommentEditForm: styled.form`
+    display: flex;
+    gap: 8px;
+    padding: 7px 13px 0;
+  `,
+
+  CommentEditCancelButton: styled(Button)`
+    flex: 0 0 auto;
+    padding: 0 12px;
+  `,
+
+  CommentEditSaveButton: styled(Button)`
+    flex: 0 0 auto;
+    padding: 0 12px;
   `,
 };
 
