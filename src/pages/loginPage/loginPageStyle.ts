@@ -114,6 +114,10 @@ const LoginS = {
     font-family: Pretendard;
     font-size: 24px;
 
+    &::-ms-reveal {
+      display: none;
+    }
+
     &::placeholder {
       color: #6f6f6f;
     }
