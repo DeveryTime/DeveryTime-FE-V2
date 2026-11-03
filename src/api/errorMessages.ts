@@ -132,4 +132,32 @@ const getApiErrorMessage = (
   );
 };
 
+// Login has a documented error format of INVALID_CREDENTIALS,
+// VALIDATION_ERROR, or INTERNAL_SERVER_ERROR. Do not turn an unexpected
+// UNAUTHORIZED response into the generic "로그인이 필요한 API" message.
+export const getLoginApiErrorMessage = (
+  error: unknown,
+  fallbackMessage: string,
+): string => {
+  if (!isAxiosError<ApiErrorResponse>(error)) {
+    return fallbackMessage;
+  }
+
+  const response = error.response?.data;
+  const code = response?.error?.code ?? response?.errorCode;
+
+  if (
+    code === "UNAUTHORIZED" ||
+    (error.response?.status === 401 && code !== "INVALID_CREDENTIALS")
+  ) {
+    return "로그인 API 요청이 인증 설정에서 차단됐습니다. 백엔드의 /api/auth/login 공개 설정과 API 경로를 확인해주세요.";
+  }
+
+  return (
+    response?.error?.message ??
+    response?.message ??
+    fallbackMessage
+  );
+};
+
 export default getApiErrorMessage;
