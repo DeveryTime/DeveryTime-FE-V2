@@ -10,7 +10,7 @@ export const config: VercelConfig = {
   rewrites: [
     routes.rewrite(
       "/api/:path*",
-      `${apiUrl.replace(/\/+$/, "")}/:path*`,
+      `${apiUrl.replace(/\/+$/, "")}/api/:path*`,
     ),
     routes.rewrite("/(.*)", "/index.html"),
   ],
