@@ -6,7 +6,7 @@ import Background from "../BackgroundAct/BackgroundAct";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import LoginS from "./loginPageStyle";
 import { loginApi } from "../../api/authApi";
-import getApiErrorMessage from "../../api/errorMessages";
+import { getLoginApiErrorMessage } from "../../api/errorMessages";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -42,7 +42,10 @@ const LoginPage = () => {
       navigate("/main");
     } catch (error: unknown) {
       alert(
-        getApiErrorMessage(error, "로그인에 실패했습니다. 다시 시도해주세요."),
+        getLoginApiErrorMessage(
+          error,
+          "로그인에 실패했습니다. 다시 시도해주세요.",
+        ),
       );
     } finally {
       setIsSubmitting(false);

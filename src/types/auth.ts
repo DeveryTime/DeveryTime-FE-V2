@@ -19,7 +19,7 @@ export interface LoginData {
 
 export interface LoginResponse {
   // The API documentation has represented this value as both true and "true".
-  success: boolean | "true";
+  success: true | "true";
   data: LoginData;
   message: string;
 }
@@ -70,8 +70,20 @@ export interface TokenReissueResponse {
 export type LoginErrorCode =
   | "INVALID_CREDENTIALS"
   | "VALIDATION_ERROR"
-  | "INTERNAL_SERVER_ERROR"
-  | "INTERNAL_SERVER_ERR";
+  | "INTERNAL_SERVER_ERROR";
+
+// Login's documented error envelope. UNAUTHORIZED is intentionally not a
+// documented login error code; if it arrives on this public endpoint, it is
+// treated as an authentication/security configuration problem.
+export interface LoginErrorResponse {
+  success: false;
+  status?: number;
+  error: {
+    code: LoginErrorCode;
+    message: string;
+    details?: ValidationErrorDetail[];
+  };
+}
 
 export type SignupErrorCode =
   | "EMAIL_NOT_VERIFIED"
