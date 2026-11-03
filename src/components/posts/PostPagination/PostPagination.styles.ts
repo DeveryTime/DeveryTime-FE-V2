@@ -27,22 +27,21 @@ const S = {
     justify-content: center;
 
     color: ${colors.gray[1000]};
-    font-size: clamp(8px, 1.1vw, 15px);
+    font-size: 16px;
     line-height: 1;
     border-radius: 0;
 
     &:hover:not(:disabled) {
-      color: ${colors.blue[500]};
+      background-color: ${colors.gray[700]};
     }
 
     &[aria-current="page"] {
-      color: ${colors.blue[500]};
+      color: ${colors.gray[0]};
       font-weight: 700;
     }
 
     &:disabled {
       color: ${colors.gray[400]};
-      background: transparent;
       cursor: not-allowed;
     }
 
@@ -52,6 +51,13 @@ const S = {
     }
   `,
 
+  PageSummary: styled.p`
+    margin: 8px 0 0;
+    color: ${colors.gray[1000]};
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+  `,
 };
 
 export default S;
