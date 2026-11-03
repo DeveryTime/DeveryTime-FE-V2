@@ -181,22 +181,6 @@ const S = {
     margin-top: 24px;
   `,
 
-  CategoryLabel: styled.span`
-    display: inline-flex;
-    align-items: center;
-    margin-left: auto;
-    box-sizing: border-box;
-    max-width: 35%;
-    font-size: 14px;
-    background-color: ${colors.gray[50]};
-    color: ${colors.gray[700]};
-    border-radius: 10px;
-    padding: 8px 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  `,
-
   ReactionBar: styled.div`
     display: flex;
     flex-direction: row;

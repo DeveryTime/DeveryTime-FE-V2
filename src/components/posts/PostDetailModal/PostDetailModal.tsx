@@ -340,8 +340,6 @@ const PostDetailModal = ({
               </S.PostMeta>
             </S.WriterInfo>
 
-            <S.CategoryLabel>{post.categoryName}</S.CategoryLabel>
-
             <S.PostMenuArea>
               <S.PostMenuButton
                 type="button"
@@ -366,6 +364,14 @@ const PostDetailModal = ({
 
                   {isMyPost && (
                     <>
+                      <S.CommentEditButton
+                        type="button"
+                        aria-label="게시글 수정"
+                        onClick={handlePostEditStart}
+                      >
+                        글 수정
+                      </S.CommentEditButton>
+
                       <S.CommentDeleteButton
                         type="button"
                         aria-label="게시글 삭제"
@@ -373,14 +379,6 @@ const PostDetailModal = ({
                       >
                         삭제하기
                       </S.CommentDeleteButton>
-
-                      <S.CommentEditButton
-                        type="button"
-                        aria-label="게시글 수정"
-                        onClick={handlePostEditStart}
-                      >
-                        수정하기
-                      </S.CommentEditButton>
                     </>
                   )}
                 </S.PostMenuPopover>
@@ -475,23 +473,6 @@ const PostDetailModal = ({
           </S.CommentInfo>
         </S.ReactionBar>
         {likeError && <p role="alert">{likeError}</p>}
-
-        <S.CommentComposer onSubmit={handleCommentSubmit}>
-          <S.CommentInput
-            value={commentContent}
-            onChange={(event) => setCommentContent(event.target.value)}
-            placeholder="댓글을 작성해주세요."
-            aria-label="댓글 내용"
-            disabled={isCommentSubmitting}
-          />
-          <S.CommentSubmitButton
-            type="submit"
-            disabled={!commentContent.trim() || isCommentSubmitting}
-          >
-            {isCommentSubmitting ? "등록 중" : "등록"}
-          </S.CommentSubmitButton>
-        </S.CommentComposer>
-        {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
 
         {/* 댓글 목록과 댓글별 메뉴 */}
         <S.CommentList>
@@ -609,6 +590,23 @@ const PostDetailModal = ({
           {isCommentError && <p role="alert"> {isCommentError} </p>}
           {commentActionError && <p role="alert">{commentActionError}</p>}
         </S.CommentList>
+
+        <S.CommentComposer onSubmit={handleCommentSubmit}>
+          <S.CommentInput
+            value={commentContent}
+            onChange={(event) => setCommentContent(event.target.value)}
+            placeholder="댓글을 작성해주세요."
+            aria-label="댓글 내용"
+            disabled={isCommentSubmitting}
+          />
+          <S.CommentSubmitButton
+            type="submit"
+            disabled={!commentContent.trim() || isCommentSubmitting}
+          >
+            {isCommentSubmitting ? "등록 중" : "등록"}
+          </S.CommentSubmitButton>
+        </S.CommentComposer>
+        {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
       </S.ModalScrollArea>
     </S.DetailDialog>
   );
