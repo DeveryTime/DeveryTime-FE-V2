@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   type ChangeEvent,
+  type FormEvent,
 } from "react";
 import ReactMarkdown from "react-markdown";
 import S from "./PostDetailModal.styles";
@@ -95,6 +96,12 @@ const PostDetailModal = ({
   const [comments, setComments] = useState<PostComment[]>([]);
   const [isCommentLoading, setIsCommentLoading] = useState(false);
   const [isCommentError, setIsCommentError] = useState<string | null>(null);
+  const [commentContent, setCommentContent] = useState("");
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [commentSubmitError, setCommentSubmitError] = useState<string | null>(
+    null,
+  );
+  const [commentReloadKey, setCommentReloadKey] = useState(0);
 
   // 게시글 수정 모드 여부를 관리한다.
   const [isPostEditing, setIsPostEditing] = useState(false);
@@ -188,7 +195,29 @@ const PostDetailModal = ({
     return () => {
       isActive = false;
     };
-  }, [post.id]);
+  }, [post.id, commentReloadKey]);
+
+  const handleCommentSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+
+    const trimmedComment = commentContent.trim();
+    if (!trimmedComment || isCommentSubmitting) return;
+
+    setIsCommentSubmitting(true);
+    setCommentSubmitError(null);
+
+    try {
+      await commentsApi.createComment(post.id, { content: trimmedComment });
+      setCommentContent("");
+      setCommentReloadKey((current) => current + 1);
+    } catch {
+      setCommentSubmitError("댓글을 작성하지 못했습니다.");
+    } finally {
+      setIsCommentSubmitting(false);
+    }
+  };
 
   //게시글 수정 저장 함수 로직
   const handlePostEditSave = async () => {
@@ -224,9 +253,6 @@ const PostDetailModal = ({
       aria-labelledby="post-detail-title"
       closeIcon={<X aria-hidden="true" />}
     >
-      {/* 게시글 카테고리 */}
-      <S.CategoryLabel> {post.categoryName} </S.CategoryLabel>
-
       <S.ModalScrollArea>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
@@ -244,6 +270,8 @@ const PostDetailModal = ({
                 {formatPostDate(post.createdAt)} - {post.viewCount} 조회
               </S.PostMeta>
             </S.WriterInfo>
+
+            <S.CategoryLabel>{post.categoryName}</S.CategoryLabel>
 
             <S.PostMenuArea>
               <S.PostMenuButton
@@ -378,6 +406,24 @@ const PostDetailModal = ({
           </S.CommentInfo>
         </S.ReactionBar>
         {likeError && <p role="alert">{likeError}</p>}
+
+        <S.CommentComposer onSubmit={handleCommentSubmit}>
+          <S.CommentInput
+            value={commentContent}
+            onChange={(event) => setCommentContent(event.target.value)}
+            placeholder="댓글을 작성해주세요."
+            aria-label="댓글 내용"
+            disabled={isCommentSubmitting}
+          />
+          <S.CommentSubmitButton
+            type="submit"
+            disabled={!commentContent.trim() || isCommentSubmitting}
+          >
+            {isCommentSubmitting ? "등록 중" : "등록"}
+          </S.CommentSubmitButton>
+        </S.CommentComposer>
+        {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
+
         {/* 댓글 목록과 댓글별 메뉴 */}
         <S.CommentList>
           {isCommentLoading && <p> 댓글을 불러오는 중입니다... </p>}

@@ -8,7 +8,7 @@ const S = {
     height: auto;
     table-layout: fixed;
     border-collapse: collapse;
-    background-color: #c6c6c6;
+    background-color: transparent;
     color: ${colors.gray[1000]};
     font-size: clamp(12px, 1.18vw, 16px);
     line-height: 1.25;
@@ -79,14 +79,14 @@ const S = {
   TableSpacerCell: styled.td`
     height: 8px;
     padding: 0;
-    background-color: #e9e9e9;
+    background-color: transparent;
   `,
 
   TableRow: styled.tr`
     cursor: pointer;
 
     &:hover {
-      background-color: #d7d7d7;
+      background-color: ${colors.gray[50]};
     }
 
     &:focus-visible {

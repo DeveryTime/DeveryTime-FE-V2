@@ -5,19 +5,19 @@ import colors from "../../../styles/tokens/colors";
 const S = {
   PaginationContainer: styled.nav`
     width: fit-content;
-    height: clamp(12px, 1.6vw, 22px);
+    min-height: 36px;
 
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 6px;
 
-    margin: clamp(33px, 3.8vw, 52px) auto 0;
+    margin: 28px auto 0;
   `,
 
   PageButton: styled.button`
-    width: clamp(11px, 1.6vw, 22px);
-    height: clamp(12px, 1.6vw, 22px);
+    width: 36px;
+    height: 36px;
     padding: 0;
     border: none;
     background: transparent;
@@ -26,16 +26,18 @@ const S = {
     align-items: center;
     justify-content: center;
 
-    color: ${colors.gray[1000]};
+    color: ${colors.gray[700]};
     font-size: 16px;
     line-height: 1;
-    border-radius: 0;
+    border-radius: 8px;
+    cursor: pointer;
 
     &:hover:not(:disabled) {
-      background-color: ${colors.gray[700]};
+      background-color: ${colors.gray[100]};
     }
 
     &[aria-current="page"] {
+      background-color: ${colors.primary[500]};
       color: ${colors.gray[0]};
       font-weight: 700;
     }
@@ -46,8 +48,8 @@ const S = {
     }
 
     svg {
-      width: 70%;
-      height: 70%;
+      width: 18px;
+      height: 18px;
     }
   `,
 

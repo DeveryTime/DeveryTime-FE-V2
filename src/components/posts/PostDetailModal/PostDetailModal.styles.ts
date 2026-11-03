@@ -19,7 +19,7 @@ const S = {
     overflow: hidden;
 
     &::backdrop {
-      background-color: ${colors.alpha.black45};
+      background-color: transparent;
     }
     &[open] {
       display: grid;
@@ -40,6 +40,10 @@ const S = {
     display: flex;
     align-items: center;
     gap: 15px;
+
+    @media (max-width: 580px) {
+      gap: 10px;
+    }
   `,
 
   ProfileImage: styled.img`
@@ -178,17 +182,19 @@ const S = {
   `,
 
   CategoryLabel: styled.span`
-    display: inline-block;
-    position: absolute;
-    top: 50px;
-    right: clamp(16px, 4vw, 40px);
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
     box-sizing: border-box;
-    max-width: calc(100% - 32px);
+    max-width: 35%;
     font-size: 14px;
     background-color: ${colors.gray[50]};
     color: ${colors.gray[700]};
     border-radius: 10px;
-    padding: 10px 16px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   `,
 
   ReactionBar: styled.div`
@@ -302,6 +308,8 @@ const S = {
   `,
 
   PostMenuButton: styled.button`
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -440,7 +448,7 @@ const S = {
 
   PostMenuArea: styled.div`
     position: relative;
-    margin-left: auto;
+    margin-left: 4px;
 
     display: flex;
     align-items: center;
@@ -495,6 +503,37 @@ const S = {
 
   PostEditSaveButton: styled(Button)`
     padding: 8px 14px;
+  `,
+
+  CommentComposer: styled.form`
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid ${colors.gray[200]};
+    border-bottom: 1px solid ${colors.gray[200]};
+  `,
+
+  CommentInput: styled.input`
+    min-width: 0;
+    flex: 1;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid ${colors.gray[200]};
+    border-radius: 8px;
+    background-color: ${colors.gray[0]};
+    color: ${colors.gray[950]};
+    font: inherit;
+
+    &:focus {
+      outline: 2px solid ${colors.primary[300]};
+      outline-offset: 1px;
+      border-color: ${colors.primary[500]};
+    }
+  `,
+
+  CommentSubmitButton: styled(Button)`
+    flex: 0 0 auto;
+    padding: 0 16px;
   `,
 };
 
