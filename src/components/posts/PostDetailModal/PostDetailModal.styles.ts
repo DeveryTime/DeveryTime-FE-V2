@@ -5,23 +5,6 @@ import Input from "../../common/Input/Input";
 import Modal from "../../common/Modal/Modal";
 
 const S = {
-  EditDialog: styled(Modal)`
-    width: min(700px, calc(100vw - 32px));
-    height: min(600px, calc(100vh - 32px));
-    max-height: calc(100vh - 32px);
-    border-radius: 3px;
-    overflow: hidden;
-
-    &[open] { display: flex; flex-direction: column; }
-
-    & > button:first-of-type {
-      left: 14px;
-      right: auto;
-      top: 15px;
-      width: 30px;
-      height: 30px;
-    }
-  `,
   DetailDialog: styled(Modal)`
     width: 875px;
     height: calc(100vh - 48px);

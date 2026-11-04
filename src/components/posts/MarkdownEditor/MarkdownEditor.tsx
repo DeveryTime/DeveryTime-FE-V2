@@ -6,6 +6,7 @@ import { Markdown } from "@tiptap/markdown";
 import S from "./MarkdownEditor.styles";
 import WriteStyles from "../../../pages/postWritePage/PostEditorStyle";
 import { IoImageOutline } from "react-icons/io5";
+import { List, ListOrdered, Quote, Link } from "lucide-react";
 
 interface MarkdownEditorProps {
   value: string;
@@ -164,7 +165,7 @@ const MarkdownEditor = ({
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
-          • 목록
+          <List size={18} aria-hidden="true" />
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
@@ -174,7 +175,7 @@ const MarkdownEditor = ({
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
-          1. 목록
+          <ListOrdered size={18} aria-hidden="true" />
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
@@ -184,7 +185,7 @@ const MarkdownEditor = ({
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
-          인용
+          <Quote size={18} aria-hidden="true" />
         </S.ToolbarButton>
         <S.ToolbarButton
           type="button"
@@ -194,7 +195,7 @@ const MarkdownEditor = ({
           disabled={disabled}
           onClick={handleLink}
         >
-          링크
+          <Link size={18} aria-hidden="true" />
         </S.ToolbarButton>
       </S.Toolbar>
 
