@@ -13,12 +13,14 @@ import S from "./PostMainPage.styles";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
+import { hasStoredAccessToken } from "../../api/authSession";
 
 interface PostMainPageProps {
-  currentUserId: number;
+  currentUserId: number | null;
+  isProfileLoading: boolean;
 }
 
-const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
+const PostMainPage = ({ currentUserId, isProfileLoading }: PostMainPageProps) => {
   const navigate = useNavigate();
   // 현재 선택된 정렬 기준, 페이지, 게시글 목록, 상세 게시글을 관리한다.
   const [selectedSort, setSelectedSort] =
@@ -101,6 +103,16 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
 
   // 표의 게시글을 선택하면 상세 정보를 조회한다.
   const handlePostClick = async (postId: number) => {
+    if (!hasStoredAccessToken()) {
+      navigate("/login");
+      return;
+    }
+    if (currentUserId === null) {
+      setDetailError(isProfileLoading
+        ? "사용자 정보를 확인하는 중입니다. 잠시 후 다시 시도해 주세요."
+        : "사용자 정보를 불러오지 못했습니다. 다시 로그인해 주세요.");
+      return;
+    }
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -179,7 +191,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
           <S.Title>{sortTitles[selectedSort]}</S.Title>
           <S.WriteButton
             type="button"
-            onClick={() => navigate("/posts/new")}
+            onClick={() => navigate(hasStoredAccessToken() ? "/posts/new" : "/login")}
           >
             글쓰기
           </S.WriteButton>
@@ -200,7 +212,7 @@ const PostMainPage = ({ currentUserId }: PostMainPageProps) => {
         {detailError && <p role="alert">{detailError}</p>}
 
         {/* 게시글을 선택했을 때만 상세 모달을 표시한다. */}
-        {selectedPost && (
+        {selectedPost && currentUserId !== null && (
           <PostDetailModal
             key={selectedPost.id}
             post={selectedPost}

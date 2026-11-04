@@ -1,20 +1,24 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Markdown } from "@tiptap/markdown";
 import S from "./MarkdownEditor.styles";
+import WriteStyles from "../../../pages/postWritePage/PostEditorStyle";
+import { IoImageOutline } from "react-icons/io5";
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (markdown: string) => void;
   disabled?: boolean;
+  actions?: ReactNode;
 }
 
 const MarkdownEditor = ({
   value,
   onChange,
   disabled = false,
+  actions,
 }: MarkdownEditorProps) => {
   const latestValueRef = useRef(value);
   const editor = useEditor({
@@ -192,19 +196,17 @@ const MarkdownEditor = ({
         >
           링크
         </S.ToolbarButton>
-        <S.ToolbarButton
-          type="button"
-          aria-label="이미지 URL 추가"
-          disabled={disabled}
-          onClick={handleImage}
-        >
-          이미지
-        </S.ToolbarButton>
       </S.Toolbar>
 
       <S.EditorArea>
         <EditorContent editor={editor} />
       </S.EditorArea>
+      <WriteStyles.Footer>
+        <WriteStyles.ImageButton type="button" aria-label="이미지 URL 추가" disabled={disabled} onClick={handleImage}>
+          <IoImageOutline />
+        </WriteStyles.ImageButton>
+        {actions}
+      </WriteStyles.Footer>
     </S.EditorContainer>
   );
 };
