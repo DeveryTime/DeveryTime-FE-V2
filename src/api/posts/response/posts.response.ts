@@ -11,15 +11,20 @@ export interface PostListResponse {
 
 export interface CreatePostData {
   id: number;
-  title: string;
-  content: string;
-  createdAt: string;
+  title?: string;
+  content?: string;
+  status?: string;
+  createdAt?: string;
 }
 
 export interface CreatePostResponse {
-  success: boolean;
-  data: CreatePostData;
-  message: string;
+  success?: boolean;
+  data?: number | CreatePostData;
+  id?: number;
+  title?: string;
+  status?: string;
+  createdAt?: string;
+  message?: string;
 }
 
 export type CreatePostErrorCode =

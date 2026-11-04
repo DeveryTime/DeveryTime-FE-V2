@@ -4,12 +4,14 @@ import type { PostCommentListResponse } from "../comments/response/comments.resp
 import likesApi from "../likes/likes.api";
 import type { PostLikeData } from "../likes/likes.types";
 import type {
+  CreatePostRequest,
   GetMyPostsRequest,
   PostListParams,
   UpdatePostRequest,
   UploadPostImageRequest,
 } from "./request/posts.request";
 import type {
+  CreatePostResponse,
   PostDetailResponse,
   PostListResponse,
   UpdatePostResponse,
@@ -54,6 +56,20 @@ const getPost = async (postId: number): Promise<PostDetailData> => {
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   };
+};
+
+const createPost = async (request: CreatePostRequest): Promise<number> => {
+  const response = await client.post<CreatePostResponse>("/posts", request);
+  const body = response.data;
+  const postId = typeof body.data === "number"
+    ? body.data
+    : body.data?.id ?? body.id;
+
+  if (typeof postId !== "number" || !Number.isInteger(postId) || postId <= 0) {
+    throw new Error("게시글 생성 응답에 올바른 게시글 ID가 없습니다.");
+  }
+
+  return postId;
 };
 
 const likePost = (postId: number): Promise<PostLikeData> =>
@@ -103,6 +119,7 @@ const postsApi = {
   getPosts,
   getMyPosts,
   getPost,
+  createPost,
   likePost,
   unlikePost,
   getComments,

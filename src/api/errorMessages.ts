@@ -77,12 +77,20 @@ const LIKE_ERROR_MESSAGES: Record<string, ApiErrorDefinition> = {
   },
 };
 
+const PROFILE_ERROR_MESSAGES: Record<string, ApiErrorDefinition> = {
+  IMAGE_DELETE_FAILED: {
+    status: 503,
+    message: "프로필 이미지 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.",
+  },
+};
+
 // 전체 에러 메시지를 하나로 합친다.
 const API_ERROR_MESSAGES: Record<string, ApiErrorDefinition> = {
   ...GLOBAL_ERROR_MESSAGES,
   ...POST_ERROR_MESSAGES,
   ...COMMENT_ERROR_MESSAGES,
   ...LIKE_ERROR_MESSAGES,
+  ...PROFILE_ERROR_MESSAGES,
 };
 
 // 에러 코드가 없을 때 사용하는 상태 코드별 메시지

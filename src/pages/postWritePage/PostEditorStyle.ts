@@ -90,6 +90,21 @@ const S = {
       pointer-events: none; color: #aaa;
     }
   `,
+  SelectedImages: styled.div`
+    display: flex; flex-direction: column; gap: 6px; margin-top: 18px;
+  `,
+  SelectedImage: styled.div`
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    min-width: 0; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 5px;
+    color: #555; font-size: 13px;
+    span:first-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  `,
+  RemoveImageButton: styled.button`
+    flex: 0 0 auto; border: 0; padding: 2px 4px; background: transparent;
+    color: #666; font: inherit; cursor: pointer;
+    &:hover { color: #c00; }
+    &:disabled { color: #aaa; cursor: not-allowed; }
+  `,
   Footer: styled.div`
     height: 58px; flex: 0 0 58px; display: flex; align-items: center;
     justify-content: space-between; padding: 0 18px; border-top: 1px solid #eee;
@@ -100,6 +115,7 @@ const S = {
     justify-content: center; padding: 0; border: 0; background: transparent;
     color: #444; font-size: 21px; cursor: pointer;
     &:hover { color: #000; }
+    &:disabled { color: #aaa; cursor: not-allowed; }
   `,
   SubmitButton: styled.button`
     width: 72px; height: 34px; border: 0; border-radius: 5px;

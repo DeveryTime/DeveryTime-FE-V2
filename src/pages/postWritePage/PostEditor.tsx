@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -8,7 +9,7 @@ import { Placeholder } from "@tiptap/extensions";
 import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
-import client from "../../api/client";
+import postsApi from "../../api/posts/posts.api";
 
 import S from "./PostEditorStyle";
 
@@ -81,11 +82,16 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     initialDraft?.categoryId ?? "",
   );
   const [title, setTitle] = useState(initialDraft?.title ?? "");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<Set<File>>(() => new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const backHandlerRef = useRef<() => void>(onClose);
   const hasSubmittedRef = useRef(false);
+  const createdPostIdRef = useRef<number | null>(null);
+  const uploadedImagesRef = useRef(new Set<File>());
 
   const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
     try {
@@ -125,6 +131,13 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
 
   const handleBack = useCallback(() => {
     if (isSubmitting) return;
+
+    if (createdPostIdRef.current !== null) {
+      hasSubmittedRef.current = true;
+      removeDraft(userId);
+      onClose();
+      return;
+    }
 
     if (editor && (categoryId || title.trim() || hasMeaningfulContent(editor.getJSON()))) {
       const draft: PostWriteDraft = {
@@ -170,7 +183,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       if (event.key !== "Tab" || !dialogRef.current) return;
 
       const elements = dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input:not([disabled]), select:not([disabled]), [contenteditable="true"]',
+        'button:not([disabled]), input:not([disabled]):not([hidden]), select:not([disabled]), [contenteditable="true"]',
       );
       const first = elements[0];
       const last = elements[elements.length - 1];
@@ -207,11 +220,28 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   };
 
   const handleImage = () => {
-    const url = window.prompt("이미지 URL을 입력해주세요.");
-    if (url) editor.chain().focus().setImage({ src: url }).run();
+    imageInputRef.current?.click();
   };
 
-  const handleSubmit = () => {
+  const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+    if (files.length !== (event.target.files?.length ?? 0)) {
+      alert("이미지 파일만 선택할 수 있습니다.");
+    }
+    if (files.length > 0) {
+      setSelectedImages((current) => [...current, ...files]);
+    }
+    event.target.value = "";
+  };
+
+  const handleRemoveImage = (file: File) => {
+    if (uploadedImagesRef.current.has(file)) return;
+    setSelectedImages((current) => current.filter((selected) => selected !== file));
+  };
+
+  const handleSubmit = async () => {
     if (!categoryId) {
       alert("카테고리를 선택해주세요.");
       return;
@@ -227,22 +257,38 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     }
 
     setIsSubmitting(true);
-    // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
-    void client
-      .post("/posts", { title: title.trim(), content, categoryId })
-      .then(() => {
-        hasSubmittedRef.current = true;
-        removeDraft(userId);
-        alert("게시글이 작성되었습니다.");
-        onClose();
-      })
-      .catch((error: unknown) => {
-        const message = axios.isAxiosError<{ error?: { message?: string } }>(error)
-          ? error.response?.data.error?.message
-          : undefined;
+    try {
+      const postId = createdPostIdRef.current ?? await postsApi.createPost({
+        title: title.trim(),
+        content: editor.getMarkdown(),
+        categoryId,
+        status: "PUBLISHED",
+      });
+      createdPostIdRef.current = postId;
+
+      for (const [sortOrder, file] of selectedImages.entries()) {
+        if (uploadedImagesRef.current.has(file)) continue;
+        await postsApi.uploadPostImage(postId, { file, sortOrder });
+        uploadedImagesRef.current.add(file);
+        setUploadedImages(new Set(uploadedImagesRef.current));
+      }
+
+      hasSubmittedRef.current = true;
+      removeDraft(userId);
+      alert("게시글이 작성되었습니다.");
+      onClose();
+    } catch (error: unknown) {
+      const message = axios.isAxiosError<{ error?: { message?: string }; message?: string }>(error)
+        ? error.response?.data.error?.message ?? error.response?.data.message
+        : undefined;
+      if (createdPostIdRef.current !== null) {
+        alert(message ?? "게시글은 작성됐지만 이미지 업로드에 실패했습니다. 다시 게시를 누르면 실패한 이미지 업로드를 재시도합니다.");
+      } else {
         alert(message ?? "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
-      })
-      .finally(() => setIsSubmitting(false));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -304,9 +350,41 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           <S.ToolButton type="button" $active={editor.isActive("link")} aria-label="링크 추가" onClick={handleLink}><IoLinkOutline /></S.ToolButton>
         </S.Toolbar>
 
-        <S.ContentArea><EditorContent editor={editor} /></S.ContentArea>
+        <S.ContentArea>
+          <EditorContent editor={editor} />
+          {selectedImages.length > 0 && (
+            <S.SelectedImages aria-label="선택한 이미지">
+              {selectedImages.map((file, index) => (
+                <S.SelectedImage key={`${file.name}-${file.lastModified}-${file.size}-${index}`}>
+                  <span>{file.name}</span>
+                  {uploadedImages.has(file) ? (
+                    <span>업로드 완료</span>
+                  ) : (
+                    <S.RemoveImageButton
+                      type="button"
+                      onClick={() => handleRemoveImage(file)}
+                      disabled={isSubmitting}
+                      aria-label={`${file.name} 제거`}
+                    >
+                      제거
+                    </S.RemoveImageButton>
+                  )}
+                </S.SelectedImage>
+              ))}
+            </S.SelectedImages>
+          )}
+        </S.ContentArea>
         <S.Footer>
-          <S.ImageButton type="button" aria-label="이미지 추가" onClick={handleImage}><IoImageOutline /></S.ImageButton>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={handleImageSelection}
+            disabled={isSubmitting}
+          />
+          <S.ImageButton type="button" aria-label="이미지 파일 선택" onClick={handleImage} disabled={isSubmitting}><IoImageOutline /></S.ImageButton>
           <S.SubmitButton type="button" onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? "게시 중..." : "게시"}
           </S.SubmitButton>

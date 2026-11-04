@@ -103,6 +103,22 @@ const S = {
     }
   `,
 
+  DeleteProfileImageButton: styled.button`
+    display: block;
+    margin: 8px auto 0;
+    padding: 6px 10px;
+    border: 1px solid #d8d8d8;
+    border-radius: 6px;
+    background: #fff;
+    color: #555;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover { color: #c00; border-color: #c00; }
+    &:disabled { color: #aaa; cursor: not-allowed; }
+  `,
+
   NameInput: styled.input`
     width: 100%;
     padding: 12px;

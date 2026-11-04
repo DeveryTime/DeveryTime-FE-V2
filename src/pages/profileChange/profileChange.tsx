@@ -21,6 +21,7 @@ const Profile = () => {
   // 새로 선택한 프로필 이미지
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [shouldDeleteProfileImage, setShouldDeleteProfileImage] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +105,17 @@ const Profile = () => {
     });
 
     setNewProfileImage(file);
+    setShouldDeleteProfileImage(false);
+  };
+
+  const handleProfileImageDelete = () => {
+    setNewProfileImage(null);
+    setPreviewUrl((previousUrl) => {
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+      return null;
+    });
+    setShouldDeleteProfileImage(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // 아이디 및 프로필 이미지 저장
@@ -128,7 +140,7 @@ const Profile = () => {
     try {
       await profileApi.updateMyProfile({
         username: trimmedUsername,
-        deleteProfileImage: false,
+        deleteProfileImage: shouldDeleteProfileImage,
         ...(newProfileImage
           ? { profileImage: newProfileImage }
           : {}),
@@ -139,6 +151,7 @@ const Profile = () => {
       setUser(updatedProfile);
       setUsername(updatedProfile.username ?? "");
       setNewProfileImage(null);
+      setShouldDeleteProfileImage(false);
 
       setPreviewUrl((previousUrl) => {
         if (previousUrl) {
@@ -202,32 +215,37 @@ const Profile = () => {
           <>
             {/* 사용자 정보 */}
             <S.UserInfo>
-              <S.ProfileImage
-                role="button"
-                tabIndex={0}
-                aria-label="프로필 이미지 변경"
-                onClick={() => fileInputRef.current?.click()}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    fileInputRef.current?.click();
-                  }
-                }}
-              >
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="프로필 이미지 미리보기"
-                  />
-                ) : user.profileImageUrl ? (
-                  <img
-                    src={user.profileImageUrl}
-                    alt="프로필 이미지"
-                  />
-                ) : (
-                  <span>프로필 이미지</span>
+              <div>
+                <S.ProfileImage
+                  role="button"
+                  tabIndex={0}
+                  aria-label="프로필 이미지 변경"
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                >
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="프로필 이미지 미리보기" />
+                  ) : user.profileImageUrl && !shouldDeleteProfileImage ? (
+                    <img src={user.profileImageUrl} alt="프로필 이미지" />
+                  ) : (
+                    <span>프로필 이미지</span>
+                  )}
+                </S.ProfileImage>
+                {(user.profileImageUrl || newProfileImage) && (
+                  <S.DeleteProfileImageButton
+                    type="button"
+                    onClick={handleProfileImageDelete}
+                    disabled={isSaving || shouldDeleteProfileImage}
+                  >
+                    프로필 이미지 삭제
+                  </S.DeleteProfileImageButton>
                 )}
-              </S.ProfileImage>
+              </div>
 
               <input
                 ref={fileInputRef}
