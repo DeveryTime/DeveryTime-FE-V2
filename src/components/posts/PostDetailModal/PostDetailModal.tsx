@@ -8,8 +8,9 @@ import {
 } from "react";
 import PostMarkdown from "./PostMarkdown";
 import S from "./PostDetailModal.styles";
-import { X, UserRound } from "lucide-react";
+import { X, UserRound, ArrowLeft } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
+import WriteStyles from "../../../pages/postWritePage/PostEditorStyle";
 import commentIcon from "../../../assets/comment.svg";
 import likeDefaultIcon from "../../../assets/Like.svg";
 import likeActiveIcon from "../../../assets/Like-active.svg";
@@ -116,6 +117,7 @@ const PostDetailModal = ({
   const [editingPostTitle, setEditingPostTitle] = useState("");
   const [editingPostContent, setEditingPostContent] = useState("");
   const [postUpdateError, setPostUpdateError] = useState<string | null>(null);
+  const [isPostSaving, setIsPostSaving] = useState(false);
   const [displayedPostTitle, setDisplayedPostTitle] = useState(post.title);
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
@@ -295,7 +297,7 @@ const PostDetailModal = ({
 
     setPostUpdateError(null);
 
-    if (trimmedPostTitle === "" || trimmedPostContent === "") {
+    if (isPostSaving || trimmedPostTitle === "" || trimmedPostContent === "") {
       return;
     }
 
@@ -304,6 +306,7 @@ const PostDetailModal = ({
       title: trimmedPostTitle,
       content: trimmedPostContent,
     };
+    setIsPostSaving(true);
     try {
       await postsApi.updatePost(post.id, updateData);
 
@@ -313,8 +316,51 @@ const PostDetailModal = ({
       setIsPostEditing(false);
     } catch {
       setPostUpdateError("게시물을 수정하는데 실패하였습니다.");
+    } finally {
+      setIsPostSaving(false);
     }
   };
+
+  if (isPostEditing) {
+    return (
+      <S.EditDialog
+        onClose={() => setIsPostEditing(false)}
+        aria-labelledby="post-edit-title"
+        closeButtonLabel="수정 취소하고 돌아가기"
+        closeIcon={<ArrowLeft aria-hidden="true" />}
+      >
+        <WriteStyles.Header>
+          <WriteStyles.Title id="post-edit-title">게시글 수정</WriteStyles.Title>
+        </WriteStyles.Header>
+        <WriteStyles.CategoryField>
+          <WriteStyles.CategoryLabel htmlFor="edit-post-category">카테고리</WriteStyles.CategoryLabel>
+          <WriteStyles.CategorySelect id="edit-post-category" value={post.categoryName} disabled>
+            <option value={post.categoryName}>{post.categoryName}</option>
+          </WriteStyles.CategorySelect>
+        </WriteStyles.CategoryField>
+        <WriteStyles.TitleInput
+          value={editingPostTitle}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setEditingPostTitle(event.target.value)}
+          aria-label="게시글 제목"
+        />
+        {postUpdateError && <p role="alert">{postUpdateError}</p>}
+        <MarkdownEditor
+          value={editingPostContent}
+          onChange={setEditingPostContent}
+          disabled={isPostSaving}
+          actions={
+            <WriteStyles.SubmitButton
+              type="button"
+              onClick={handlePostEditSave}
+              disabled={isPostSaving || !editingPostTitle.trim() || !editingPostContent.trim()}
+            >
+              {isPostSaving ? "저장 중" : "저장"}
+            </WriteStyles.SubmitButton>
+          }
+        />
+      </S.EditDialog>
+    );
+  }
 
   return (
     <S.DetailDialog
@@ -386,71 +432,22 @@ const PostDetailModal = ({
             </S.PostMenuArea>
           </S.PostHeader>
 
-          {/* 게시글 본문 또는 게시글 수정 화면 */}
-          {isPostEditing ? (
-            <S.PostEditForm>
-              <S.PostTitle id="post-detail-title">게시글 수정</S.PostTitle>
-
-              <S.PostEditTitleInput
-                value={editingPostTitle}
-                onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                  setEditingPostTitle(event.target.value)
-                }
-                aria-label="게시글 제목"
-              />
-
-              <MarkdownEditor
-                value={editingPostContent}
-                onChange={setEditingPostContent}
-              />
-
-              {postUpdateError && <p role="alert">{postUpdateError}</p>}
-
-              <S.PostEditActions>
-                <S.PostEditCancelButton
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setEditingPostTitle(displayedPostTitle);
-                    setEditingPostContent(displayedPostContent);
-                    setIsPostEditing(false);
-                  }}
-                >
-                  취소
-                </S.PostEditCancelButton>
-
-                <S.PostEditSaveButton
-                  type="button"
-                  variant="primary"
-                  onClick={handlePostEditSave}
-                  disabled={
-                    !editingPostTitle.trim() || !editingPostContent.trim()
-                  }
-                >
-                  저장
-                </S.PostEditSaveButton>
-              </S.PostEditActions>
-            </S.PostEditForm>
-          ) : (
-            <>
-              <S.PostTitle id="post-detail-title">
-                {displayedPostTitle}
-              </S.PostTitle>
-              <S.PostContent>
-                <PostMarkdown content={displayedPostContent} />
-              </S.PostContent>
-              {post.imageUrls.length > 0 && (
-                <S.ImageList>
-                  {post.imageUrls.map((imageUrl, index) => (
-                    <S.ContentImage
-                      key={`${imageUrl}-${index}`}
-                      src={imageUrl}
-                      alt={`${displayedPostTitle} 첨부된 이미지`}
-                    />
-                  ))}
-                </S.ImageList>
-              )}
-            </>
+          <S.PostTitle id="post-detail-title">
+            {displayedPostTitle}
+          </S.PostTitle>
+          <S.PostContent>
+            <PostMarkdown content={displayedPostContent} />
+          </S.PostContent>
+          {post.imageUrls.length > 0 && (
+            <S.ImageList>
+              {post.imageUrls.map((imageUrl, index) => (
+                <S.ContentImage
+                  key={`${imageUrl}-${index}`}
+                  src={imageUrl}
+                  alt={`${displayedPostTitle} 첨부된 이미지`}
+                />
+              ))}
+            </S.ImageList>
           )}
         </S.DetailContent>
 

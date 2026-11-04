@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import PostMainPage from "./PostMainPage";
 import profileApi from "../../api/profile/profile.api";
+import { hasStoredAccessToken } from "../../api/authSession";
 
 const PostMainRoute = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(hasStoredAccessToken);
 
   useEffect(() => {
     let isActive = true;
+    if (!hasStoredAccessToken()) return;
 
     const fetchCurrentUser = async () => {
       try {
@@ -16,9 +18,9 @@ const PostMainRoute = () => {
           setCurrentUserId(profile.id);
         }
       } catch {
-        if (isActive) {
-          setError("사용자 정보를 불러오지 못했습니다.");
-        }
+        // 프로필 조회에 실패해도 공개 목록은 계속 보여준다.
+      } finally {
+        if (isActive) setIsProfileLoading(false);
       }
     };
 
@@ -29,15 +31,7 @@ const PostMainRoute = () => {
     };
   }, []);
 
-  if (error) {
-    return <p role="alert">{error}</p>;
-  }
-
-  if (currentUserId === null) {
-    return <p role="status">사용자 정보를 불러오는 중입니다...</p>;
-  }
-
-  return <PostMainPage currentUserId={currentUserId} />;
+  return <PostMainPage currentUserId={currentUserId} isProfileLoading={isProfileLoading} />;
 };
 
 export default PostMainRoute;

@@ -5,24 +5,21 @@ const S = {
   EditorContainer: styled.div`
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
-    border: 1px solid ${colors.gray[200]};
-    border-radius: 8px;
     background-color: ${colors.gray[0]};
-
-    &:focus-within {
-      border-color: ${colors.primary[500]};
-    }
   `,
 
   Toolbar: styled.div`
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
-    padding: 8px;
+    gap: 2px;
+    padding: 4px 12px;
+    border-top: 1px solid ${colors.gray[200]};
     border-bottom: 1px solid ${colors.gray[200]};
-    background-color: ${colors.gray[50]};
+    background-color: ${colors.gray[0]};
   `,
 
   ToolbarButton: styled.button<{ $isActive?: boolean }>`
@@ -58,8 +55,10 @@ const S = {
   `,
 
   EditorArea: styled.div`
-    min-height: 220px;
-    padding: 12px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px;
 
     .tiptap {
       min-height: 196px;
