@@ -252,7 +252,7 @@ const S = {
     height: 45px;
     border-radius: 50%;
     background-color: ${colors.gray[100]};
-    object-fit: contain;
+    object-fit: cover;
     flex-shrink: 0;
   `,
 
