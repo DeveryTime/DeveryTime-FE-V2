@@ -183,6 +183,13 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     linkDialogOpenRef.current = isLinkDialogOpen;
   }, [isLinkDialogOpen]);
 
+  const closeLinkDialog = useCallback(() => {
+    setIsLinkDialogOpen(false);
+    setIsLinkActive(false);
+    linkSelectionRef.current = null;
+    requestAnimationFrame(() => editor?.commands.focus());
+  }, [editor]);
+
   useEffect(() => {
     editor?.setEditable(!postCreationCompleted);
   }, [editor, postCreationCompleted]);
@@ -195,10 +202,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       if (event.key === "Escape") {
         event.preventDefault();
         if (linkDialogOpenRef.current) {
-          setIsLinkDialogOpen(false);
-          setIsLinkActive(false);
-          linkSelectionRef.current = null;
-          requestAnimationFrame(() => editor?.commands.focus());
+          closeLinkDialog();
           return;
         }
         backHandlerRef.current();
@@ -236,7 +240,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();
     };
-  }, [editor, onClose]);
+  }, [closeLinkDialog, editor, onClose]);
 
   if (!editor) return null;
 
@@ -250,13 +254,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     setIsLinkActive(editor.isActive("link"));
     setLinkHref(typeof previousUrl === "string" ? previousUrl : "https://");
     setIsLinkDialogOpen(true);
-  };
-
-  const closeLinkDialog = () => {
-    setIsLinkDialogOpen(false);
-    setIsLinkActive(false);
-    linkSelectionRef.current = null;
-    requestAnimationFrame(() => editor.commands.focus());
   };
 
   const handleLinkSubmit = (event: FormEvent<HTMLFormElement>) => {
