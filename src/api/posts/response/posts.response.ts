@@ -12,15 +12,15 @@ export interface PostListResponse {
 export interface CreatePostData {
   id: number;
   title: string;
-  content: string;
+  status: string;
   createdAt: string;
 }
 
-export interface CreatePostResponse {
+export type CreatePostResponse = CreatePostData | {
   success: boolean;
-  data: CreatePostData;
-  message: string;
-}
+  data: number | CreatePostData;
+  message?: string;
+};
 
 export type CreatePostErrorCode =
   | "USER_NOT_FOUND"
@@ -51,4 +51,21 @@ export interface PostDetailResponse {
 export interface UploadPostImageResponse {
   success: boolean;
   data: UploadPostImageData;
+}
+
+export type UploadPostImageErrorCode =
+  | "UNAUTHORIZED"
+  | "POST_NOT_FOUND"
+  | "FORBIDDEN"
+  | "INVALID_IMAGE_FILE"
+  | "INVALID_IMAGE_TYPE"
+  | "IMAGE_FILE_TOO_LARGE"
+  | "IMAGE_UPLOAD_FAILED";
+
+export interface UploadPostImageErrorResponse {
+  success: false;
+  error: {
+    code: UploadPostImageErrorCode;
+    message: string;
+  };
 }

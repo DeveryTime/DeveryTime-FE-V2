@@ -64,7 +64,8 @@ const uploadPostImage = async (
   const response = await client.post<UploadPostImageResponse>(
     `/posts/${postId}/images`,
     formData,
-    { headers: { "content-Type": undefined } },
+    // The shared Axios client defaults to JSON; clear it so the browser can add the multipart boundary.
+    { headers: { "Content-Type": undefined } },
   );
 
   return response.data.data;

@@ -20,8 +20,9 @@ export interface UpdatePostRequest {
 
 export interface CreatePostRequest {
   title: string;
-  content: unknown;
-  categoryId?: number;
+  content: string;
+  categoryId: number;
+  status: "PUBLISHED";
 }
 
 export interface UploadPostImageRequest {
