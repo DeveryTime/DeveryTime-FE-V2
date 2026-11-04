@@ -23,9 +23,12 @@ const S = {
   `,
 
   ToolbarButton: styled.button<{ $isActive?: boolean }>`
-    min-width: 32px;
-    height: 32px;
-    padding: 0 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 0;
     border-radius: 6px;
     background-color: ${({ $isActive }) =>
@@ -49,8 +52,8 @@ const S = {
 
   Divider: styled.span`
     width: 1px;
-    height: 22px;
-    margin: 0 4px;
+    height: 18px;
+    margin: 0 5px;
     background-color: ${colors.gray[200]};
   `,
 

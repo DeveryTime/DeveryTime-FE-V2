@@ -2,11 +2,11 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import TextAlign from "@tiptap/extension-text-align";
 import { Markdown } from "@tiptap/markdown";
 import S from "./MarkdownEditor.styles";
 import WriteStyles from "../../../pages/postWritePage/PostEditorStyle";
-import { IoImageOutline } from "react-icons/io5";
-import { List, ListOrdered, Quote, Link } from "lucide-react";
+import { IoImageOutline, IoLinkOutline } from "react-icons/io5";
 
 interface MarkdownEditorProps {
   value: string;
@@ -32,6 +32,7 @@ const MarkdownEditor = ({
       }),
       Markdown,
       Image,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content: value,
     contentType: "markdown",
@@ -59,6 +60,9 @@ const MarkdownEditor = ({
       isOrderedList: currentEditor.isActive("orderedList"),
       isBlockquote: currentEditor.isActive("blockquote"),
       isLink: currentEditor.isActive("link"),
+      isAlignLeft: currentEditor.isActive({ textAlign: "left" }),
+      isAlignCenter: currentEditor.isActive({ textAlign: "center" }),
+      isAlignRight: currentEditor.isActive({ textAlign: "right" }),
     }),
   });
 
@@ -116,88 +120,99 @@ const MarkdownEditor = ({
 
   return (
     <S.EditorContainer>
-      <S.Toolbar aria-label="게시글 본문 서식">
-        <S.ToolbarButton
+      <WriteStyles.Toolbar aria-label="게시글 본문 서식">
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isBold}
+          $active={toolbarState.isBold}
           aria-label="굵게"
           aria-pressed={toolbarState.isBold}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
-          B
-        </S.ToolbarButton>
-        <S.ToolbarButton
+          <strong>B</strong>
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isItalic}
+          $active={toolbarState.isItalic}
           aria-label="기울임"
           aria-pressed={toolbarState.isItalic}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <em>I</em>
-        </S.ToolbarButton>
-        <S.ToolbarButton
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isUnderline}
+          $active={toolbarState.isUnderline}
           aria-label="밑줄"
           aria-pressed={toolbarState.isUnderline}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
         >
           <u>U</u>
-        </S.ToolbarButton>
-        <S.ToolbarButton
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isStrike}
+          $active={toolbarState.isStrike}
           aria-label="취소선"
           aria-pressed={toolbarState.isStrike}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
           <s>S</s>
-        </S.ToolbarButton>
-        <S.ToolbarButton
+        </WriteStyles.ToolButton>
+        <WriteStyles.Divider />
+        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignLeft} aria-label="왼쪽 정렬" aria-pressed={toolbarState.isAlignLeft} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+          <span aria-hidden="true">≡</span>
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignCenter} aria-label="가운데 정렬" aria-pressed={toolbarState.isAlignCenter} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+          <span aria-hidden="true">≡</span>
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignRight} aria-label="오른쪽 정렬" aria-pressed={toolbarState.isAlignRight} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+          <span aria-hidden="true">≡</span>
+        </WriteStyles.ToolButton>
+        <WriteStyles.Divider />
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isBulletList}
+          $active={toolbarState.isBulletList}
           aria-label="글머리 목록"
           aria-pressed={toolbarState.isBulletList}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
-          <List size={18} aria-hidden="true" />
-        </S.ToolbarButton>
-        <S.ToolbarButton
+          <span aria-hidden="true">•</span>
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isOrderedList}
+          $active={toolbarState.isOrderedList}
           aria-label="번호 목록"
           aria-pressed={toolbarState.isOrderedList}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
-          <ListOrdered size={18} aria-hidden="true" />
-        </S.ToolbarButton>
-        <S.ToolbarButton
+          <span aria-hidden="true">1.</span>
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isBlockquote}
+          $active={toolbarState.isBlockquote}
           aria-label="인용문"
           aria-pressed={toolbarState.isBlockquote}
           disabled={disabled}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
-          <Quote size={18} aria-hidden="true" />
-        </S.ToolbarButton>
-        <S.ToolbarButton
+          <span aria-hidden="true">❝</span>
+        </WriteStyles.ToolButton>
+        <WriteStyles.ToolButton
           type="button"
-          $isActive={toolbarState.isLink}
+          $active={toolbarState.isLink}
           aria-label="링크 추가 또는 제거"
           aria-pressed={toolbarState.isLink}
           disabled={disabled}
           onClick={handleLink}
         >
-          <Link size={18} aria-hidden="true" />
-        </S.ToolbarButton>
-      </S.Toolbar>
+          <IoLinkOutline aria-hidden="true" />
+        </WriteStyles.ToolButton>
+      </WriteStyles.Toolbar>
 
       <S.EditorArea>
         <EditorContent editor={editor} />
