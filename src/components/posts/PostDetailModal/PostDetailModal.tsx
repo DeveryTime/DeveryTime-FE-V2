@@ -6,7 +6,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import ReactMarkdown from "react-markdown";
+import PostMarkdown from "./PostMarkdown";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
@@ -437,7 +437,7 @@ const PostDetailModal = ({
                 {displayedPostTitle}
               </S.PostTitle>
               <S.PostContent>
-                <ReactMarkdown>{displayedPostContent}</ReactMarkdown>
+                <PostMarkdown content={displayedPostContent} />
               </S.PostContent>
               {post.imageUrls.length > 0 && (
                 <S.ImageList>

@@ -49,6 +49,7 @@ const S = {
   ProfileImage: styled.img`
     width: 60px;
     height: 60px;
+    flex-shrink: 0;
 
     border-radius: 50%;
     object-fit: cover;
@@ -66,11 +67,11 @@ const S = {
     line-height: 1.6;
     overflow-wrap: anywhere;
 
-    & > :first-child {
+    .tiptap > :first-child {
       margin-top: 0;
     }
 
-    & > :last-child {
+    .tiptap > :last-child {
       margin-bottom: 0;
     }
 
@@ -152,6 +153,8 @@ const S = {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
   `,
   WriterName: styled.strong`
     font-weight: 600;
@@ -263,6 +266,8 @@ const S = {
     display: flex;
     align-items: center;
     gap: 13px;
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 16px;
     font-weight: 700;
   `,
@@ -328,6 +333,7 @@ const S = {
   CommentMenuArea: styled.div`
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 10px;
     position: relative;
   `,
@@ -432,7 +438,8 @@ const S = {
 
   PostMenuArea: styled.div`
     position: relative;
-    margin-left: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
 
     display: flex;
     align-items: center;
