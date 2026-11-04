@@ -44,7 +44,6 @@ interface PostWriteDraft {
 interface PendingLinkSelection {
   from: number;
   to: number;
-  isLink: boolean;
 }
 
 const getPostWriteDraftKey = (userId: number) => `post-write-draft:${userId}`;
@@ -95,8 +94,12 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [title, setTitle] = useState(initialDraft?.title ?? "");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [isLinkActive, setIsLinkActive] = useState(false);
   const [linkHref, setLinkHref] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdPostId, setCreatedPostId] = useState<number | null>(null);
+  const [postCreationCompleted, setPostCreationCompleted] = useState(false);
+  const [uploadedImageIndexes, setUploadedImageIndexes] = useState<Set<number>>(() => new Set());
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -181,6 +184,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   }, [isLinkDialogOpen]);
 
   useEffect(() => {
+    editor?.setEditable(!postCreationCompleted);
+  }, [editor, postCreationCompleted]);
+
+  useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
     titleInputRef.current?.focus();
 
@@ -189,6 +196,9 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         event.preventDefault();
         if (linkDialogOpenRef.current) {
           setIsLinkDialogOpen(false);
+          setIsLinkActive(false);
+          linkSelectionRef.current = null;
+          requestAnimationFrame(() => editor?.commands.focus());
           return;
         }
         backHandlerRef.current();
@@ -226,7 +236,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();
     };
-  }, [onClose]);
+  }, [editor, onClose]);
 
   if (!editor) return null;
 
@@ -236,15 +246,17 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     linkSelectionRef.current = {
       from: selection.from,
       to: selection.to,
-      isLink: editor.isActive("link"),
     };
+    setIsLinkActive(editor.isActive("link"));
     setLinkHref(typeof previousUrl === "string" ? previousUrl : "https://");
     setIsLinkDialogOpen(true);
   };
 
   const closeLinkDialog = () => {
     setIsLinkDialogOpen(false);
+    setIsLinkActive(false);
     linkSelectionRef.current = null;
+    requestAnimationFrame(() => editor.commands.focus());
   };
 
   const handleLinkSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -259,7 +271,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
 
     if (selection.from !== selection.to) {
       editor.chain().focus().setTextSelection({ from: selection.from, to: selection.to }).setLink({ href }).run();
-    } else if (selection.isLink) {
+    } else if (isLinkActive) {
       editor.chain().focus().setTextSelection(selection.from).extendMarkRange("link").setLink({ href }).run();
     } else {
       editor
@@ -281,7 +293,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     const selection = linkSelectionRef.current;
     if (!selection) return;
     const chain = editor.chain().focus();
-    if (selection.isLink) {
+    if (isLinkActive) {
       chain.setTextSelection(selection.from).extendMarkRange("link").unsetLink().run();
     } else {
       chain.setTextSelection({ from: selection.from, to: selection.to }).unsetLink().run();
@@ -290,6 +302,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   };
 
   const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    if (postCreationCompleted) {
+      event.currentTarget.value = "";
+      return;
+    }
     const files = Array.from(event.currentTarget.files ?? []);
     if (files.length > 0) {
       setSelectedImages((current) => [...current, ...files]);
@@ -298,52 +314,64 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   };
 
   const handleSubmit = () => {
-    if (!categoryId) {
-      alert("카테고리를 선택해주세요.");
-      return;
-    }
-    if (!title.trim()) {
-      alert("제목을 입력해주세요.");
-      return;
-    }
-    const editorContent = editor.getJSON();
-    const content = editor.getMarkdown().trim();
-    if (!content && !hasMeaningfulContent(editorContent)) {
-      alert("게시글 내용을 입력해주세요.");
-      return;
+    if (isSubmitting) return;
+
+    if (!postCreationCompleted) {
+      if (!categoryId) {
+        alert("카테고리를 선택해주세요.");
+        return;
+      }
+      if (!title.trim()) {
+        alert("제목을 입력해주세요.");
+        return;
+      }
+      const editorContent = editor.getJSON();
+      const content = editor.getMarkdown().trim();
+      if (!content && !hasMeaningfulContent(editorContent)) {
+        alert("게시글 내용을 입력해주세요.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
     void (async () => {
       try {
-        const createPostRequest: CreatePostRequest = {
-          title: title.trim(),
-          content,
-          categoryId,
-          status: "PUBLISHED",
-        };
-        const response = await client.post<CreatePostResponse>("/posts", createPostRequest);
-        const responseBody = response.data;
-        const postId = "data" in responseBody
-          ? typeof responseBody.data === "number"
-            ? responseBody.data
-            : responseBody.data.id
-          : responseBody.id;
+        let postId = createdPostId;
+        if (!postCreationCompleted) {
+          const createPostRequest: CreatePostRequest = {
+            title: title.trim(),
+            content: editor.getMarkdown().trim(),
+            categoryId: categoryId as PostCategoryId,
+            status: "PUBLISHED",
+          };
+          const response = await client.post<CreatePostResponse>("/posts", createPostRequest);
+          const responseBody = response.data;
+          postId = "data" in responseBody
+            ? typeof responseBody.data === "number"
+              ? responseBody.data
+              : responseBody.data.id
+            : responseBody.id;
 
-        hasSubmittedRef.current = true;
-        removeDraft(userId);
+          setPostCreationCompleted(true);
+          hasSubmittedRef.current = true;
+          removeDraft(userId);
+          if (postId) setCreatedPostId(postId);
+        }
 
         if (selectedImages.length > 0 && !postId) {
-          alert("게시글은 등록됐지만 응답에서 게시글 ID를 찾지 못해 이미지를 업로드하지 못했습니다.");
-          onClose();
+          alert("게시글은 등록됐지만 응답에서 게시글 ID를 찾지 못해 이미지를 업로드하지 못했습니다. 게시글 중복 등록을 막기 위해 다시 등록하지 않습니다.");
           return;
         }
 
         let failedImageCount = 0;
         let firstImageErrorMessage: string | undefined;
+        const uploadedIndexes = new Set(uploadedImageIndexes);
         for (const [sortOrder, file] of selectedImages.entries()) {
+          if (uploadedIndexes.has(sortOrder)) continue;
           try {
-            await postsApi.uploadPostImage(postId, { file, sortOrder });
+            await postsApi.uploadPostImage(postId as number, { file, sortOrder });
+            uploadedIndexes.add(sortOrder);
+            setUploadedImageIndexes(new Set(uploadedIndexes));
           } catch (error: unknown) {
             failedImageCount += 1;
             if (!firstImageErrorMessage && axios.isAxiosError<UploadPostImageErrorResponse>(error)) {
@@ -354,10 +382,11 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
 
         if (failedImageCount > 0) {
           const errorDetails = firstImageErrorMessage ? `\n${firstImageErrorMessage}` : "";
-          alert(`게시글은 등록됐지만 이미지 ${failedImageCount}장을 업로드하지 못했습니다.${errorDetails}`);
-        } else {
-          alert("게시글이 작성되었습니다.");
+          alert(`게시글은 등록됐지만 이미지 ${failedImageCount}장을 업로드하지 못했습니다. 게시글을 중복 생성하지 않고 실패한 이미지만 다시 시도할 수 있습니다.${errorDetails}`);
+          return;
         }
+
+        alert("게시글이 작성되었습니다.");
         onClose();
       } catch (error: unknown) {
         const message = axios.isAxiosError<{ error?: { message?: string } }>(error)
@@ -394,7 +423,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             id="post-category"
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value === "" ? "" : (Number(event.target.value) as PostCategoryId))}
-            disabled={isSubmitting}
+            disabled={isSubmitting || postCreationCompleted}
           >
             <option value="">카테고리를 선택해주세요</option>
             {POST_CATEGORIES.map((category) => (
@@ -411,6 +440,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           placeholder="제목을 입력해주세요."
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          disabled={isSubmitting || postCreationCompleted}
         />
 
         <S.Toolbar>
@@ -438,7 +468,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
                 <button
                   type="button"
                   aria-label={`${file.name} 제거`}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || postCreationCompleted}
                   onClick={() => setSelectedImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                 >
                   ×
@@ -456,9 +486,9 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             hidden
             onChange={handleImageSelection}
           />
-          <S.ImageButton type="button" aria-label="이미지 파일 추가" onClick={() => imageInputRef.current?.click()} disabled={isSubmitting}><IoImageOutline /></S.ImageButton>
-          <S.SubmitButton type="button" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "게시 중..." : "게시"}
+          <S.ImageButton type="button" aria-label="이미지 파일 추가" onClick={() => imageInputRef.current?.click()} disabled={isSubmitting || postCreationCompleted}><IoImageOutline /></S.ImageButton>
+          <S.SubmitButton type="button" onClick={handleSubmit} disabled={isSubmitting || (postCreationCompleted && !createdPostId)}>
+            {isSubmitting ? (postCreationCompleted ? "이미지 업로드 중..." : "게시 중...") : postCreationCompleted ? "이미지 다시 시도" : "게시"}
           </S.SubmitButton>
         </S.Footer>
       </S.EditorWrapper>
@@ -481,7 +511,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
               onChange={(event) => setLinkHref(event.target.value)}
             />
             <S.LinkDialogActions>
-              {linkSelectionRef.current?.isLink && (
+              {isLinkActive && (
                 <button type="button" onClick={handleLinkRemove}>링크 제거</button>
               )}
               <span />
