@@ -41,7 +41,7 @@ const S = {
   TableHeader: styled.th`
     padding: clamp(5px, 0.6vw, 8px) 12px;
     border-top: 2px solid ${colors.gray[1000]};
-    background-color: #d7d7d7;
+    background-color: transparent;
     text-align: left;
     font-size: clamp(11px, 1.1vw, 16px);
     font-weight: 500;

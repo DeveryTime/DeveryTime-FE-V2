@@ -33,7 +33,8 @@ const S = {
     cursor: pointer;
 
     &:hover:not(:disabled) {
-      background-color: ${colors.gray[100]};
+      background-color: ${colors.primary[500]};
+      color: ${colors.gray[0]};
     }
 
     &[aria-current="page"] {

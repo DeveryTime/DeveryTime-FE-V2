@@ -20,7 +20,7 @@ export interface UpdatePostRequest {
 
 export interface CreatePostRequest {
   title: string;
-  content: unknown;
+  content: string;
   categoryId?: number;
 }
 

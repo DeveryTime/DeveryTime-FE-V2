@@ -220,14 +220,16 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       alert("제목을 입력해주세요.");
       return;
     }
-    const content = editor.getJSON();
-    if (!hasMeaningfulContent(content)) {
+    const editorContent = editor.getJSON();
+    if (!hasMeaningfulContent(editorContent)) {
       alert("게시글 내용을 입력해주세요.");
       return;
     }
 
+    // 상세 화면과 수정 API가 사용하는 Markdown 문자열 형식으로 저장한다.
+    const content = editor.getMarkdown();
+
     setIsSubmitting(true);
-    // JSON은 정렬 속성, 이미지 등 Markdown에 없는 정보를 보존합니다.
     void client
       .post("/posts", { title: title.trim(), content, categoryId })
       .then(() => {
