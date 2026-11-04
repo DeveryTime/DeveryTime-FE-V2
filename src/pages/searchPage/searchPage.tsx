@@ -1,15 +1,11 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useSearchParams} from "react-router-dom";
 import S from "./searchPage.style";
 import { SearchPostResult } from "../../components/searchPostResult/searchPostResult";
+import type {SearchPost} from "../../types/search.types.ts";
+import {searchApi} from "../../api/search/search.api.ts";
 
-// 검색 결과 게시글 타입
-interface SearchPost {
-  id: number;
-  title: string;
-  categoryName: string;
-  createdAt: string;
-}
+const PAGE_SIZE = 10;
 
 export function SearchPage() {
   // URL의 검색어 가져오기
@@ -20,12 +16,52 @@ export function SearchPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // 검색 결과 데이터
-  const posts: SearchPost[] = [];
+  const [posts, setPosts] = useState<SearchPost[]>([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // 검색 결과 개수와 전체 페이지 수
-  const totalElements = posts.length;
-  const totalPages = 1;
 
+  useEffect(() => {
+    setCurrentPage(1);
+  },[keyword]);
+
+  useEffect(() => {
+    if(!keyword) {
+      setTotalPages(1);
+      setTotalElements(0);
+      setPosts([]);
+      return;
+    }
+    const controller = new AbortController();
+
+    searchApi(
+      {
+        keyword,
+        page: currentPage - 1, // 서버는 0부터 시작
+        size: PAGE_SIZE,
+        sort: "createdAt,desc",
+      },
+      controller.signal, )
+      .then((res) => {
+        if (!res.success) {
+          setPosts([]);
+          setTotalPages(1);
+          setTotalElements(0);
+          return;
+        }
+        const {content, totalElements, totalPages} = res.data.posts;
+        setPosts(content);
+        setTotalPages(Math.max(totalPages,1));
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        console.error(err);
+        setPosts([]);
+        setTotalPages(1);
+        setTotalElements(0);
+      });
+    return () => controller.abort();
+  }, [keyword, currentPage]);
   return (
     <S.PageContainer>
       <S.Title>'{keyword}' 검색 결과</S.Title>
@@ -37,6 +73,7 @@ export function SearchPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
+          pageSize={PAGE_SIZE}
         />
       ) : (
         // 검색 결과가 없으면 안내 문구 표시

@@ -5,18 +5,11 @@ import {
   FiChevronsRight,
 } from "react-icons/fi";
 import S from "./searchPostResult.style";
-
-// 검색 결과 게시글 타입
-export interface SearchPostResultItem {
-  id: number;
-  title: string;
-  categoryName: string;
-  createdAt: string;
-}
+import type {SearchPost} from "../../types/search.types.ts";
 
 // 검색 결과 컴포넌트 Props
 interface SearchPostResultProps {
-  posts: SearchPostResultItem[];
+  posts: SearchPost[];
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
