@@ -18,9 +18,6 @@ const S = {
     position: relative;
     overflow: hidden;
 
-    &::backdrop {
-      background-color: transparent;
-    }
     &[open] {
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
@@ -255,10 +252,7 @@ const S = {
     height: 45px;
     border-radius: 50%;
     background-color: ${colors.gray[100]};
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    object-fit: contain;
     flex-shrink: 0;
   `,
 
@@ -439,6 +433,7 @@ const S = {
   PostMenuArea: styled.div`
     position: relative;
     margin-left: auto;
+    margin-right: -16px;
     flex-shrink: 0;
 
     display: flex;
