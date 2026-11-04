@@ -49,7 +49,7 @@ export function SearchPage() {
           setTotalElements(0);
           return;
         }
-        const {content, totalElements, totalPages} = res.data.posts;
+        const {content,totalPages} = res.data.posts;
         setPosts(content);
         setTotalPages(Math.max(totalPages,1));
       })
