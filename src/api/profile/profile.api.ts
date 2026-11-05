@@ -27,9 +27,6 @@ const updateMyProfile = async (
   const response = await client.patch<UpdateProfileResponse>(
     "/users/me",
     formData,
-    {
-      headers: {"Content-Type": undefined}
-    },
   );
 
   return response.data;

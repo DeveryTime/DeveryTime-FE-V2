@@ -185,7 +185,7 @@ const S = {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 13px;
+    gap: 24px;
     border-top: 10px solid ${colors.gray[200]};
     margin-top: auto;
     padding-top: 9px;
@@ -196,7 +196,7 @@ const S = {
   LikeCount: styled.span`
     font-size: 20px;
     font-weight: 500;
-    padding-top: 3px;
+    line-height: 24px;
   `,
 
   LikeButton: styled.button`
@@ -209,20 +209,17 @@ const S = {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-left: 13px;
-    padding-top: 4px;
   `,
 
   CommentImage: styled.img`
-    padding-bottom: 2px;
-    padding-right: 2px;
+    width: 17px;
+    height: 17px;
   `,
 
   CommentCount: styled.span`
-    display: inline-block;
     font-size: 20px;
     font-weight: 500;
-    padding-bottom: 5px;
+    line-height: 24px;
   `,
 
   CommentList: styled.div`

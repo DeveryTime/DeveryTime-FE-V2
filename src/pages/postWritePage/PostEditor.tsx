@@ -9,6 +9,8 @@ import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
 import client from "../../api/client";
+import categoriesApi from "../../api/categories/categories.api";
+import type { Category } from "../../api/categories/categories.types";
 import postsApi from "../../api/posts/posts.api";
 import type { CreatePostRequest } from "../../api/posts/request/posts.request";
 import type {
@@ -23,20 +25,8 @@ interface PostEditorProps {
   onClose: () => void;
 }
 
-const POST_CATEGORIES = [
-  { id: 1, name: "전공" },
-  { id: 2, name: "일상" },
-  { id: 3, name: "교과" },
-  { id: 4, name: "급식" },
-  { id: 5, name: "프로젝트" },
-  { id: 6, name: "기숙사" },
-  { id: 7, name: "분실물" },
-] as const;
-
-type PostCategoryId = (typeof POST_CATEGORIES)[number]["id"];
-
 interface PostWriteDraft {
-  categoryId: PostCategoryId | "";
+  categoryId: number | "";
   title: string;
   content: JSONContent;
 }
@@ -64,7 +54,7 @@ const readPostWriteDraft = (userId: number): PostWriteDraft | null => {
       draft.content === null ||
       !("categoryId" in draft) ||
       (draft.categoryId !== "" &&
-        !POST_CATEGORIES.some((category) => category.id === draft.categoryId))
+        (typeof draft.categoryId !== "number" || !Number.isInteger(draft.categoryId)))
     ) {
       return null;
     }
@@ -88,9 +78,12 @@ const hasMeaningfulContent = (node: EditorNode): boolean => {
 
 const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [initialDraft] = useState(() => readPostWriteDraft(userId));
-  const [categoryId, setCategoryId] = useState<PostCategoryId | "">(
+  const [categoryId, setCategoryId] = useState<number | "">(
     initialDraft?.categoryId ?? "",
   );
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
+  const [hasCategoryLoadError, setHasCategoryLoadError] = useState(false);
   const [title, setTitle] = useState(initialDraft?.title ?? "");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
@@ -108,6 +101,33 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const linkDialogOpenRef = useRef(false);
   const backHandlerRef = useRef<() => void>(onClose);
   const hasSubmittedRef = useRef(false);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void categoriesApi.getCategories().then(
+      (nextCategories) => {
+        if (!isActive) return;
+
+        setCategories(nextCategories);
+        setCategoryId((currentCategoryId) =>
+          currentCategoryId !== "" &&
+          nextCategories.some((category) => category.id === currentCategoryId)
+            ? currentCategoryId
+            : "",
+        );
+      },
+      () => {
+        if (isActive) setHasCategoryLoadError(true);
+      },
+    ).finally(() => {
+      if (isActive) setAreCategoriesLoading(false);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
     try {
@@ -314,7 +334,11 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     if (isSubmitting) return;
 
     if (!postCreationCompleted) {
-      if (!categoryId) {
+      if (categoryId === "") {
+        alert("카테고리를 선택해주세요.");
+        return;
+      }
+      if (!categories.some((category) => category.id === categoryId)) {
         alert("카테고리를 선택해주세요.");
         return;
       }
@@ -335,10 +359,14 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       try {
         let postId = createdPostId;
         if (!postCreationCompleted) {
+          if (typeof categoryId !== "number") {
+            throw new Error("카테고리를 선택해주세요.");
+          }
+
           const createPostRequest: CreatePostRequest = {
             title: title.trim(),
             content: editor.getMarkdown().trim(),
-            categoryId: categoryId as PostCategoryId,
+            categoryId,
             status: "PUBLISHED",
           };
           const response = await client.post<CreatePostResponse>("/posts", createPostRequest);
@@ -419,11 +447,20 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           <S.CategorySelect
             id="post-category"
             value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value === "" ? "" : (Number(event.target.value) as PostCategoryId))}
-            disabled={isSubmitting || postCreationCompleted}
+            onChange={(event) => setCategoryId(event.target.value === "" ? "" : Number(event.target.value))}
+            disabled={isSubmitting || postCreationCompleted || areCategoriesLoading || hasCategoryLoadError || categories.length === 0}
+            aria-busy={areCategoriesLoading}
           >
-            <option value="">카테고리를 선택해주세요</option>
-            {POST_CATEGORIES.map((category) => (
+            <option value="">
+              {areCategoriesLoading
+                ? "카테고리를 불러오는 중입니다..."
+                : hasCategoryLoadError
+                  ? "카테고리를 불러오지 못했습니다"
+                  : categories.length === 0
+                    ? "등록된 카테고리가 없습니다"
+                    : "카테고리를 선택해주세요"}
+            </option>
+            {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>

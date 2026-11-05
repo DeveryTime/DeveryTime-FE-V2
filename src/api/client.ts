@@ -25,6 +25,10 @@ const isPublicAuthRequest = (url?: string): boolean => {
 };
 
 client.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
+
   // 로그인과 재발급은 공개 API다. 특히 재발급은 refreshToken을 body로 보낸다.
   if (isPublicAuthRequest(config.url)) {
     delete config.headers.Authorization;
