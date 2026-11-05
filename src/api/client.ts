@@ -11,7 +11,9 @@ const client = axios.create({
   baseURL: "/api",
 });
 
-let refreshInFlight: Promise<string> | null = null;
+type RefreshedTokens = { accessToken: string; refreshToken: string };
+
+let refreshInFlight: Promise<RefreshedTokens> | null = null;
 
 const getRequestPath = (url?: string): string =>
   (url?.split("?")[0] ?? "")
@@ -25,10 +27,6 @@ const isPublicAuthRequest = (url?: string): boolean => {
 };
 
 client.interceptors.request.use((config) => {
-  if (config.data instanceof FormData) {
-    delete config.headers["Content-Type"];
-  }
-
   // 로그인과 재발급은 공개 API다. 특히 재발급은 refreshToken을 body로 보낸다.
   if (isPublicAuthRequest(config.url)) {
     delete config.headers.Authorization;
@@ -74,11 +72,15 @@ client.interceptors.response.use(
         try {
           const { reissueTokenApi } = await import("./authApi");
           const response = await reissueTokenApi({ refreshToken });
-          return response.data.accessToken;
+          return {
+            accessToken: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
+          };
         } catch (refreshError: unknown) {
           if (
             axios.isAxiosError(refreshError) &&
-            refreshError.response?.status === 401
+            refreshError.response?.status === 401 &&
+            getRefreshToken() === refreshToken
           ) {
             clearAuthTokens();
           }
@@ -90,10 +92,11 @@ client.interceptors.response.use(
     }
 
     try {
-      const accessToken = await refreshInFlight;
+      const { accessToken, refreshToken: rotatedRefreshToken } =
+        await refreshInFlight;
 
       // 로그아웃 또는 다른 계정 로그인 도중 끝난 재발급으로 세션을 되살리지 않는다.
-      if (getRefreshToken() !== refreshToken) {
+      if (getRefreshToken() !== rotatedRefreshToken) {
         return Promise.reject(error);
       }
 
