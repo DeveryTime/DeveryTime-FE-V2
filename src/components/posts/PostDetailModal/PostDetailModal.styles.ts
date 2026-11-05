@@ -5,23 +5,6 @@ import Input from "../../common/Input/Input";
 import Modal from "../../common/Modal/Modal";
 
 const S = {
-  EditDialog: styled(Modal)`
-    width: min(700px, calc(100vw - 32px));
-    height: min(600px, calc(100vh - 32px));
-    max-height: calc(100vh - 32px);
-    border-radius: 3px;
-    overflow: hidden;
-
-    &[open] { display: flex; flex-direction: column; }
-
-    & > button:first-of-type {
-      left: 14px;
-      right: auto;
-      top: 15px;
-      width: 30px;
-      height: 30px;
-    }
-  `,
   DetailDialog: styled(Modal)`
     width: 875px;
     height: calc(100vh - 48px);
@@ -35,9 +18,6 @@ const S = {
     position: relative;
     overflow: hidden;
 
-    &::backdrop {
-      background-color: transparent;
-    }
     &[open] {
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
@@ -272,10 +252,7 @@ const S = {
     height: 45px;
     border-radius: 50%;
     background-color: ${colors.gray[100]};
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    object-fit: cover;
     flex-shrink: 0;
   `,
 
@@ -456,6 +433,7 @@ const S = {
   PostMenuArea: styled.div`
     position: relative;
     margin-left: auto;
+    margin-right: -16px;
     flex-shrink: 0;
 
     display: flex;

@@ -46,21 +46,6 @@ const S = {
     font-size: clamp(11px, 1.1vw, 16px);
     font-weight: 500;
 
-    &:nth-of-type(1) {
-      padding-left: 13px;
-    }
-
-    &:nth-of-type(2) {
-      padding-left: 2px;
-    }
-
-    &:nth-of-type(3) {
-      padding-left: clamp(12px, 11.2vw, 152px);
-    }
-
-    &:nth-of-type(4) {
-      padding-left: clamp(12px, 6.9vw, 94px);
-    }
   `,
 
   TableCell: styled.td`
