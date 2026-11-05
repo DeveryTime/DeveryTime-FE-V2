@@ -13,7 +13,7 @@ import {
 import type { AuthApiError } from "../../../types/auth";
 import { readSignupDraft, saveSignupDraft } from "../signupDraft";
 
-const VERIFICATION_DURATION_SECONDS = 3 * 60;
+const VERIFICATION_DURATION_SECONDS = 5 * 60;
 
 const isValidSchoolEmail = (value: string) => {
   const [localPart, domain, ...extraParts] = value.trim().split("@");
@@ -67,7 +67,7 @@ const SignupPage2 = () => {
       });
 
       setVerificationCode("");
-      // 인증번호 발송 API가 성공한 뒤 3분(180초) 타이머를 시작합니다.
+      // 인증번호 발송 API가 성공한 뒤 5분(300초) 타이머를 시작합니다.
       setTime(VERIFICATION_DURATION_SECONDS);
       alert("인증번호가 전송되었습니다.");
     } catch (error: unknown) {
