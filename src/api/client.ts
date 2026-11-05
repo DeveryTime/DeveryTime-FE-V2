@@ -5,10 +5,8 @@ const client = axios.create({
   baseURL: "/api",
 });
 
+
 client.interceptors.request.use((config) => {
-  if (config.data instanceof FormData) {
-    delete config.headers["Content-Type"];
-  }
   const requestPath = config.url?.split("?")[0].replace(/\/$/, "");
 
   // 로그인은 토큰을 발급받기 전의 공개 요청이므로 기존 토큰을 보내지 않는다.
