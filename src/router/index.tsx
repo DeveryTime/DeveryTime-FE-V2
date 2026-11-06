@@ -10,7 +10,7 @@ import PostEditor from "../pages/postWritePage/PostEditor";
 import Profile from "../pages/profileChange/profileChange";
 import Landing from "../pages/landingPage/landingPage";
 import Info from "../pages/infopage/myInfoPage";
-import CategoryPage from "../pages/CategoryPage/CategoryPage";
+import CategoryPageRoute from "../pages/CategoryPage/CategoryPageRoute";
 import MainLayout from "../components/layout/mainLayout";
 import PostWritePage from "../pages/postWritePage/PostWritePage";
 import myPostsPage from "../pages/MyPostsPage/MyPostsPage.tsx";
@@ -67,9 +67,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/Categorypage",
-        element: (
-          <CategoryPage categoryId={0} categoryName="" currentUserId={0} />
-        ),
+        Component: CategoryPageRoute,
       },
       {
         path: "/post",
