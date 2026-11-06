@@ -128,6 +128,7 @@ const S = {
   height: 32px;
   display: block;
   flex-shrink: 0;
+      object-fit: cover;
       border-radius: 50%;
       cursor: pointer;
   `
