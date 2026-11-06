@@ -1,17 +1,27 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import S from "./Navbar.style";
 import logoIcon from "../../assets/logoIcon.svg";
 import profile from "../../assets/profile.svg";
 import searchIcon from "../../assets/searchIcon.svg";
+import profileApi from "../../api/profile/profile.api.ts";
 
 const NavBar = () => {
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
 
   // localStorage에 token이 있으면 로그인 상태로 판단
   const isLoggedIn = Boolean(localStorage.getItem("accessToken"));
+
+  useEffect(() => {
+    if(!isLoggedIn)return;
+    profileApi
+      .getMyProfile()
+      .then((data)  => setProfileImage(data.profileImageUrl) )
+      .catch((e) => console.error(e));
+  },[isLoggedIn]);
 
   // 카테고리 목록
   const CATEGORIES = [
@@ -81,7 +91,7 @@ const NavBar = () => {
         {/* 로그인 상태에 따라 프로필 또는 로그인 버튼 표시 */}
         <div>
           {isLoggedIn ? (
-            <Link to="/info"><S.ProfileImage src={profile} alt="프로필" /></Link>
+            <Link to="/info"><S.ProfileImage src={profileImage || profile} alt="프로필" /></Link>
           ) : (
             <S.Login to="/login">로그인</S.Login>
           )}
