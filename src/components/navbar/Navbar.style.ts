@@ -10,7 +10,7 @@ const S = {
     box-sizing: border-box;
     background-color: #b0c5fd;
     border: none;
-    box-shadow: 0px 1px 4px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.1);
     width: 100%;
   `,
 
@@ -126,11 +126,10 @@ const S = {
   ProfileImage: styled.img`
    width: 32px;
   height: 32px;
-  padding: 0;
-  margin: 0;
   display: block;
-  object-fit: cover;
   flex-shrink: 0;
+      border-radius: 50%;
+      cursor: pointer;
   `
 };
 
