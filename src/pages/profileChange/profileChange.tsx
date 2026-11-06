@@ -133,6 +133,7 @@ const Profile = () => {
           ? { profileImage: newProfileImage }
           : {}),
       });
+      window.dispatchEvent(new Event("profile-updated"));
 
       const updatedProfile = await profileApi.getMyProfile();
 
