@@ -263,7 +263,7 @@ const Profile = () => {
             {/* 저장 버튼 */}
             <S.SaveBtn
               type="button"
-              onClick={() => { void handleSave(); navigate("/info")}}
+              onClick={() =>  void handleSave()}
               disabled={!canSave}
             >
               {isSaving ? "저장 중..." : "변경사항 저장"}
