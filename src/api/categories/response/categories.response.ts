@@ -1,3 +1,3 @@
-import type { Category } from "../categories.types";
+import type { CategoryResponseProps } from "../categories.types";
 
-export type CategoriesResponse = Category[];
+export type CategoriesResponse = CategoryResponseProps[];
