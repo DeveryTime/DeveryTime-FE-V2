@@ -17,10 +17,16 @@ const NavBar = () => {
 
   useEffect(() => {
     if(!isLoggedIn)return;
-    profileApi
-      .getMyProfile()
-      .then((data)  => setProfileImage(data.profileImageUrl) )
-      .catch((e) => console.error(e));
+    const fetchProfile =  () => {
+      profileApi
+        .getMyProfile()
+        .then((data)  => setProfileImage(data.profileImageUrl) )
+        .catch((e) => console.error(e));
+    };
+    fetchProfile();
+    window.addEventListener("profile-updated", fetchProfile);
+    return () => window.removeEventListener("profile-updated", fetchProfile);
+
   },[isLoggedIn]);
 
   // 카테고리 목록
