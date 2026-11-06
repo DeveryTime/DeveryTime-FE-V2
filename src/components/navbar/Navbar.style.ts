@@ -23,7 +23,7 @@ const S = {
   `,
 
   NavCatalog: styled.div`
-    gap: 58px;
+    gap: 28px;
     display: flex;
   `,
   Logo: styled(Link)`
@@ -91,7 +91,6 @@ const S = {
     display: flex;
     align-items: center;
     gap: 27px;
-    padding: 0 0 0 58px;
     color: #fff;
     font-weight: 700;
     flex-shrink: 0;
@@ -124,8 +123,8 @@ const S = {
   `,
 
   ProfileImage: styled.img`
-   width: 32px;
-  height: 32px;
+   width: 45px;
+  height: 45px;
   display: block;
   flex-shrink: 0;
       object-fit: cover;
