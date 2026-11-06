@@ -176,7 +176,7 @@ const SignupPage2 = () => {
             <Signup2S.BackButton
               type="button"
               aria-label="이전 페이지"
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/signup/1")}
             >
               <IoIosArrowBack />
             </Signup2S.BackButton>
