@@ -487,9 +487,9 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             ))}
           </S.CategorySelect>
         </S.CategoryField>
-        {categoryLoadError && (
+        {hasCategoryLoadError && (
           <S.CategoryError role="alert">
-            <span>{categoryLoadError}</span>
+            <span>{categoryLoadError || "카테고리를 불러오지 못했습니다."}</span>
             <button
               type="button"
               onClick={() => {

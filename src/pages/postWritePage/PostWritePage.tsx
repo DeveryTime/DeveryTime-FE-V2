@@ -8,6 +8,7 @@ const PostWritePage = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<number | null>(null);
   const [hasError, setHasError] = useState(false);
+  const [profileLoadAttempt, setProfileLoadAttempt] = useState(0);
 
   useEffect(() => {
     let isActive = true;
@@ -23,9 +24,24 @@ const PostWritePage = () => {
       },
     );
     return () => { isActive = false; };
-  }, [navigate]);
+  }, [navigate, profileLoadAttempt]);
 
-  if (hasError) return <p role="alert">사용자 정보를 불러오지 못했습니다.</p>;
+  if (hasError) {
+    return (
+      <div role="alert">
+        <p>사용자 정보를 불러오지 못했습니다.</p>
+        <button
+          type="button"
+          onClick={() => {
+            setHasError(false);
+            setProfileLoadAttempt((attempt) => attempt + 1);
+          }}
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
   if (userId === null) return <p role="status">사용자 정보를 불러오는 중입니다...</p>;
 
   return <PostEditor userId={userId} onClose={() => navigate("/posts")} />;
