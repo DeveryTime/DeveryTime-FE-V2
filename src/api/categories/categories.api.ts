@@ -5,9 +5,7 @@ import type { CategoryListData } from "./categories.types";
 const getCategories = async (): Promise<CategoryListData[]> => {
   const response = await client.get<CategoriesResponse>("/categories");
 
-  return response.data
-    .filter((category) => category.success)
-    .map((category) => category.data);
+  return response.data.data;
 };
 
 const categoriesApi = {

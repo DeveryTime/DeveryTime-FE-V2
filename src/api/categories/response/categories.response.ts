@@ -1,3 +1,3 @@
 import type { CategoryResponseProps } from "../categories.types";
 
-export type CategoriesResponse = CategoryResponseProps[];
+export type CategoriesResponse = CategoryResponseProps;

@@ -7,5 +7,5 @@ export type Category = CategoryListData;
 
 export interface CategoryResponseProps {
   success: boolean;
-  data: CategoryListData;
+  data: CategoryListData[];
 }
