@@ -6,7 +6,6 @@ import SignupPage3 from "../pages/signupPage/signupPage3/signupPage3";
 import LoginPage from "../pages/loginPage/loginPage";
 import SearchPage from "../pages/searchPage/searchPage";
 import PostMainRoute from "../pages/PostMainPage/PostMainRoute";
-import PostEditor from "../pages/postWritePage/PostEditor";
 import Profile from "../pages/profileChange/profileChange";
 import Landing from "../pages/landingPage/landingPage";
 import Info from "../pages/infopage/myInfoPage";
@@ -55,7 +54,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/PostEditor",
-        element: <PostEditor userId={0} onClose={() => {}} />,
+        Component: PostWritePage,
       },
       {
         path: "/Profile",

@@ -9,6 +9,7 @@ import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
 import client from "../../api/client";
+import getApiErrorMessage from "../../api/errorMessages";
 import categoriesApi from "../../api/categories/categories.api";
 import type { Category } from "../../api/categories/categories.types";
 import postsApi from "../../api/posts/posts.api";
@@ -83,7 +84,9 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   );
   const [categories, setCategories] = useState<Category[]>([]);
   const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
-  const [hasCategoryLoadError, setHasCategoryLoadError] = useState(false);
+  const [categoryLoadError, setCategoryLoadError] = useState<string | null>(null);
+  const [categoryLoadAttempt, setCategoryLoadAttempt] = useState(0);
+  const hasCategoryLoadError = categoryLoadError !== null;
   const [title, setTitle] = useState(initialDraft?.title ?? "");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
@@ -105,9 +108,22 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   useEffect(() => {
     let isActive = true;
 
-    void categoriesApi.getCategories().then(
-      (nextCategories) => {
+    void (async () => {
+      try {
+        const nextCategories = await categoriesApi.getCategories();
         if (!isActive) return;
+
+        if (
+          !Array.isArray(nextCategories) ||
+          !nextCategories.every(
+            (category) =>
+              category !== null &&
+              Number.isSafeInteger(category.id) &&
+              typeof category.name === "string",
+          )
+        ) {
+          throw new Error("카테고리 API 응답 형식이 올바르지 않습니다.");
+        }
 
         setCategories(nextCategories);
         setCategoryId((currentCategoryId) =>
@@ -116,18 +132,22 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             ? currentCategoryId
             : "",
         );
-      },
-      () => {
-        if (isActive) setHasCategoryLoadError(true);
-      },
-    ).finally(() => {
-      if (isActive) setAreCategoriesLoading(false);
-    });
+      } catch (error: unknown) {
+        if (!isActive) return;
+        setCategoryLoadError(
+          error instanceof Error && error.message === "카테고리 API 응답 형식이 올바르지 않습니다."
+            ? error.message
+            : getApiErrorMessage(error, "카테고리를 불러오지 못했습니다."),
+        );
+      } finally {
+        if (isActive) setAreCategoriesLoading(false);
+      }
+    })();
 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [categoryLoadAttempt, userId]);
 
   const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
     try {
@@ -467,6 +487,22 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             ))}
           </S.CategorySelect>
         </S.CategoryField>
+        {categoryLoadError && (
+          <S.CategoryError role="alert">
+            <span>{categoryLoadError}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setAreCategoriesLoading(true);
+                setCategoryLoadError(null);
+                setCategoryLoadAttempt((attempt) => attempt + 1);
+              }}
+              disabled={areCategoriesLoading}
+            >
+              다시 시도
+            </button>
+          </S.CategoryError>
+        )}
 
         <S.TitleInput
           ref={titleInputRef}
