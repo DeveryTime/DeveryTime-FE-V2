@@ -6,6 +6,7 @@ import logoIcon from "../../assets/logoIcon.svg";
 import profile from "../../assets/profile.svg";
 import searchIcon from "../../assets/searchIcon.svg";
 import profileApi from "../../api/profile/profile.api.ts";
+import toast from "react-hot-toast";
 
 const NavBar = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -88,6 +89,12 @@ const NavBar = () => {
             <Link
               key={category.id}
               to={`/Categorypage?categoryId=${category.id}&categoryName=${encodeURIComponent(category.name)}`}
+              onClick={(e) =>{
+                if (isLoggedIn) {
+                  e. preventDefault();
+                  toast.error("로그인이 필요합니다.")
+                  navigate("/login");
+                }}}
             >
               {category.name}
             </Link>
