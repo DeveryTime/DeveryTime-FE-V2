@@ -9,9 +9,8 @@ import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
 import client from "../../api/client";
-import getApiErrorMessage from "../../api/errorMessages";
-import categoriesApi from "../../api/categories/categories.api";
 import type { Category } from "../../api/categories/categories.types";
+import { CATEGORIES } from "../../constants/categories";
 import postsApi from "../../api/posts/posts.api";
 import type { CreatePostRequest } from "../../api/posts/request/posts.request";
 import type {
@@ -82,11 +81,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [categoryId, setCategoryId] = useState<number | "">(
     initialDraft?.categoryId ?? "",
   );
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
-  const [categoryLoadError, setCategoryLoadError] = useState<string | null>(null);
-  const [categoryLoadAttempt, setCategoryLoadAttempt] = useState(0);
-  const hasCategoryLoadError = categoryLoadError !== null;
+  const categories = CATEGORIES satisfies readonly Category[];
   const [title, setTitle] = useState(initialDraft?.title ?? "");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
@@ -104,50 +99,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const linkDialogOpenRef = useRef(false);
   const backHandlerRef = useRef<() => void>(onClose);
   const hasSubmittedRef = useRef(false);
-
-  useEffect(() => {
-    let isActive = true;
-
-    void (async () => {
-      try {
-        const nextCategories = await categoriesApi.getCategories();
-        if (!isActive) return;
-
-        if (
-          !Array.isArray(nextCategories) ||
-          !nextCategories.every(
-            (category) =>
-              category !== null &&
-              Number.isSafeInteger(category.id) &&
-              typeof category.name === "string",
-          )
-        ) {
-          throw new Error("카테고리 API 응답 형식이 올바르지 않습니다.");
-        }
-
-        setCategories(nextCategories);
-        setCategoryId((currentCategoryId) =>
-          currentCategoryId !== "" &&
-          nextCategories.some((category) => category.id === currentCategoryId)
-            ? currentCategoryId
-            : "",
-        );
-      } catch (error: unknown) {
-        if (!isActive) return;
-        setCategoryLoadError(
-          error instanceof Error && error.message === "카테고리 API 응답 형식이 올바르지 않습니다."
-            ? error.message
-            : getApiErrorMessage(error, "카테고리를 불러오지 못했습니다."),
-        );
-      } finally {
-        if (isActive) setAreCategoriesLoading(false);
-      }
-    })();
-
-    return () => {
-      isActive = false;
-    };
-  }, [categoryLoadAttempt, userId]);
 
   const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
     try {
@@ -468,17 +419,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             id="post-category"
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value === "" ? "" : Number(event.target.value))}
-            disabled={isSubmitting || postCreationCompleted || areCategoriesLoading || hasCategoryLoadError || categories.length === 0}
-            aria-busy={areCategoriesLoading}
+            disabled={isSubmitting || postCreationCompleted}
           >
             <option value="">
-              {areCategoriesLoading
-                ? "카테고리를 불러오는 중입니다..."
-                : hasCategoryLoadError
-                  ? "카테고리를 불러오지 못했습니다"
-                  : categories.length === 0
-                    ? "등록된 카테고리가 없습니다"
-                    : "카테고리를 선택해주세요"}
+              카테고리를 선택해주세요
             </option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -487,22 +431,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             ))}
           </S.CategorySelect>
         </S.CategoryField>
-        {hasCategoryLoadError && (
-          <S.CategoryError role="alert">
-            <span>{categoryLoadError || "카테고리를 불러오지 못했습니다."}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setAreCategoriesLoading(true);
-                setCategoryLoadError(null);
-                setCategoryLoadAttempt((attempt) => attempt + 1);
-              }}
-              disabled={areCategoriesLoading}
-            >
-              다시 시도
-            </button>
-          </S.CategoryError>
-        )}
 
         <S.TitleInput
           ref={titleInputRef}

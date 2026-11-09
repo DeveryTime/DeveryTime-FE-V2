@@ -79,16 +79,6 @@ const S = {
     }
     &:disabled { color: #888; cursor: not-allowed; }
   `,
-  CategoryError: styled.div`
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 0 18px 8px 78px; color: #b42318; font-size: 12px;
-    button {
-      flex: 0 0 auto; padding: 4px 8px; border: 1px solid #d8d8d8;
-      border-radius: 5px; background: #fff; color: #333; font: inherit;
-      cursor: pointer;
-    }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-  `,
   TitleInput: styled.input`
     width: 100%; box-sizing: border-box; padding: 14px 18px; border: 0;
     outline: none; font-size: 20px; font-weight: 700; color: #222;
