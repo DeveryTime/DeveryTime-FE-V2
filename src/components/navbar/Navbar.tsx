@@ -90,7 +90,7 @@ const NavBar = () => {
               key={category.id}
               to={`/Categorypage?categoryId=${category.id}&categoryName=${encodeURIComponent(category.name)}`}
               onClick={(e) =>{
-                if (isLoggedIn) {
+                if (!isLoggedIn) {
                   e. preventDefault();
                   toast.error("로그인이 필요합니다.")
                   navigate("/login");
