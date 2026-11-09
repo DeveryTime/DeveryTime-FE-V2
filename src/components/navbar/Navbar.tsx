@@ -6,6 +6,7 @@ import logoIcon from "../../assets/logoIcon.svg";
 import profile from "../../assets/profile.svg";
 import searchIcon from "../../assets/searchIcon.svg";
 import profileApi from "../../api/profile/profile.api.ts";
+import { CATEGORIES } from "../../constants/categories";
 
 const NavBar = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -28,17 +29,6 @@ const NavBar = () => {
     return () => window.removeEventListener("profile-updated", fetchProfile);
 
   },[isLoggedIn]);
-
-  // 카테고리 목록
-  const CATEGORIES = [
-    { id: 1, name: "전공" },
-    { id: 2, name: "일상" },
-    { id: 3, name: "교과" },
-    { id: 4, name: "급식" },
-    { id: 5, name: "프로젝트" },
-    { id: 6, name: "기숙사" },
-    { id: 7, name: "분실물" },
-  ];
 
   // 검색 실행
   const handleSearch = () => {
