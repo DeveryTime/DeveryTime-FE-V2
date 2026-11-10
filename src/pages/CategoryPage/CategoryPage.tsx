@@ -29,7 +29,7 @@ const CategoryPage = ({
 }: CategoryPageProps) => {
   const navigate = useNavigate();
   const [selectedSort, setSelectedSort] =
-    useState<PostSort>("createdAt,desc");
+    useState<PostSort>("likeCount,desc");
   const [pagination, setPagination] = useState({ categoryId, page: 1 });
   const currentPage =
     pagination.categoryId === categoryId ? pagination.page : 1;
