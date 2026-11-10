@@ -101,10 +101,12 @@ const S = {
       text-decoration: none;
       cursor: pointer;
 
-      &:hover {
-        color: #000;
-      }
-    }
+        &:hover {
+            color: #000;
+        }
+        &.active {
+            color: #64748B;
+        }
   `,
 
   Login: styled(Link)`
