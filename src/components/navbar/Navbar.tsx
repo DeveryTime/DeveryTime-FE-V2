@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import { useNavigate, Link } from "react-router-dom";
+import {useNavigate, Link, useLocation} from "react-router-dom";
 
 import S from "./Navbar.style";
 import logoIcon from "../../assets/logoIcon.svg";
@@ -15,6 +15,8 @@ const NavBar = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentCategoryId = new URLSearchParams(location.search).get("categoryId");
 
   // localStorage에 token이 있으면 로그인 상태로 판단
   const isLoggedIn = Boolean(localStorage.getItem("accessToken"));
@@ -81,6 +83,7 @@ const NavBar = () => {
             <Link
               key={category.id}
               to={`/Categorypage?categoryId=${category.id}&categoryName=${encodeURIComponent(category.name)}`}
+              className={currentCategoryId=== String(category.id) ?  "active" : ""}
               onClick={(e) =>{
                 if (!isLoggedIn) {
                   e. preventDefault();

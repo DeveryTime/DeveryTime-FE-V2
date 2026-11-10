@@ -104,6 +104,9 @@ const S = {
       &:hover {
         color: #000;
       }
+        &.active {
+            color: #64748B;
+        }
     }
   `,
 
