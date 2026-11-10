@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEv
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
 import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
@@ -121,7 +120,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         link: { openOnClick: false, autolink: true },
       }),
       Markdown,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image,
       Placeholder.configure({ placeholder: "내용을 입력해주세요." }),
     ],
@@ -446,10 +444,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           <S.ToolButton type="button" $active={editor.isActive("italic")} aria-label="기울임" onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></S.ToolButton>
           <S.ToolButton type="button" $active={editor.isActive("underline")} aria-label="밑줄" onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></S.ToolButton>
           <S.ToolButton type="button" $active={editor.isActive("strike")} aria-label="취소선" onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></S.ToolButton>
-          <S.Divider />
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "left" })} aria-label="왼쪽 정렬" onClick={() => editor.chain().focus().setTextAlign("left").run()}>≡</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "center" })} aria-label="가운데 정렬" onClick={() => editor.chain().focus().setTextAlign("center").run()}>≡</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "right" })} aria-label="오른쪽 정렬" onClick={() => editor.chain().focus().setTextAlign("right").run()}>≡</S.ToolButton>
           <S.Divider />
           <S.ToolButton type="button" $active={editor.isActive("bulletList")} aria-label="글머리 기호 목록" onClick={() => editor.chain().focus().toggleBulletList().run()}>•</S.ToolButton>
           <S.ToolButton type="button" $active={editor.isActive("orderedList")} aria-label="번호 목록" onClick={() => editor.chain().focus().toggleOrderedList().run()}>1.</S.ToolButton>
