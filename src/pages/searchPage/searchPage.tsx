@@ -9,16 +9,34 @@ import type {SearchPost} from "../../types/search.types.ts";
 import {searchApi} from "../../api/search/search.api.ts";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal.tsx";
 import {hasStoredAccessToken} from "../../api/authSession.ts";
+import profileApi from "../../api/profile/profile.api.ts";
 
 const PAGE_SIZE = 10;
 
-interface SearchPageProps {
-  currentUserId: number | null;
-  isProfileLoading: boolean;
-}
-
-export function SearchPage({currentUserId, isProfileLoading} : SearchPageProps) {
+export function SearchPage() {
   const navigate = useNavigate();
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(hasStoredAccessToken);
+
+  useEffect(() => {
+    let isActive = true;
+    if (!hasStoredAccessToken()) return;
+    const fetchCurrentUser = async () => {
+      try {
+        const profile = await profileApi.getMyProfile();
+        if (isActive) {
+          setCurrentUserId(profile.id);
+        }
+      } catch {
+      } finally {
+        if (isActive) setIsProfileLoading(false);
+      }
+    };
+    void fetchCurrentUser();
+    return () => {
+      isActive = false;
+    };
+  }, []);
   // URL의 검색어 가져오기
   const [searchParams] = useSearchParams();
   const keyword = searchParams.get("keyword") || "";
