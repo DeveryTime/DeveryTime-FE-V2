@@ -16,6 +16,7 @@ import type {
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
 import profileApi from "../../api/profile/profile.api";
+import { hasStoredAccessToken } from "../../api/authSession";
 
 interface CategoryPageProps {
   categoryId: number;
@@ -175,7 +176,15 @@ const CategoryPage = ({
       </S.SortMenuArea>
 
       <S.Content>
-        <S.Title>{categoryName}</S.Title>
+        <S.ContentHeader>
+          <S.Title>{categoryName}</S.Title>
+          <S.WriteButton
+            type="button"
+            onClick={() => navigate(hasStoredAccessToken() ? "/posts/new" : "/login")}
+          >
+            글쓰기
+          </S.WriteButton>
+        </S.ContentHeader>
         <S.Description>{categoryName} 게시판입니다.</S.Description>
         <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
