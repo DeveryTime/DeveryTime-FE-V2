@@ -35,9 +35,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
-    null,
-  );
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const detailRequestId = useRef(0);
@@ -77,15 +75,13 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
         const nextTotalPages = Math.max(1, response.totalPages);
 
         setPosts(
-          response.content.map(
-            (post: PostListResponseItem, index: number) => ({
-              id: post.id,
-              number: responsePage * response.size + index + 1,
-              category: post.categoryName,
-              title: post.title,
-              createdAt: formatPostDate(post.createdAt),
-            }),
-          ),
+          response.content.map((post: PostListResponseItem, index: number) => ({
+            id: post.id,
+            number: responsePage * response.size + index + 1,
+            category: post.categoryName,
+            title: post.title,
+            createdAt: formatPostDate(post.createdAt),
+          })),
         );
         setTotalPages(nextTotalPages);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
@@ -153,11 +149,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
     }
   };
 
-  const handlePostUpdate = (
-    postId: number,
-    title: string,
-    content: string,
-  ) => {
+  const handlePostUpdate = (postId: number, title: string, content: string) => {
     setPosts((currentPosts) =>
       currentPosts.map((post) =>
         post.id === postId ? { ...post, title } : post,
@@ -172,7 +164,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
     <S.PageContainer>
       <S.PageHeader>
         <S.BackButton type="button" aria-label="뒤로가기" onClick={handleBack}>
-          &lt; 뒤로 가기
+          &lt;
         </S.BackButton>
         <S.Title>내가 쓴 글</S.Title>
       </S.PageHeader>
@@ -200,7 +192,9 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
           게시글 상세 정보를 불러오는 중입니다...
         </S.StatusMessage>
       )}
-      {detailError && <S.ErrorMessage role="alert">{detailError}</S.ErrorMessage>}
+      {detailError && (
+        <S.ErrorMessage role="alert">{detailError}</S.ErrorMessage>
+      )}
 
       {selectedPost && (
         <PostDetailModal

@@ -1,11 +1,11 @@
 import S from "./PostPagination.styles";
 
 import {
-  ChevronsLeft,
-  ChevronLeft,
-  ChevronsRight,
-  ChevronRight,
-} from "lucide-react";
+  FiChevronsLeft,
+  FiChevronLeft,
+  FiChevronsRight,
+  FiChevronRight,
+} from "react-icons/fi";
 
 //페이지네이션이 부모에게 받을 값 타입 정의.
 interface PostPaginationProps {
@@ -44,7 +44,7 @@ const PostPagination = ({
           disabled={totalPages === 0 || currentPage === 1}
           aria-label="첫 페이지로 이동"
         >
-          <ChevronsLeft aria-hidden="true" />
+          <FiChevronsLeft aria-hidden="true" />
         </S.PageButton>
 
         <S.PageButton
@@ -53,7 +53,7 @@ const PostPagination = ({
           disabled={totalPages === 0 || currentPage === 1}
           aria-label="이전 페이지"
         >
-          <ChevronLeft aria-hidden="true" />
+          <FiChevronLeft aria-hidden="true" />
         </S.PageButton>
 
         {pages.map((page) => (
@@ -73,7 +73,7 @@ const PostPagination = ({
           disabled={totalPages === 0 || currentPage === totalPages}
           aria-label="다음 페이지로 이동"
         >
-          <ChevronRight aria-hidden="true" />
+          <FiChevronRight aria-hidden="true" />
         </S.PageButton>
 
         <S.PageButton
@@ -82,7 +82,7 @@ const PostPagination = ({
           disabled={totalPages === 0 || currentPage === totalPages}
           aria-label="마지막 페이지로 이동"
         >
-          <ChevronsRight aria-hidden="true" />
+          <FiChevronsRight aria-hidden="true" />
         </S.PageButton>
       </S.PaginationContainer>
     </>

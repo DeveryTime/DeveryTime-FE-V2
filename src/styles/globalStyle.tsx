@@ -13,6 +13,13 @@ export const GlobalStyle = () => (
         font-family: Pretendard, sans-serif;
       }
 
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
       a {
         text-decoration: none;
         color: inherit;

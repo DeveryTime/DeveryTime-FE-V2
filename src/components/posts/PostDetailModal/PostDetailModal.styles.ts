@@ -18,9 +18,6 @@ const S = {
     position: relative;
     overflow: hidden;
 
-    &::backdrop {
-      background-color: ${colors.alpha.black45};
-    }
     &[open] {
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
@@ -40,11 +37,16 @@ const S = {
     display: flex;
     align-items: center;
     gap: 15px;
+
+    @media (max-width: 580px) {
+      gap: 10px;
+    }
   `,
 
   ProfileImage: styled.img`
     width: 60px;
     height: 60px;
+    flex-shrink: 0;
 
     border-radius: 50%;
     object-fit: cover;
@@ -62,11 +64,11 @@ const S = {
     line-height: 1.6;
     overflow-wrap: anywhere;
 
-    & > :first-child {
+    .tiptap > :first-child {
       margin-top: 0;
     }
 
-    & > :last-child {
+    .tiptap > :last-child {
       margin-bottom: 0;
     }
 
@@ -148,6 +150,8 @@ const S = {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
   `,
   WriterName: styled.strong`
     font-weight: 600;
@@ -177,25 +181,11 @@ const S = {
     margin-top: 24px;
   `,
 
-  CategoryLabel: styled.span`
-    display: inline-block;
-    position: absolute;
-    top: 50px;
-    right: clamp(16px, 4vw, 40px);
-    box-sizing: border-box;
-    max-width: calc(100% - 32px);
-    font-size: 14px;
-    background-color: ${colors.gray[50]};
-    color: ${colors.gray[700]};
-    border-radius: 10px;
-    padding: 10px 16px;
-  `,
-
   ReactionBar: styled.div`
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 13px;
+    gap: 24px;
     border-top: 10px solid ${colors.gray[200]};
     margin-top: auto;
     padding-top: 9px;
@@ -206,7 +196,7 @@ const S = {
   LikeCount: styled.span`
     font-size: 20px;
     font-weight: 500;
-    padding-top: 3px;
+    line-height: 24px;
   `,
 
   LikeButton: styled.button`
@@ -219,20 +209,17 @@ const S = {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-left: 13px;
-    padding-top: 4px;
   `,
 
   CommentImage: styled.img`
-    padding-bottom: 2px;
-    padding-right: 2px;
+    width: 17px;
+    height: 17px;
   `,
 
   CommentCount: styled.span`
-    display: inline-block;
     font-size: 20px;
     font-weight: 500;
-    padding-bottom: 5px;
+    line-height: 24px;
   `,
 
   CommentList: styled.div`
@@ -262,10 +249,7 @@ const S = {
     height: 45px;
     border-radius: 50%;
     background-color: ${colors.gray[100]};
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    object-fit: cover;
     flex-shrink: 0;
   `,
 
@@ -273,6 +257,8 @@ const S = {
     display: flex;
     align-items: center;
     gap: 13px;
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 16px;
     font-weight: 700;
   `,
@@ -302,6 +288,8 @@ const S = {
   `,
 
   PostMenuButton: styled.button`
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -336,6 +324,7 @@ const S = {
   CommentMenuArea: styled.div`
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 10px;
     position: relative;
   `,
@@ -351,9 +340,9 @@ const S = {
 
   CommentMenuPopover: styled.div`
     position: absolute;
-    top: calc(100% + 8px);
+    bottom: calc(100% + 8px);
     right: 0;
-    z-index: 20;
+    z-index: 30;
 
     display: flex;
     flex-direction: column;
@@ -441,6 +430,8 @@ const S = {
   PostMenuArea: styled.div`
     position: relative;
     margin-left: auto;
+    margin-right: -16px;
+    flex-shrink: 0;
 
     display: flex;
     align-items: center;
@@ -495,6 +486,53 @@ const S = {
 
   PostEditSaveButton: styled(Button)`
     padding: 8px 14px;
+  `,
+
+  CommentComposer: styled.form`
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid ${colors.gray[200]};
+    border-bottom: 1px solid ${colors.gray[200]};
+  `,
+
+  CommentInput: styled.input`
+    min-width: 0;
+    flex: 1;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid ${colors.gray[200]};
+    border-radius: 8px;
+    background-color: ${colors.gray[0]};
+    color: ${colors.gray[950]};
+    font: inherit;
+
+    &:focus {
+      outline: 2px solid ${colors.primary[300]};
+      outline-offset: 1px;
+      border-color: ${colors.primary[500]};
+    }
+  `,
+
+  CommentSubmitButton: styled(Button)`
+    flex: 0 0 auto;
+    padding: 0 16px;
+  `,
+
+  CommentEditForm: styled.form`
+    display: flex;
+    gap: 8px;
+    padding: 7px 13px 0;
+  `,
+
+  CommentEditCancelButton: styled(Button)`
+    flex: 0 0 auto;
+    padding: 0 12px;
+  `,
+
+  CommentEditSaveButton: styled(Button)`
+    flex: 0 0 auto;
+    padding: 0 12px;
   `,
 };
 

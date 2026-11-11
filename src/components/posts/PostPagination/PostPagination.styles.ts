@@ -5,19 +5,19 @@ import colors from "../../../styles/tokens/colors";
 const S = {
   PaginationContainer: styled.nav`
     width: fit-content;
-    height: clamp(12px, 1.6vw, 22px);
+    min-height: 22px;
 
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 4px;
 
-    margin: clamp(33px, 3.8vw, 52px) auto 0;
+    margin: 32px auto 0;
   `,
 
   PageButton: styled.button`
-    width: clamp(11px, 1.6vw, 22px);
-    height: clamp(12px, 1.6vw, 22px);
+    width: 22px;
+    height: 22px;
     padding: 0;
     border: none;
     background: transparent;
@@ -26,32 +26,34 @@ const S = {
     align-items: center;
     justify-content: center;
 
-    color: ${colors.gray[1000]};
-    font-size: clamp(8px, 1.1vw, 15px);
+    color: #000000;
+    font-size: 16px;
     line-height: 1;
-    border-radius: 0;
+    cursor: pointer;
 
     &:hover:not(:disabled) {
-      color: ${colors.blue[500]};
+      color: #577aed;
     }
 
     &[aria-current="page"] {
-      color: ${colors.blue[500]};
+      color: #577aed;
       font-weight: 700;
     }
 
     &:disabled {
-      color: ${colors.gray[400]};
-      background: transparent;
+      color: #b0b0b0;
       cursor: not-allowed;
     }
 
-    svg {
-      width: 70%;
-      height: 70%;
-    }
   `,
 
+  PageSummary: styled.p`
+    margin: 8px 0 0;
+    color: ${colors.gray[1000]};
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+  `,
 };
 
 export default S;

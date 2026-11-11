@@ -10,7 +10,7 @@ const S = {
     box-sizing: border-box;
     background-color: #b0c5fd;
     border: none;
-    box-shadow: 0px 1px 4px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.1);
     width: 100%;
   `,
 
@@ -23,7 +23,7 @@ const S = {
   `,
 
   NavCatalog: styled.div`
-    gap: 58px;
+    gap: 28px;
     display: flex;
   `,
   Logo: styled(Link)`
@@ -91,7 +91,6 @@ const S = {
     display: flex;
     align-items: center;
     gap: 27px;
-    padding: 0 0 0 58px;
     color: #fff;
     font-weight: 700;
     flex-shrink: 0;
@@ -102,10 +101,12 @@ const S = {
       text-decoration: none;
       cursor: pointer;
 
-      &:hover {
-        color: #000;
-      }
-    }
+        &:hover {
+            color: #000;
+        }
+        &.active {
+            color: #64748B;
+        }
   `,
 
   Login: styled(Link)`
@@ -124,13 +125,13 @@ const S = {
   `,
 
   ProfileImage: styled.img`
-   width: 32px;
-  height: 32px;
-  padding: 0;
-  margin: 0;
+   width: 45px;
+  height: 45px;
   display: block;
-  object-fit: cover;
   flex-shrink: 0;
+      object-fit: cover;
+      border-radius: 50%;
+      cursor: pointer;
   `
 };
 

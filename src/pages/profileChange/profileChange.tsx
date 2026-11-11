@@ -133,6 +133,7 @@ const Profile = () => {
           ? { profileImage: newProfileImage }
           : {}),
       });
+      window.dispatchEvent(new Event("profile-updated"));
 
       const updatedProfile = await profileApi.getMyProfile();
 
@@ -263,7 +264,7 @@ const Profile = () => {
             {/* 저장 버튼 */}
             <S.SaveBtn
               type="button"
-              onClick={() => void handleSave()}
+              onClick={() =>  void handleSave()}
               disabled={!canSave}
             >
               {isSaving ? "저장 중..." : "변경사항 저장"}

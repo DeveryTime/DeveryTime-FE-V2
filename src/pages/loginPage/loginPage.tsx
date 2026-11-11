@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import InputBox from "../../components/loginPage/inputBox/InputBox";
 import S from "../BackgroundAct/BackgroundActStyle";
 import Background from "../BackgroundAct/BackgroundAct";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import LoginS from "./loginPageStyle";
 import { loginApi } from "../../api/authApi";
-import type { AuthApiError } from "../../types/auth";
+import { getLoginApiErrorMessage } from "../../api/errorMessages";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -39,16 +38,15 @@ const LoginPage = () => {
 
     setIsSubmitting(true);
     try {
-      const { data: {accessToken, refreshToken} } = await loginApi({ email: trimmedEmail, password });
-      localStorage.setItem("token", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-
+      await loginApi({ email: trimmedEmail, password });
       navigate("/main");
     } catch (error: unknown) {
-      const message = axios.isAxiosError<AuthApiError>(error)
-        ? error.response?.data.error.message
-        : undefined;
-      alert(message ?? "로그인에 실패했습니다. 다시 시도해주세요.");
+      alert(
+        getLoginApiErrorMessage(
+          error,
+          "로그인에 실패했습니다. 다시 시도해주세요.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }

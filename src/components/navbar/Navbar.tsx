@@ -1,28 +1,39 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useNavigate, Link, useLocation} from "react-router-dom";
 
 import S from "./Navbar.style";
 import logoIcon from "../../assets/logoIcon.svg";
 import profile from "../../assets/profile.svg";
 import searchIcon from "../../assets/searchIcon.svg";
+import profileApi from "../../api/profile/profile.api.ts";
+
+import { CATEGORIES } from "../../constants/categories";
+import toast from "react-hot-toast";
+
 
 const NavBar = () => {
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentCategoryId = new URLSearchParams(location.search).get("categoryId");
 
   // localStorage에 token이 있으면 로그인 상태로 판단
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const isLoggedIn = Boolean(localStorage.getItem("accessToken"));
 
-  // 카테고리 목록
-  const CATEGORIES = [
-    { id: 1, name: "전공" },
-    { id: 2, name: "일상" },
-    { id: 3, name: "교과" },
-    { id: 4, name: "급식" },
-    { id: 5, name: "프로젝트" },
-    { id: 6, name: "기숙사" },
-    { id: 7, name: "분실물" },
-  ];
+  useEffect(() => {
+    if(!isLoggedIn)return;
+    const fetchProfile =  () => {
+      profileApi
+        .getMyProfile()
+        .then((data)  => setProfileImage(data.profileImageUrl) )
+        .catch((e) => console.error(e));
+    };
+    fetchProfile();
+    window.addEventListener("profile-updated", fetchProfile);
+    return () => window.removeEventListener("profile-updated", fetchProfile);
+
+  },[isLoggedIn]);
 
   // 검색 실행
   const handleSearch = () => {
@@ -72,6 +83,13 @@ const NavBar = () => {
             <Link
               key={category.id}
               to={`/Categorypage?categoryId=${category.id}&categoryName=${encodeURIComponent(category.name)}`}
+              className={currentCategoryId=== String(category.id) ?  "active" : ""}
+              onClick={(e) =>{
+                if (!isLoggedIn) {
+                  e. preventDefault();
+                  toast.error("로그인이 필요합니다.")
+                  navigate("/login");
+                }}}
             >
               {category.name}
             </Link>
@@ -81,7 +99,7 @@ const NavBar = () => {
         {/* 로그인 상태에 따라 프로필 또는 로그인 버튼 표시 */}
         <div>
           {isLoggedIn ? (
-            <Link to="/info"><S.ProfileImage src={profile} alt="프로필" /></Link>
+            <Link to="/info"><S.ProfileImage src={profileImage || profile} alt="프로필" /></Link>
           ) : (
             <S.Login to="/login">로그인</S.Login>
           )}

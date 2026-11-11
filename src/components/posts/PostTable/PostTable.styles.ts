@@ -71,7 +71,7 @@ const S = {
     cursor: pointer;
 
     &:hover {
-      background-color: transparent;
+      background-color: ${colors.gray[50]};
     }
 
     &:focus-visible {

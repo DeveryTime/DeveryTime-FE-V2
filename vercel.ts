@@ -1,17 +1,10 @@
-import {deploymentEnv, routes, type VercelConfig} from "@vercel/config/v1";
+import { routes, type VercelConfig } from "@vercel/config/v1";
 
-const apiUrl = deploymentEnv("VITE_API_PROXY_TARGET");
-
-if (!apiUrl) {
-  throw new Error("VITE_API_PROXY_TARGET is required");
-}
+const API_ORIGIN = "https://3.36.87.221";
 
 export const config: VercelConfig = {
   rewrites: [
-    routes.rewrite(
-      "/api/:path*",
-      `${apiUrl.replace(/\/+$/, "")}/:path*`,
-    ),
-    routes.rewrite("/(.*)", "/index.html"),
+    routes.rewrite("/api/:path*", `${API_ORIGIN}/api/:path*`),
+    routes.rewrite("/(.*)", "/"),
   ],
 };

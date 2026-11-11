@@ -6,7 +6,7 @@ import profileApi from "../../api/profile/profile.api";
 import getApiErrorMessage from "../../api/errorMessages";
 import type { ProfileData } from "../../api/profile/profile.types";
 import S from "./myInfoPage.style";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Info = () => {
   const [activeSection, setActiveSection] = useState<"info" | "posts">(
@@ -36,6 +36,11 @@ const Info = () => {
     let isActive = true;
 
     const fetchProfile = async () => {
+      if (import.meta.env.DEV && !localStorage.getItem("accessToken")) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const profile = await profileApi.getMyProfile();
 
@@ -87,7 +92,7 @@ const Info = () => {
         >
           내가 쓴 글
         </S.MenuItem>
-        <S.MenuItem type="button" data-active="false" onClick={() => navigate("/profile")}>
+        <S.MenuItem type="button" data-active="false" onClick={() => navigate("/Profile")}>
           프로필 수정
         </S.MenuItem>
         <S.MenuItem
