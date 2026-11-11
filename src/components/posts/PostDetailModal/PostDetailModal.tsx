@@ -27,7 +27,7 @@ interface PostDetailModalProps {
   post: PostDetailData;
   currentUserId: number;
   onClose: () => void;
-  onDelete: (postId: number) => void;
+  onDelete: (postId: number) => void | Promise<void>;
   onUpdate?: (postId: number, title: string, content: string) => void;
   isLikeEnabled?: boolean;
   isMyPost?: boolean;
@@ -75,6 +75,7 @@ const PostDetailModal = ({
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // 의도적으로 게시글 상태 변경 시점에만 동기화한다.
   useLayoutEffect(() => {
@@ -163,6 +164,15 @@ const PostDetailModal = ({
       if (currentPostRef.current.id === requestedPostId) {
         setIsLikeLoading(false);
       }
+    }
+  };
+
+  const handlePostDelete = async () => {
+    setDeleteError(null);
+    try {
+      await onDelete(post.id);
+    } catch {
+      setDeleteError("게시글을 삭제하지 못했습니다.");
     }
   };
 
@@ -380,11 +390,14 @@ const PostDetailModal = ({
                       <S.CommentDeleteButton
                         type="button"
                         aria-label="게시글 삭제"
-                        onClick={() => onDelete(post.id)}
+                        onClick={handlePostDelete}
                       >
                         삭제하기
                       </S.CommentDeleteButton>
                     </>
+                  )}
+                  {deleteError && (
+                    <p role="alert">{deleteError}</p>
                   )}
                 </S.PostMenuPopover>
               )}
