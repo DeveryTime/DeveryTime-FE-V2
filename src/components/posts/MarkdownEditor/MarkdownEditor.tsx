@@ -60,9 +60,6 @@ const MarkdownEditor = ({
       isOrderedList: currentEditor.isActive("orderedList"),
       isBlockquote: currentEditor.isActive("blockquote"),
       isLink: currentEditor.isActive("link"),
-      isAlignLeft: currentEditor.isActive({ textAlign: "left" }),
-      isAlignCenter: currentEditor.isActive({ textAlign: "center" }),
-      isAlignRight: currentEditor.isActive({ textAlign: "right" }),
     }),
   });
 
@@ -160,16 +157,6 @@ const MarkdownEditor = ({
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
           <s>S</s>
-        </WriteStyles.ToolButton>
-        <WriteStyles.Divider />
-        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignLeft} aria-label="왼쪽 정렬" aria-pressed={toolbarState.isAlignLeft} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
-          <span aria-hidden="true">≡</span>
-        </WriteStyles.ToolButton>
-        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignCenter} aria-label="가운데 정렬" aria-pressed={toolbarState.isAlignCenter} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
-          <span aria-hidden="true">≡</span>
-        </WriteStyles.ToolButton>
-        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignRight} aria-label="오른쪽 정렬" aria-pressed={toolbarState.isAlignRight} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
-          <span aria-hidden="true">≡</span>
         </WriteStyles.ToolButton>
         <WriteStyles.Divider />
         <WriteStyles.ToolButton
