@@ -38,9 +38,9 @@ export interface CreatePostErrorResponse {
 }
 
 export interface UpdatePostResponse {
-  id: number;
-  title: string;
-  updatedAt: string;
+  success: boolean;
+  data: { id: number; title: string; status: string; updatedAt: string };
+  message: string;
 }
 
 export interface PostDetailResponse {
