@@ -28,12 +28,6 @@ export interface PostListParams {
   categoryId?: number;
 }
 
-export interface UpdatePostRequest {
-  userId: number;
-  title: string;
-  content: string;
-}
-
 export interface UpdatePostResponse {
   id: number;
   title: string;

@@ -14,11 +14,8 @@ import commentIcon from "../../../assets/comment.svg";
 import likeDefaultIcon from "../../../assets/Like.svg";
 import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
-import type {
-  PostComment,
-  PostDetailData,
-  UpdatePostRequest,
-} from "../../../types/posts.types";
+import type { PostComment, PostDetailData } from "../../../types/posts.types";
+import type { UpdatePostRequest } from "../../../api/posts/request/posts.request";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
@@ -121,6 +118,7 @@ const PostDetailModal = ({
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
   );
+  const imageUrls = post.imageUrls ?? [];
 
   useLayoutEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -300,10 +298,16 @@ const PostDetailModal = ({
       return;
     }
 
+    if (post.categoryId === undefined) {
+      setPostUpdateError("게시물 카테고리 정보를 확인할 수 없습니다.");
+      return;
+    }
+
     const updateData: UpdatePostRequest = {
-      userId: currentUserId,
+      categoryId: post.categoryId,
       title: trimmedPostTitle,
       content: trimmedPostContent,
+      status: "PUBLISHED",
     };
     setIsPostSaving(true);
     try {
@@ -423,9 +427,9 @@ const PostDetailModal = ({
               <S.PostContent><PostMarkdown content={displayedPostContent} /></S.PostContent>
             </>
           )}
-          {post.imageUrls.length > 0 && (
+          {imageUrls.length > 0 && (
             <S.ImageList>
-              {post.imageUrls.map((imageUrl, index) => (
+              {imageUrls.map((imageUrl, index) => (
                 <S.ContentImage
                   key={`${imageUrl}-${index}`}
                   src={imageUrl}
