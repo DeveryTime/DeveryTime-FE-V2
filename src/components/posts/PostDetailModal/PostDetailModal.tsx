@@ -7,10 +7,12 @@ import {
   type FormEvent,
 } from "react";
 import PostMarkdown from "./PostMarkdown";
+import { CATEGORIES } from "../../../constants/categories";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
 import commentIcon from "../../../assets/comment.svg";
+import deleteImageIcon from "../../../assets/delete-image.svg";
 import likeDefaultIcon from "../../../assets/Like.svg";
 import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
@@ -24,7 +26,7 @@ interface PostDetailModalProps {
   post: PostDetailData;
   currentUserId: number;
   onClose: () => void;
-  onDelete: (postId: number) => void;
+  onDelete: (postId: number) => void | Promise<void>;
   onUpdate?: (postId: number, title: string, content: string) => void;
   isLikeEnabled?: boolean;
   isMyPost?: boolean;
@@ -57,6 +59,19 @@ const CommentDate = (dateString: string) => {
     .replace(/\.$/, "");
 };
 
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) =>
+  imageUrls.reduce((currentContent, imageUrl) => {
+    const imagePattern = new RegExp(
+      `!\\[[^\\]]*\\]\\(${escapeRegExp(imageUrl)}(?:\\s+["'][^"']*["'])?\\)\\s*`,
+      "g",
+    );
+
+    return currentContent.replace(imagePattern, "");
+  }, content);
+
 const PostDetailModal = ({
   post,
   currentUserId,
@@ -72,19 +87,16 @@ const PostDetailModal = ({
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
   const currentPostRef = useRef(post);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // 의도적으로 게시글 상태 변경 시점에만 동기화한다.
+  // effect 안에서 상태를 즉시 변경하면 불필요한 추가 렌더링이 발생할 수 있음
   useLayoutEffect(() => {
     currentPostRef.current = post;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsLiked(post.liked ?? false);
-    setLikeCount(post.likeCount ?? 0);
-    setIsLikeLoading(false);
-    setLikeError(null);
-  }, [post.id, post.liked, post.likeCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [post]);
 
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(
     null,
   );
@@ -114,17 +126,35 @@ const PostDetailModal = ({
   const [editingPostContent, setEditingPostContent] = useState("");
   const [postUpdateError, setPostUpdateError] = useState<string | null>(null);
   const [isPostSaving, setIsPostSaving] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<{ id: number; imageUrl: string }[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
+  const [savedDeletedImageIds, setSavedDeletedImageIds] = useState<number[]>([]);
   const [displayedPostTitle, setDisplayedPostTitle] = useState(post.title);
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
   );
-  const imageUrls = post.imageUrls ?? [];
 
-  useLayoutEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDisplayedPostTitle(post.title);
-    setDisplayedPostContent(post.content);
-  }, [post.id, post.title, post.content]);
+  const [previousPost, setPreviousPost] = useState(post);
+  if (previousPost !== post) {
+    setPreviousPost(post);
+    if (
+      previousPost.liked !== post.liked ||
+      previousPost.likeCount !== post.likeCount
+    ) {
+      setIsLiked(post.liked ?? false);
+      setLikeCount(post.likeCount ?? 0);
+      setIsLikeLoading(false);
+      setLikeError(null);
+    }
+    if (
+      previousPost.title !== post.title ||
+      previousPost.content !== post.content
+    ) {
+      setDisplayedPostTitle(post.title);
+      setDisplayedPostContent(post.content);
+    }
+  }
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {
@@ -164,8 +194,19 @@ const PostDetailModal = ({
     }
   };
 
+  const handlePostDelete = async () => {
+    setDeleteError(null);
+    try {
+      await onDelete(post.id);
+    } catch {
+      setDeleteError("게시글을 삭제하지 못했습니다.");
+    }
+  };
+
   // 게시글 수정 모드를 시작하고 게시글 메뉴를 닫는다.
   const handlePostEditStart = () => {
+    setSelectedImages([]);
+    setDeletedImageIds([]);
     setIsPostEditing(true);
     setIsPostMenuOpen(false);
     setEditingPostTitle(displayedPostTitle);
@@ -298,27 +339,45 @@ const PostDetailModal = ({
       return;
     }
 
-    if (post.categoryId === undefined) {
-      setPostUpdateError("게시물 카테고리 정보를 확인할 수 없습니다.");
+    const categoryId = post.categoryId ?? CATEGORIES.find((category) => category.name === post.categoryName)?.id;
+    if (!categoryId) {
+      setPostUpdateError("카테고리 정보를 확인할 수 없습니다.");
       return;
     }
-
+    const deletedImageUrls = (post.images ?? [])
+      .filter((image) => deletedImageIds.includes(image.id))
+      .map((image) => image.imageUrl);
+    const contentWithoutDeletedImages = removeDeletedImageMarkdown(
+      trimmedPostContent,
+      deletedImageUrls,
+    );
     const updateData: UpdatePostRequest = {
-      categoryId: post.categoryId,
+      categoryId,
       title: trimmedPostTitle,
-      content: trimmedPostContent,
+      content: contentWithoutDeletedImages,
       status: "PUBLISHED",
+      deleteImageIds: deletedImageIds,
     };
     setIsPostSaving(true);
     try {
+      for (const [index, file] of selectedImages.entries()) {
+        const uploaded = await postsApi.uploadPostImage(post.id, {
+          file,
+          sortOrder: (post.images?.length ?? post.imageUrls?.length ?? 0) + uploadedImages.length + index,
+        });
+        setUploadedImages((current) => [...current, uploaded]);
+        setSelectedImages((current) => current.slice(1));
+      }
       await postsApi.updatePost(post.id, updateData);
+      setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
+      setDeletedImageIds([]);
 
       setDisplayedPostTitle(trimmedPostTitle);
-      setDisplayedPostContent(trimmedPostContent);
-      onUpdate?.(post.id, trimmedPostTitle, trimmedPostContent);
+      setDisplayedPostContent(updateData.content);
+      onUpdate?.(post.id, trimmedPostTitle, updateData.content);
       setIsPostEditing(false);
     } catch {
-      setPostUpdateError("게시물을 수정하는데 실패하였습니다.");
+      setPostUpdateError("저장에 실패했습니다. 업로드된 이미지는 유지되며 다시 시도할 수 있습니다.");
     } finally {
       setIsPostSaving(false);
     }
@@ -384,12 +443,16 @@ const PostDetailModal = ({
                       <S.CommentDeleteButton
                         type="button"
                         aria-label="게시글 삭제"
-                        onClick={() => onDelete(post.id)}
+                        onClick={() => {
+                          setIsPostMenuOpen(false);
+                          setIsDeleteConfirmOpen(true);
+                        }}
                       >
                         삭제하기
                       </S.CommentDeleteButton>
                     </>
                   )}
+                  {deleteError && <p role="alert">{deleteError}</p>}
                 </S.PostMenuPopover>
               )}
             </S.PostMenuArea>
@@ -409,9 +472,12 @@ const PostDetailModal = ({
                 value={editingPostContent}
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
+                selectedImages={selectedImages}
+                onRemoveImage={(index) => setSelectedImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                onSelectImages={(files) => setSelectedImages((current) => [...current, ...files])}
                 actions={
                   <S.PostEditActions>
-                    <S.PostEditCancelButton type="button" variant="secondary" disabled={isPostSaving} onClick={() => setIsPostEditing(false)}>
+                    <S.PostEditCancelButton type="button" variant="secondary" disabled={isPostSaving} onClick={() => { setSelectedImages([]); setDeletedImageIds([]); setIsPostEditing(false); }}>
                       취소
                     </S.PostEditCancelButton>
                     <S.PostEditSaveButton type="button" variant="primary" onClick={handlePostEditSave} disabled={isPostSaving || !editingPostTitle.trim() || !editingPostContent.trim()}>
@@ -427,15 +493,19 @@ const PostDetailModal = ({
               <S.PostContent><PostMarkdown content={displayedPostContent} /></S.PostContent>
             </>
           )}
-          {imageUrls.length > 0 && (
+          {((post.images?.length ?? post.imageUrls?.length ?? 0) > 0 || uploadedImages.length > 0) && (
             <S.ImageList>
-              {imageUrls.map((imageUrl, index) => (
-                <S.ContentImage
-                  key={`${imageUrl}-${index}`}
-                  src={imageUrl}
-                  alt={`${displayedPostTitle} 첨부된 이미지`}
-                />
-              ))}
+              {(post.images ?? (post.imageUrls ?? []).map((imageUrl) => ({ id: undefined, imageUrl })))
+                .concat(uploadedImages)
+                .filter((image) => image.id === undefined || !deletedImageIds.includes(image.id) && !savedDeletedImageIds.includes(image.id))
+                .map((image, index) => (
+                  <S.ImageItem key={`${image.imageUrl}-${index}`}>
+                    <S.ContentImage src={image.imageUrl} alt={`${displayedPostTitle} 첨부된 이미지`} />
+                    {isPostEditing && image.id !== undefined && (
+                      <S.ImageDeleteButton type="button" aria-label="이미지 삭제" disabled={isPostSaving} onClick={() => setDeletedImageIds((current) => [...current, image.id!])}><img src={deleteImageIcon} alt="" /></S.ImageDeleteButton>
+                    )}
+                  </S.ImageItem>
+                ))}
             </S.ImageList>
           )}
         </S.DetailContent>
@@ -594,6 +664,34 @@ const PostDetailModal = ({
         </S.CommentComposer>
         {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
       </S.ModalScrollArea>
+      {isDeleteConfirmOpen && (
+        <S.DeleteConfirmDialog
+          onClose={() => setIsDeleteConfirmOpen(false)}
+          aria-labelledby="post-delete-confirm-title"
+        >
+          <S.DeleteConfirmTitle id="post-delete-confirm-title">
+            게시글을 삭제하시겠습니까?
+          </S.DeleteConfirmTitle>
+          <S.DeleteConfirmActions>
+            <S.DeleteConfirmButton
+              type="button"
+              onClick={() => {
+                setIsDeleteConfirmOpen(false);
+                void handlePostDelete();
+              }}
+            >
+              삭제
+            </S.DeleteConfirmButton>
+            <S.DeleteCancelButton
+              type="button"
+              autoFocus
+              onClick={() => setIsDeleteConfirmOpen(false)}
+            >
+              취소
+            </S.DeleteCancelButton>
+          </S.DeleteConfirmActions>
+        </S.DeleteConfirmDialog>
+      )}
     </S.DetailDialog>
   );
 };

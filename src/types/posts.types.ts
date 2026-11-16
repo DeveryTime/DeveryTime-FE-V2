@@ -6,7 +6,7 @@ export * from "../api/comments/request/comments.request";
 export * from "../api/comments/response/comments.response";
 export * from "../api/likes/likes.types";
 export * from "../api/likes/response/likes.response";
-import type { PostDetailData, PostSort } from "../api/posts/posts.types";
+import type { PostSort } from "../api/posts/posts.types";
 export interface PostTableItem {
   id: number;
   number: number;
@@ -26,17 +26,6 @@ export interface PostListParams {
   size: number;
   sort: PostSort;
   categoryId?: number;
-}
-
-export interface UpdatePostResponse {
-  id: number;
-  title: string;
-  updatedAt: string;
-}
-
-export interface PostDetailResponse {
-  success: boolean;
-  data: PostDetailData;
 }
 
 export interface PostLikeData {
