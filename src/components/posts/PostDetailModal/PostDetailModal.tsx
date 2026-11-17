@@ -763,7 +763,10 @@ const PostDetailModal = ({
         {likeError && <p role="alert">{likeError}</p>}
 
         {/* 댓글 목록과 댓글별 메뉴 */}
-        <S.CommentList ref={commentListRef}>
+        <S.CommentList
+          ref={commentListRef}
+          aria-busy={isCommentLoading}
+        >
           {isCommentLoading && <CommentSkeleton />}
 
           {!isCommentLoading && !isCommentError && (

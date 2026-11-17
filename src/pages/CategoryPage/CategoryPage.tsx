@@ -4,6 +4,8 @@ import S from "./CategoryPage.styles";
 
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
+import PostTableSkeleton from "../../components/posts/PostTable/PostTableSkeleton";
+import PostDetailSkeleton from "../../components/posts/PostDetailSkeleton";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 
@@ -192,7 +194,7 @@ const CategoryPage = ({
         <S.Description>{categoryName} 게시판입니다.</S.Description>
         <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
-        {isLoading && <p>카테고리 게시글을 불러오는 중입니다...</p>}
+        {isLoading && <PostTableSkeleton />}
         {error && <p role="alert">{error}</p>}
 
         {!isLoading && !error && posts.length > 0 ? (
@@ -206,7 +208,7 @@ const CategoryPage = ({
           )
         )}
 
-        {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
+        {isDetailLoading && <PostDetailSkeleton />}
         {detailError && <p role="alert">{detailError}</p>}
 
         {selectedPost && currentUserId !== null && (          <PostDetailModal

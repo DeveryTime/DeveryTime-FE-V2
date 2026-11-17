@@ -297,12 +297,18 @@ const S = {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-height: 200px;
+    max-height: 220px;
+    min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     border-top: 1px solid ${colors.gray[200]};
   `,
 
   CommentItem: styled.article`
+    flex: 0 0 auto;
+    min-width: 0;
     padding: 10px;
     border-bottom: 1px solid ${colors.gray[200]};
     flex-direction: column;
@@ -314,6 +320,7 @@ const S = {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-width: 0;
     padding-left: 10px;
   `,
 
@@ -337,12 +344,19 @@ const S = {
   `,
 
   CommentBody: styled.p`
+    min-width: 0;
+    margin: 0;
     padding-top: 7px;
     padding-left: 13px;
     font-size: 18px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
   `,
 
   CommentDateCreatedAt: styled.p`
+    flex-shrink: 0;
+    margin: 0;
     font-size: 18px;
     color: ${colors.gray[500]};
     font-weight: 500;

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import S from "./searchPage.style";
 import { SearchPostResult } from "../../components/searchPostResult/searchPostResult";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal.tsx";
+import PostDetailSkeleton from "../../components/posts/PostDetailSkeleton.tsx";
 import type { PostDetailData } from "../../types/posts.types.ts";
 import type { SearchPost } from "../../types/search.types.ts";
 import { searchApi } from "../../api/search/search.api.ts";
@@ -208,7 +209,7 @@ function SearchResults({
           '{keyword}'에 대한 검색 결과가 없습니다.
         </S.EmptyMessage>
       )}
-      {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
+      {isDetailLoading && <PostDetailSkeleton />}
       {detailError && <p role="alert">{detailError}</p>}
 
       {selectedPost && currentUserId !== null && (

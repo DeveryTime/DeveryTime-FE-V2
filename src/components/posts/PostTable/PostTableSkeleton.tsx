@@ -9,7 +9,7 @@ const skeletonRows = Array.from(
 );
 
 const PostTableSkeleton = () => (
-  <S.Table aria-busy="true" aria-label="게시글 목록을 불러오는 중입니다">
+  <S.Table aria-busy="true" aria-label="게시글 목록">
     <thead>
       <tr>
         <S.TableHeader>번호</S.TableHeader>
