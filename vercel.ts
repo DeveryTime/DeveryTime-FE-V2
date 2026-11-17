@@ -1,7 +1,7 @@
 import { routes, type VercelConfig } from "@vercel/config/v1";
 
 
-const API_ORIGIN = "https://54.117.166.129";
+const API_ORIGIN = "https://deverytime-develop.dsmhs.kr";
 
 
 export const config: VercelConfig = {
