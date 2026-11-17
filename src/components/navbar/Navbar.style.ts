@@ -139,7 +139,7 @@ const S = {
               color: #000;
           }
           &.active {
-              color: #64748b;
+              color: #111;
           }
       }
 

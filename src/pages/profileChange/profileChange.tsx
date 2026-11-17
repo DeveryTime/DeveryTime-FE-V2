@@ -42,7 +42,6 @@ const Profile = () => {
         const profile = await profileApi.getMyProfile();
 
         if (!isActive) return;
-
         setUser(profile);
 
         // API 응답 필드명은 username으로 통일
