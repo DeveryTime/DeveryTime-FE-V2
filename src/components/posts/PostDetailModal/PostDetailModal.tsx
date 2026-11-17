@@ -153,9 +153,6 @@ const PostDetailModal = ({
     null,
   );
   const [isCommentActionLoading, setIsCommentActionLoading] = useState(false);
-  const [commentReloadKey, setCommentReloadKey] = useState(0);
-  const [successfulCommentReloadKey, setSuccessfulCommentReloadKey] =
-    useState<number | null>(null);
   const commentListRef = useRef<HTMLDivElement>(null);
   const shouldScrollCommentsToBottomRef = useRef(false);
   const createdCommentIdRef = useRef<number | null>(null);
@@ -329,7 +326,6 @@ const PostDetailModal = ({
         const response = await commentsApi.getComments(post.id);
         if (isActive) {
           setComments(response.data);
-          setSuccessfulCommentReloadKey(commentReloadKey);
         }
       } catch {
         if (isActive) {
@@ -347,15 +343,13 @@ const PostDetailModal = ({
     return () => {
       isActive = false;
     };
-  }, [post.id, commentReloadKey]);
+  }, [post.id]);
 
   // 새 댓글을 등록한 뒤 댓글 목록의 마지막 위치로 이동한다.
   useEffect(() => {
     if (
       !shouldScrollCommentsToBottomRef.current ||
-      successfulCommentReloadKey !== commentReloadKey ||
-      isCommentLoading ||
-      isCommentError
+      isCommentLoading
     ) {
       return;
     }
@@ -385,10 +379,7 @@ const PostDetailModal = ({
     return () => cancelAnimationFrame(animationFrame);
   }, [
     comments,
-    commentReloadKey,
-    isCommentError,
     isCommentLoading,
-    successfulCommentReloadKey,
   ]);
 
   useLayoutEffect(() => {
@@ -426,7 +417,17 @@ const PostDetailModal = ({
       setCommentContent("");
       createdCommentIdRef.current = createdComment.id;
       shouldScrollCommentsToBottomRef.current = true;
-      setCommentReloadKey((current) => current + 1);
+      setComments((currentComments) => [
+        ...currentComments,
+        {
+          id: createdComment.id,
+          userId: createdComment.userId,
+          authorName: createdComment.authorName ?? "나",
+          content: createdComment.content,
+          createdAt: createdComment.createdAt,
+          profileImageUrl: createdComment.profileImageUrl ?? null,
+        },
+      ]);
     } catch {
       setCommentSubmitError("댓글을 작성하지 못했습니다.");
     } finally {

@@ -13,6 +13,8 @@ export interface CreateCommentData {
   userId: number;
   content: string;
   createdAt: string;
+  authorName?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface UpdateCommentData {
