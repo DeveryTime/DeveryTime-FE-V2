@@ -13,6 +13,9 @@ interface MarkdownEditorProps {
   onChange: (markdown: string) => void;
   disabled?: boolean;
   actions?: ReactNode;
+  onSelectImages: (files: File[]) => void;
+  selectedImages: File[];
+  onRemoveImage: (index: number) => void;
 }
 
 const MarkdownEditor = ({
@@ -20,8 +23,12 @@ const MarkdownEditor = ({
   onChange,
   disabled = false,
   actions,
+  onSelectImages,
+  selectedImages,
+  onRemoveImage,
 }: MarkdownEditorProps) => {
   const latestValueRef = useRef(value);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -102,17 +109,6 @@ const MarkdownEditor = ({
     }
 
     editor.chain().focus().setLink({ href: url.trim() }).run();
-  };
-
-  //이미지 URL 입력 처리
-  const handleImage = () => {
-    const imageUrl = window.prompt("이미지 URL을 입력해주세요.");
-
-    if (!imageUrl?.trim()) {
-      return;
-    }
-
-    editor.chain().focus().setImage({ src: imageUrl.trim() }).run();
   };
 
   return (
@@ -204,8 +200,22 @@ const MarkdownEditor = ({
       <S.EditorArea>
         <EditorContent editor={editor} />
       </S.EditorArea>
+      {selectedImages.length > 0 && (
+        <WriteStyles.SelectedImageList aria-label="업로드할 이미지">
+          {selectedImages.map((file, index) => (
+            <WriteStyles.SelectedImageItem key={`${file.name}-${file.lastModified}-${index}`}>
+              <span>{file.name}</span>
+              <button type="button" aria-label={`${file.name} 제거`} disabled={disabled} onClick={() => onRemoveImage(index)}>×</button>
+            </WriteStyles.SelectedImageItem>
+          ))}
+        </WriteStyles.SelectedImageList>
+      )}
       <WriteStyles.Footer>
-        <WriteStyles.ImageButton type="button" aria-label="이미지 URL 추가" disabled={disabled} onClick={handleImage}>
+        <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => {
+          onSelectImages(Array.from(event.currentTarget.files ?? []));
+          event.currentTarget.value = "";
+        }} />
+        <WriteStyles.ImageButton type="button" aria-label="이미지 파일 추가" disabled={disabled} onClick={() => imageInputRef.current?.click()}>
           <IoImageOutline />
         </WriteStyles.ImageButton>
         {actions}

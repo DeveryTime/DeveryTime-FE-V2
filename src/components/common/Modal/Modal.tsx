@@ -35,7 +35,15 @@ const Modal = ({
   }, []);
 
   return (
-    <S.Dialog ref={dialogRef} onClose={onClose} {...props}>
+    <S.Dialog
+      ref={dialogRef}
+      onClose={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+      {...props}
+    >
       <S.CloseButton
         type="button"
         onClick={() => dialogRef.current?.close()}

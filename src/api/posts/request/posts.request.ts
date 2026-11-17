@@ -13,9 +13,11 @@ export interface GetMyPostsRequest {
 }
 
 export interface UpdatePostRequest {
-  userId: number;
+  categoryId: number;
   title: string;
   content: string;
+  status: "PUBLISHED";
+  deleteImageIds?: number[];
 }
 
 export interface CreatePostRequest {

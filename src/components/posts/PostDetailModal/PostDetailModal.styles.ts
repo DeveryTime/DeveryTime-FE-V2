@@ -5,6 +5,54 @@ import Input from "../../common/Input/Input";
 import Modal from "../../common/Modal/Modal";
 
 const S = {
+  DeleteConfirmDialog: styled(Modal)`
+    width: min(610px, calc(100vw - 32px));
+    padding: 110px 44px 30px;
+    border-radius: 36px;
+
+    & > button:first-of-type {
+      display: none;
+    }
+
+  `,
+
+  DeleteConfirmTitle: styled.h2`
+    margin: 0 0 90px;
+    text-align: center;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 500;
+
+  `,
+
+  DeleteConfirmActions: styled.div`
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+  `,
+
+  DeleteConfirmButton: styled(Button)`
+    flex: 1;
+    max-width: 220px;
+    height: 64px;
+    border: 0;
+    border-radius: 25px;
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+  `,
+
+  DeleteCancelButton: styled.button`
+    flex: 1;
+    max-width: 220px;
+    height: 64px;
+    border: 2px solid #aaa;
+    border-radius: 25px;
+    background: white;
+    color: black;
+    font-size: 24px;
+    cursor: pointer;
+  `,
+
   DetailDialog: styled(Modal)`
     width: 875px;
     height: calc(100vh - 48px);
@@ -38,9 +86,6 @@ const S = {
     align-items: center;
     gap: 15px;
 
-    @media (max-width: 580px) {
-      gap: 10px;
-    }
   `,
 
   ProfileImage: styled.img`
@@ -134,6 +179,32 @@ const S = {
       margin: 16px 0;
       border-radius: 8px;
     }
+  `,
+
+  ImageItem: styled.div`
+    position: relative;
+    align-self: flex-start;
+    max-width: 100%;
+
+    &:hover button, &:focus-within button { opacity: 1; }
+  `,
+
+  ImageDeleteButton: styled.button`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+    &:focus-visible { opacity: 1; }
+    &:disabled { cursor: not-allowed; }
   `,
 
   ContentImage: styled.img`
