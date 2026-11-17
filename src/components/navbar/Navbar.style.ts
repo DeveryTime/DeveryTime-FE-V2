@@ -1,6 +1,8 @@
 import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
 
+const m ="@media (max-width: 768px)";
+
 const S = {
   Nav: styled.nav`
     display: flex;
@@ -12,6 +14,11 @@ const S = {
     border: none;
     box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.1);
     width: 100%;
+
+      ${m} {
+          padding: 12px 16px;
+          gap: 12px;
+      }
   `,
 
   NavGap: styled.div`
@@ -20,11 +27,20 @@ const S = {
     gap: 36px;
     flex: 1;
     min-width: 0;
+      
+      ${m} {
+          flex-wrap: wrap;
+          gap: 12px 16px;
+      }
   `,
 
   NavCatalog: styled.div`
     gap: 28px;
     display: flex;
+
+      ${m} {
+          gap: 12px;
+      }
   `,
   Logo: styled(Link)`
     display: flex;
@@ -36,6 +52,10 @@ const S = {
 
     img {
       height: 40px;
+        
+        ${m} {
+            height: 32px;
+        }
     }
   `,
 
@@ -48,6 +68,9 @@ const S = {
     font-weight: 700;
     flex-shrink: 0;
     white-space: nowrap;
+      ${m} {
+          font-size: 17px;
+      }
   `,
 
   Search: styled.div`
@@ -62,6 +85,13 @@ const S = {
     padding: 0 16px;
     box-sizing: border-box;
     flex: 1;
+      ${m} {
+          order: 99;
+          flex: 1 1 100%;
+          max-width: none;
+          min-width: 0;
+          height: 38px;
+      }
   `,
 
   SearchInput: styled.input`
@@ -74,6 +104,10 @@ const S = {
     font-size: 14px;
     padding: 0;
     margin: 0;
+      
+      ${m} {
+          font-size: 16px;
+      }
   `,
 
   SearchIcon: styled.button`
@@ -107,6 +141,16 @@ const S = {
         &.active {
             color: #64748B;
         }
+        ${m} {
+            gap: 14px;
+            font-size: 14px;
+            flex-shrink: 1;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            &::-webkit-scrollbar {
+                display: none;
+            }
   `,
 
   Login: styled(Link)`
@@ -122,6 +166,12 @@ const S = {
     cursor: pointer;
     flex-shrink: 0;
     text-decoration: none;
+
+      ${m} {
+          padding: 6px 12px;
+          font-size: 14px;
+          border-radius: 12px;
+      }
   `,
 
   ProfileImage: styled.img`
@@ -132,6 +182,11 @@ const S = {
       object-fit: cover;
       border-radius: 50%;
       cursor: pointer;
+      
+      ${m} {
+          width: 36px;
+          height: 36px;
+      }
   `
 };
 
