@@ -65,7 +65,7 @@ const escapeRegExp = (value: string) =>
 const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) =>
   imageUrls.reduce((currentContent, imageUrl) => {
     const imagePattern = new RegExp(
-      `!\\[[^\\]]*\\]\\(${escapeRegExp(imageUrl)}(?:\\s+["'][^"']*["'])?\\)\\s*`,
+      `!\\[[^\\]]*\\]\\(${escapeRegExp(imageUrl)}(?:\\s+["'][^"']*["'])?\\)`,
       "g",
     );
 
@@ -448,15 +448,12 @@ const PostDetailModal = ({
                           setIsPostMenuOpen(false);
                           setIsDeleteConfirmOpen(true);
                         }}
-                        onClick={handlePostDelete}
-
                       >
                         삭제하기
                       </S.CommentDeleteButton>
                     </>
                   )}
 
-                  {deleteError && <p role="alert">{deleteError}</p>}
                   {deleteError && (
                     <p role="alert">{deleteError}</p>
                   )}
