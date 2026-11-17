@@ -412,9 +412,7 @@ const S = {
   `,
 
   CommentMenuPopover: styled.div`
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
+    position: fixed;
     z-index: 30;
 
     display: flex;
