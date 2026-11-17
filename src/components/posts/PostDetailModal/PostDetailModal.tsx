@@ -139,6 +139,10 @@ const PostDetailModal = ({
   const [savedDeletedImageIds, setSavedDeletedImageIds] = useState<number[]>(
     [],
   );
+  const [deletedImageUrls, setDeletedImageUrls] = useState<string[]>([]);
+  const [savedDeletedImageUrls, setSavedDeletedImageUrls] = useState<string[]>(
+    [],
+  );
   const [displayedPostTitle, setDisplayedPostTitle] = useState(post.title);
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
@@ -170,20 +174,29 @@ const PostDetailModal = ({
       ? post.images
       : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
   const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
+  const hiddenImageUrls = new Set([
+    ...deletedImageUrls,
+    ...savedDeletedImageUrls,
+  ]);
   const visibleImages = [...postImages, ...uploadedImages].filter(
-    (image) => image.id === undefined || !hiddenImageIds.has(image.id),
+    (image) =>
+      !hiddenImageUrls.has(image.imageUrl) &&
+      (image.id === undefined || !hiddenImageIds.has(image.id)),
   );
   const visibleStandaloneImages = visibleImages.filter(
     (image) => !isPostEditing || !editingPostContent.includes(image.imageUrl),
   );
 
-  const handleImageDelete = (imageId: number | undefined) => {
-    if (imageId === undefined) {
-      return;
+  const handleImageDelete = (image: PostImage) => {
+    if (image.id !== undefined) {
+      setDeletedImageIds((current) =>
+        current.includes(image.id as number)
+          ? current
+          : [...current, image.id as number],
+      );
     }
-
-    setDeletedImageIds((current) =>
-      current.includes(imageId) ? current : [...current, imageId],
+    setDeletedImageUrls((current) =>
+      current.includes(image.imageUrl) ? current : [...current, image.imageUrl],
     );
   };
 
@@ -241,6 +254,7 @@ const PostDetailModal = ({
   const handlePostEditStart = () => {
     setSelectedImages([]);
     setDeletedImageIds([]);
+    setDeletedImageUrls([]);
     setIsPostEditing(true);
     setIsPostMenuOpen(false);
     setEditingPostTitle(displayedPostTitle);
@@ -384,12 +398,13 @@ const PostDetailModal = ({
       setPostUpdateError("카테고리 정보를 확인할 수 없습니다.");
       return;
     }
-    const deletedImageUrls = (post.images ?? [])
+    const deletedContentImageUrls = deletedImageUrls;
+    const deletedImageUrlsFromIds = (post.images ?? [])
       .filter((image) => deletedImageIds.includes(image.id))
       .map((image) => image.imageUrl);
     const contentWithoutDeletedImages = removeDeletedImageMarkdown(
       trimmedPostContent,
-      deletedImageUrls,
+      [...new Set([...deletedContentImageUrls, ...deletedImageUrlsFromIds])],
     );
     const updateData: UpdatePostRequest = {
       categoryId,
@@ -413,7 +428,11 @@ const PostDetailModal = ({
       }
       await postsApi.updatePost(post.id, updateData);
       setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
+      setSavedDeletedImageUrls((current) => [
+        ...new Set([...current, ...deletedContentImageUrls]),
+      ]);
       setDeletedImageIds([]);
+      setDeletedImageUrls([]);
 
       setDisplayedPostTitle(trimmedPostTitle);
       setDisplayedPostContent(updateData.content);
@@ -523,7 +542,7 @@ const PostDetailModal = ({
                   const image = postImages.find(
                     (postImage) => postImage.imageUrl === imageUrl,
                   );
-                  handleImageDelete(image?.id);
+                  handleImageDelete(image ?? { imageUrl });
                 }}
                 selectedImages={selectedImages}
                 onRemoveImage={(index) =>
@@ -543,6 +562,7 @@ const PostDetailModal = ({
                       onClick={() => {
                         setSelectedImages([]);
                         setDeletedImageIds([]);
+                        setDeletedImageUrls([]);
                         setIsPostEditing(false);
                       }}
                     >
@@ -582,13 +602,13 @@ const PostDetailModal = ({
                     src={image.imageUrl}
                     alt={`${displayedPostTitle} 첨부된 이미지`}
                   />
-                  {isPostEditing && image.id !== undefined && (
+                  {isPostEditing && (
                     <S.ImageDeleteButton
                       type="button"
                       aria-label="이미지 삭제"
                       $alwaysVisible={isPostEditing}
                       disabled={isPostSaving}
-                      onClick={() => handleImageDelete(image.id)}
+                      onClick={() => handleImageDelete(image)}
                     >
                       <img src={deleteImageIcon} alt="" />
                     </S.ImageDeleteButton>
