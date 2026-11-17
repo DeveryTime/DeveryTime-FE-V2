@@ -122,35 +122,38 @@ const S = {
   `,
 
   Category: styled.div`
-    display: flex;
-    align-items: center;
-    gap: 27px;
-    color: #fff;
-    font-weight: 700;
-    flex-shrink: 0;
-    white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 27px;
+      color: #fff;
+      font-weight: 700;
+      flex-shrink: 0;
+      white-space: nowrap;
 
-    & > a {
-      color: inherit;
-      text-decoration: none;
-      cursor: pointer;
+      & > a {
+          color: inherit;
+          text-decoration: none;
+          cursor: pointer;
 
-        &:hover {
-            color: #000;
-        }
-        &.active {
-            color: #64748B;
-        }
-        ${m} {
-            gap: 14px;
-            font-size: 14px;
-            flex-shrink: 1;
-            min-width: 0;
-            overflow-x: auto;
-            scrollbar-width: none;
-            &::-webkit-scrollbar {
-                display: none;
-            }
+          &:hover {
+              color: #000;
+          }
+          &.active {
+              color: #64748b;
+          }
+      }
+
+      ${m} {
+          gap: 14px;
+          font-size: 14px;
+          flex-shrink: 1;
+          min-width: 0;
+          overflow-x: auto;
+          scrollbar-width: none;
+          &::-webkit-scrollbar {
+              display: none;
+          }
+      }
   `,
 
   Login: styled(Link)`
