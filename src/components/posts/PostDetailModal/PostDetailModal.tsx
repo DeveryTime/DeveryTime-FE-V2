@@ -169,24 +169,32 @@ const PostDetailModal = ({
     }
   }
 
+  // 상세 응답 형식에 맞춰 게시글 이미지를 구성한다.
   const postImages: PostImage[] =
     post.images?.length > 0
       ? post.images
       : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
+
+  // 삭제된 이미지는 ID 또는 URL 기준으로 숨긴다.
   const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
   const hiddenImageUrls = new Set([
     ...deletedImageUrls,
     ...savedDeletedImageUrls,
   ]);
+
+  // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
   const visibleImages = [...postImages, ...uploadedImages].filter(
     (image) =>
       !hiddenImageUrls.has(image.imageUrl) &&
       (image.id === undefined || !hiddenImageIds.has(image.id)),
   );
+
+  // 본문에 포함된 이미지는 별도 목록에서 중복 표시하지 않는다.
   const visibleStandaloneImages = visibleImages.filter(
     (image) => !isPostEditing || !editingPostContent.includes(image.imageUrl),
   );
 
+  // 이미지 ID와 URL을 삭제 목록에 추가한다.
   const handleImageDelete = (image: PostImage) => {
     if (image.id !== undefined) {
       setDeletedImageIds((current) =>
@@ -252,6 +260,7 @@ const PostDetailModal = ({
 
   // 게시글 수정 모드를 시작하고 게시글 메뉴를 닫는다.
   const handlePostEditStart = () => {
+    // 수정할 때 이전 수정 시도의 임시 삭제 상태를 초기화한다.
     setSelectedImages([]);
     setDeletedImageIds([]);
     setDeletedImageUrls([]);
@@ -398,6 +407,7 @@ const PostDetailModal = ({
       setPostUpdateError("카테고리 정보를 확인할 수 없습니다.");
       return;
     }
+    // 삭제한 이미지의 마크다운을 저장할 본문에서 제거한다.
     const deletedContentImageUrls = deletedImageUrls;
     const deletedImageUrlsFromIds = (post.images ?? [])
       .filter((image) => deletedImageIds.includes(image.id))
@@ -427,6 +437,8 @@ const PostDetailModal = ({
         setSelectedImages((current) => current.slice(1));
       }
       await postsApi.updatePost(post.id, updateData);
+
+      // 저장된 삭제 상태를 유지해 화면에 삭제한 이미지를 다시 표시하지 않는다.
       setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
       setSavedDeletedImageUrls((current) => [
         ...new Set([...current, ...deletedContentImageUrls]),
@@ -539,6 +551,7 @@ const PostDetailModal = ({
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
                 onDeleteImage={(imageUrl) => {
+                  // 에디터에서 삭제한 이미지의 ID와 URL을 찾아 기록한다.
                   const image = postImages.find(
                     (postImage) => postImage.imageUrl === imageUrl,
                   );

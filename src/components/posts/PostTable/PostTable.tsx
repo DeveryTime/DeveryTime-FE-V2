@@ -7,6 +7,7 @@ interface PostTableProps {
 }
 
 const formatPostDate = (dateString: string) => {
+  // 게시글 날짜를 테이블에 표시할 형식으로 변환한다.
   const date = new Date(dateString);
 
   if (Number.isNaN(date.getTime())) {
@@ -21,6 +22,7 @@ const formatPostDate = (dateString: string) => {
 };
 
 const PostTable = ({ posts, onPostClick }: PostTableProps) => {
+  // 게시글 목록을 공통 테이블 형태로 렌더링한다.
   return (
     // 게시글 번호, 카테고리, 제목, 작성일을 표 형태로 표시한다.
     <S.Table>

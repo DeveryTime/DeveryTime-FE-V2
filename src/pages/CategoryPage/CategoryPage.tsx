@@ -28,6 +28,7 @@ const CategoryPage = ({
   categoryName,
 }: CategoryPageProps) => {
   const navigate = useNavigate();
+  // 정렬, 페이지, 게시글 상세 조회 상태를 관리한다.
   const [selectedSort, setSelectedSort] =
     useState<PostSort>("likeCount,desc");
   const [pagination, setPagination] = useState({ categoryId, page: 1 });
@@ -102,6 +103,7 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
+    // 선택한 게시글과 현재 사용자의 정보를 함께 조회한다.
     if (!localStorage.getItem("accessToken")) {
       navigate("/login");
       return;
@@ -136,6 +138,7 @@ const CategoryPage = ({
 
   //게시글 삭제 함수
   const handlePostDelete = async (postId: number) => {
+    // 삭제 성공 후 목록과 페이지 데이터를 갱신한다.
     try {
       await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
@@ -150,6 +153,7 @@ const CategoryPage = ({
 
   //수정 성공한 후에 상태 갱신하는 로직
   const handlePostUpdate = (postId: number, title: string, content: string) => {
+    // 수정된 제목과 본문을 목록과 상세 모달에 반영한다.
     setPosts((currentPage) =>
       currentPage.map((currentPost) =>
         currentPost.id === postId ? { ...currentPost, title } : currentPost,
