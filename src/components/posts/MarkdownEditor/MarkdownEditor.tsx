@@ -1,5 +1,12 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import {
+  EditorContent,
+  NodeViewWrapper,
+  ReactNodeViewRenderer,
+  useEditor,
+  useEditorState,
+  type ReactNodeViewProps,
+} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
@@ -7,6 +14,7 @@ import { Markdown } from "@tiptap/markdown";
 import S from "./MarkdownEditor.styles";
 import WriteStyles from "../../../pages/postWritePage/PostEditorStyle";
 import { IoImageOutline, IoLinkOutline } from "react-icons/io5";
+import deleteImageIcon from "../../../assets/delete-image.svg";
 
 interface MarkdownEditorProps {
   value: string;
@@ -16,7 +24,42 @@ interface MarkdownEditorProps {
   onSelectImages: (files: File[]) => void;
   selectedImages: File[];
   onRemoveImage: (index: number) => void;
+  onDeleteImage?: (imageUrl: string) => void;
 }
+
+type EditableImageViewProps = ReactNodeViewProps & {
+  onDeleteImage?: (imageUrl: string) => void;
+};
+
+const EditableImageView = ({
+  node,
+  deleteNode,
+  onDeleteImage,
+}: EditableImageViewProps) => {
+  const imageUrl = typeof node.attrs.src === "string" ? node.attrs.src : "";
+
+  return (
+    <NodeViewWrapper className="editable-image-node">
+      <img
+        src={imageUrl}
+        alt={typeof node.attrs.alt === "string" ? node.attrs.alt : ""}
+      />
+      {onDeleteImage && (
+        <button
+          type="button"
+          aria-label="이미지 삭제"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            deleteNode();
+            onDeleteImage(imageUrl);
+          }}
+        >
+          <img src={deleteImageIcon} alt="" />
+        </button>
+      )}
+    </NodeViewWrapper>
+  );
+};
 
 const MarkdownEditor = ({
   value,
@@ -26,6 +69,7 @@ const MarkdownEditor = ({
   onSelectImages,
   selectedImages,
   onRemoveImage,
+  onDeleteImage,
 }: MarkdownEditorProps) => {
   const latestValueRef = useRef(value);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -38,7 +82,13 @@ const MarkdownEditor = ({
         },
       }),
       Markdown,
-      Image,
+      Image.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer((props) => (
+            <EditableImageView {...props} onDeleteImage={onDeleteImage} />
+          ));
+        },
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content: value,

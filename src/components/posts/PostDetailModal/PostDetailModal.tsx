@@ -514,6 +514,12 @@ const PostDetailModal = ({
                 value={editingPostContent}
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
+                onDeleteImage={(imageUrl) => {
+                  const image = postImages.find(
+                    (postImage) => postImage.imageUrl === imageUrl,
+                  );
+                  handleImageDelete(image?.id);
+                }}
                 selectedImages={selectedImages}
                 onRemoveImage={(index) =>
                   setSelectedImages((current) =>
@@ -563,7 +569,7 @@ const PostDetailModal = ({
               </S.PostContent>
             </>
           )}
-          {visibleImages.length > 0 && (
+          {!isPostEditing && visibleImages.length > 0 && (
             <S.ImageList>
               {visibleImages.map((image, index) => (
                 <S.ImageItem key={`${image.imageUrl}-${index}`}>
