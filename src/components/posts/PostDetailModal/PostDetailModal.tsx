@@ -415,6 +415,7 @@ const PostDetailModal = ({
         content: trimmedComment,
       });
       setCommentContent("");
+      setIsCommentError(null);
       createdCommentIdRef.current = createdComment.id;
       shouldScrollCommentsToBottomRef.current = true;
       setComments((currentComments) => [
@@ -770,7 +771,7 @@ const PostDetailModal = ({
         >
           {isCommentLoading && <CommentSkeleton />}
 
-          {!isCommentLoading && !isCommentError && (
+          {!isCommentLoading && (
             <>
               {comments.map((comment) => (
                 <S.CommentItem
@@ -861,7 +862,9 @@ const PostDetailModal = ({
             </>
           )}
           {!isCommentLoading && isCommentSubmitting && <CommentSkeleton />}
-          {isCommentError && <p role="alert"> {isCommentError} </p>}
+          {isCommentError && comments.length === 0 && (
+            <p role="alert"> {isCommentError} </p>
+          )}
           {commentActionError && <p role="alert">{commentActionError}</p>}
         </S.CommentList>
 
