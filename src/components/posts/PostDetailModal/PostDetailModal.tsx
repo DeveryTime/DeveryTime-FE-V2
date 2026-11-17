@@ -171,6 +171,9 @@ const PostDetailModal = ({
   const visibleImages = [...postImages, ...uploadedImages].filter(
     (image) => image.id === undefined || !hiddenImageIds.has(image.id),
   );
+  const visibleStandaloneImages = visibleImages.filter(
+    (image) => !isPostEditing || !editingPostContent.includes(image.imageUrl),
+  );
 
   const handleImageDelete = (imageId: number | undefined) => {
     if (imageId === undefined) {
@@ -569,9 +572,9 @@ const PostDetailModal = ({
               </S.PostContent>
             </>
           )}
-          {!isPostEditing && visibleImages.length > 0 && (
+          {visibleStandaloneImages.length > 0 && (
             <S.ImageList>
-              {visibleImages.map((image, index) => (
+              {visibleStandaloneImages.map((image, index) => (
                 <S.ImageItem key={`${image.imageUrl}-${index}`}>
                   <S.ContentImage
                     src={image.imageUrl}
