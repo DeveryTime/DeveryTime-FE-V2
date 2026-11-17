@@ -189,7 +189,7 @@ const S = {
     &:hover button, &:focus-within button { opacity: 1; }
   `,
 
-  ImageDeleteButton: styled.button`
+  ImageDeleteButton: styled.button<{ $alwaysVisible?: boolean }>`
     position: absolute;
     top: 8px;
     right: 8px;
@@ -201,7 +201,7 @@ const S = {
     border-radius: 50%;
     background: white;
     cursor: pointer;
-    opacity: 0;
+    opacity: ${({ $alwaysVisible }) => ($alwaysVisible ? 1 : 0)};
     transition: opacity 0.15s;
     &:focus-visible { opacity: 1; }
     &:disabled { cursor: not-allowed; }

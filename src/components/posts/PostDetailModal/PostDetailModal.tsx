@@ -166,7 +166,9 @@ const PostDetailModal = ({
   }
 
   const postImages: PostImage[] =
-    post.images ?? (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
+    post.images?.length > 0
+      ? post.images
+      : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
   const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
   const visibleImages = [...postImages, ...uploadedImages].filter(
     (image) => image.id === undefined || !hiddenImageIds.has(image.id),
@@ -584,6 +586,7 @@ const PostDetailModal = ({
                     <S.ImageDeleteButton
                       type="button"
                       aria-label="이미지 삭제"
+                      $alwaysVisible={isPostEditing}
                       disabled={isPostSaving}
                       onClick={() => handleImageDelete(image.id)}
                     >
