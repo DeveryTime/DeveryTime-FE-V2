@@ -766,7 +766,7 @@ const PostDetailModal = ({
         {/* 댓글 목록과 댓글별 메뉴 */}
         <S.CommentList
           ref={commentListRef}
-          aria-busy={isCommentLoading}
+          aria-busy={isCommentLoading || isCommentSubmitting}
         >
           {isCommentLoading && <CommentSkeleton />}
 
@@ -860,6 +860,7 @@ const PostDetailModal = ({
               ))}
             </>
           )}
+          {!isCommentLoading && isCommentSubmitting && <CommentSkeleton />}
           {isCommentError && <p role="alert"> {isCommentError} </p>}
           {commentActionError && <p role="alert">{commentActionError}</p>}
         </S.CommentList>
