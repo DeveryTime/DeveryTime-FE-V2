@@ -6,11 +6,21 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { createPortal } from "react-dom";
+import {
+  autoUpdate,
+  computePosition,
+  flip,
+  offset,
+  shift,
+} from "@floating-ui/dom";
 import PostMarkdown from "./PostMarkdown";
 import { CATEGORIES } from "../../../constants/categories";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import commentIcon from "../../../assets/comment.svg";
 import deleteImageIcon from "../../../assets/delete-image.svg";
 import likeDefaultIcon from "../../../assets/Like.svg";
@@ -78,6 +88,27 @@ const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) =>
     return markdown.replace(imagePattern, "");
   }, content);
 
+const COMMENT_SKELETON_COUNT = 2;
+
+const CommentSkeleton = () => (
+  <>
+    {Array.from({ length: COMMENT_SKELETON_COUNT }, (_, index) => (
+      <S.CommentItem key={index} aria-hidden="true">
+        <S.CommentHeader>
+          <S.CommentAuthor>
+            <Skeleton circle width={45} height={45} />
+            <Skeleton width={80} height={20} />
+          </S.CommentAuthor>
+          <Skeleton width={72} height={20} />
+        </S.CommentHeader>
+        <S.CommentBody>
+          <Skeleton width="82%" height={20} />
+        </S.CommentBody>
+      </S.CommentItem>
+    ))}
+  </>
+);
+
 const PostDetailModal = ({
   post,
   currentUserId,
@@ -123,6 +154,18 @@ const PostDetailModal = ({
   );
   const [isCommentActionLoading, setIsCommentActionLoading] = useState(false);
   const [commentReloadKey, setCommentReloadKey] = useState(0);
+  const [successfulCommentReloadKey, setSuccessfulCommentReloadKey] =
+    useState<number | null>(null);
+  const commentListRef = useRef<HTMLDivElement>(null);
+  const shouldScrollCommentsToBottomRef = useRef(false);
+  const createdCommentIdRef = useRef<number | null>(null);
+  const commentMenuPopoverRef = useRef<HTMLDivElement>(null);
+  const [commentMenuAnchor, setCommentMenuAnchor] =
+    useState<HTMLButtonElement | null>(null);
+  const [commentMenuPosition, setCommentMenuPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   // 게시글 수정 모드 여부를 관리한다.
   const [isPostEditing, setIsPostEditing] = useState(false);
@@ -192,6 +235,9 @@ const PostDetailModal = ({
   // 본문에 포함된 이미지는 별도 목록에서 중복 표시하지 않는다.
   const visibleStandaloneImages = visibleImages.filter(
     (image) => !isPostEditing || !editingPostContent.includes(image.imageUrl),
+  );
+  const openComment = comments.find(
+    (comment) => comment.id === openCommentMenuId,
   );
 
   // 이미지 ID와 URL을 삭제 목록에 추가한다.
@@ -283,6 +329,7 @@ const PostDetailModal = ({
         const response = await commentsApi.getComments(post.id);
         if (isActive) {
           setComments(response.data);
+          setSuccessfulCommentReloadKey(commentReloadKey);
         }
       } catch {
         if (isActive) {
@@ -302,6 +349,65 @@ const PostDetailModal = ({
     };
   }, [post.id, commentReloadKey]);
 
+  // 새 댓글을 등록한 뒤 댓글 목록의 마지막 위치로 이동한다.
+  useEffect(() => {
+    if (
+      !shouldScrollCommentsToBottomRef.current ||
+      successfulCommentReloadKey !== commentReloadKey ||
+      isCommentLoading ||
+      isCommentError
+    ) {
+      return;
+    }
+
+    const commentList = commentListRef.current;
+    const createdCommentId = createdCommentIdRef.current;
+    if (!commentList || createdCommentId === null) {
+      return;
+    }
+
+    const createdComment = commentList.querySelector(
+      `[data-comment-id="${createdCommentId}"]`,
+    );
+    if (!createdComment) {
+      return;
+    }
+
+    const animationFrame = requestAnimationFrame(() => {
+      commentList.scrollTo({
+        top: commentList.scrollHeight,
+        behavior: "smooth",
+      });
+      shouldScrollCommentsToBottomRef.current = false;
+      createdCommentIdRef.current = null;
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [
+    comments,
+    commentReloadKey,
+    isCommentError,
+    isCommentLoading,
+    successfulCommentReloadKey,
+  ]);
+
+  useLayoutEffect(() => {
+    const popover = commentMenuPopoverRef.current;
+    if (!commentMenuAnchor || openCommentMenuId === null || !popover) {
+      return;
+    }
+
+    return autoUpdate(commentMenuAnchor, popover, () => {
+      void computePosition(commentMenuAnchor, popover, {
+        placement: "top-end",
+        strategy: "fixed",
+        middleware: [offset(8), flip(), shift({ padding: 8 })],
+      }).then(({ x, y }) => {
+        setCommentMenuPosition({ x, y });
+      });
+    });
+  }, [commentMenuAnchor, openCommentMenuId]);
+
   const handleCommentSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
@@ -314,8 +420,12 @@ const PostDetailModal = ({
     setCommentSubmitError(null);
 
     try {
-      await commentsApi.createComment(post.id, { content: trimmedComment });
+      const createdComment = await commentsApi.createComment(post.id, {
+        content: trimmedComment,
+      });
       setCommentContent("");
+      createdCommentIdRef.current = createdComment.id;
+      shouldScrollCommentsToBottomRef.current = true;
       setCommentReloadKey((current) => current + 1);
     } catch {
       setCommentSubmitError("댓글을 작성하지 못했습니다.");
@@ -653,13 +763,16 @@ const PostDetailModal = ({
         {likeError && <p role="alert">{likeError}</p>}
 
         {/* 댓글 목록과 댓글별 메뉴 */}
-        <S.CommentList>
-          {isCommentLoading && <p> 댓글을 불러오는 중입니다... </p>}
+        <S.CommentList ref={commentListRef}>
+          {isCommentLoading && <CommentSkeleton />}
 
           {!isCommentLoading && !isCommentError && (
             <>
               {comments.map((comment) => (
-                <S.CommentItem key={comment.id}>
+                <S.CommentItem
+                  key={comment.id}
+                  data-comment-id={comment.id}
+                >
                   <S.CommentHeader>
                     <S.CommentAuthor>
                       {comment.profileImageUrl ? (
@@ -683,46 +796,22 @@ const PostDetailModal = ({
                       <S.CommentButton
                         type="button"
                         aria-label="댓글 메뉴"
-                        onClick={() =>
-                          setOpenCommentMenuId((previous) =>
-                            previous === comment.id ? null : comment.id,
-                          )
-                        }
+                        onClick={(event) => {
+                          if (openCommentMenuId === comment.id) {
+                            setOpenCommentMenuId(null);
+                            setCommentMenuAnchor(null);
+                            setCommentMenuPosition(null);
+                            return;
+                          }
+
+                          setOpenCommentMenuId(comment.id);
+                          setCommentMenuAnchor(event.currentTarget);
+                          setCommentMenuPosition(null);
+                        }}
                         aria-expanded={openCommentMenuId === comment.id}
                       >
                         <S.KebabIcon src={KebabMenu} alt="" />
                       </S.CommentButton>
-                      {openCommentMenuId === comment.id && (
-                        <S.CommentMenuPopover>
-                          {currentUserId === comment.userId ? (
-                            <>
-                              <S.CommentEditButton
-                                type="button"
-                                onClick={() => handleCommentEditStart(comment)}
-                              >
-                                댓글 수정
-                              </S.CommentEditButton>
-                              <S.CommentDeleteButton
-                                type="button"
-                                onClick={() =>
-                                  void handleCommentDelete(comment.id)
-                                }
-                                disabled={isCommentActionLoading}
-                              >
-                                삭제하기
-                              </S.CommentDeleteButton>
-                            </>
-                          ) : (
-                            <S.CommentMenuPopoverLink
-                              href="https://docs.google.com/forms/d/e/1FAIpQLSdZfb16smuoFx3K4JUiB-dqX5hKLywfr2FcyAI4KqWuSYdLZg/viewform"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              신고하기
-                            </S.CommentMenuPopoverLink>
-                          )}
-                        </S.CommentMenuPopover>
-                      )}
                     </S.CommentMenuArea>
                   </S.CommentHeader>
                   {editingCommentId === comment.id ? (
@@ -770,6 +859,46 @@ const PostDetailModal = ({
           {isCommentError && <p role="alert"> {isCommentError} </p>}
           {commentActionError && <p role="alert">{commentActionError}</p>}
         </S.CommentList>
+
+        {openComment &&
+          commentMenuAnchor &&
+          createPortal(
+            <S.CommentMenuPopover
+              ref={commentMenuPopoverRef}
+              style={{
+                left: commentMenuPosition?.x ?? 0,
+                top: commentMenuPosition?.y ?? 0,
+                visibility: commentMenuPosition ? "visible" : "hidden",
+              }}
+            >
+              {currentUserId === openComment.userId ? (
+                <>
+                  <S.CommentEditButton
+                    type="button"
+                    onClick={() => handleCommentEditStart(openComment)}
+                  >
+                    댓글 수정
+                  </S.CommentEditButton>
+                  <S.CommentDeleteButton
+                    type="button"
+                    onClick={() => void handleCommentDelete(openComment.id)}
+                    disabled={isCommentActionLoading}
+                  >
+                    삭제하기
+                  </S.CommentDeleteButton>
+                </>
+              ) : (
+                <S.CommentMenuPopoverLink
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSdZfb16smuoFx3K4JUiB-dqX5hKLywfr2FcyAI4KqWuSYdLZg/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  신고하기
+                </S.CommentMenuPopoverLink>
+              )}
+            </S.CommentMenuPopover>,
+            commentMenuAnchor.closest("dialog") ?? document.body,
+          )}
 
         <S.CommentComposer onSubmit={handleCommentSubmit}>
           <S.CommentInput

@@ -297,6 +297,8 @@ const S = {
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
     border-top: 1px solid ${colors.gray[200]};
   `,
 
@@ -410,9 +412,7 @@ const S = {
   `,
 
   CommentMenuPopover: styled.div`
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
+    position: fixed;
     z-index: 30;
 
     display: flex;

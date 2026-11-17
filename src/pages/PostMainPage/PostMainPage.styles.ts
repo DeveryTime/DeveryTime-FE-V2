@@ -22,6 +22,7 @@ const S = {
   Content: styled.section`
     // 게시글 목록 콘텐츠 영역
     min-width: 0;
+    padding-bottom: 80px;
   `,
 
   ContentHeader: styled.div`
