@@ -225,9 +225,7 @@ const Profile = () => {
                     src={user.profileImageUrl}
                     alt="프로필 이미지"
                   />
-                ) : (
-                  <span>프로필 이미지</span>
-                )}
+                ) : null}
               </S.ProfileImage>
 
               <input

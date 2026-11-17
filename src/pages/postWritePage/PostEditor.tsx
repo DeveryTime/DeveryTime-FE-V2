@@ -2,15 +2,14 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEv
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
 import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
 import client from "../../api/client";
-import categoriesApi from "../../api/categories/categories.api";
 import type { Category } from "../../api/categories/categories.types";
+import { CATEGORIES } from "../../constants/categories";
 import postsApi from "../../api/posts/posts.api";
 import type { CreatePostRequest } from "../../api/posts/request/posts.request";
 import type {
@@ -81,9 +80,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [categoryId, setCategoryId] = useState<number | "">(
     initialDraft?.categoryId ?? "",
   );
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [areCategoriesLoading, setAreCategoriesLoading] = useState(true);
-  const [hasCategoryLoadError, setHasCategoryLoadError] = useState(false);
+  const categories = CATEGORIES satisfies readonly Category[];
   const [title, setTitle] = useState(initialDraft?.title ?? "");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
@@ -101,33 +98,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const linkDialogOpenRef = useRef(false);
   const backHandlerRef = useRef<() => void>(onClose);
   const hasSubmittedRef = useRef(false);
-
-  useEffect(() => {
-    let isActive = true;
-
-    void categoriesApi.getCategories().then(
-      (nextCategories) => {
-        if (!isActive) return;
-
-        setCategories(nextCategories);
-        setCategoryId((currentCategoryId) =>
-          currentCategoryId !== "" &&
-          nextCategories.some((category) => category.id === currentCategoryId)
-            ? currentCategoryId
-            : "",
-        );
-      },
-      () => {
-        if (isActive) setHasCategoryLoadError(true);
-      },
-    ).finally(() => {
-      if (isActive) setAreCategoriesLoading(false);
-    });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
     try {
@@ -150,7 +120,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         link: { openOnClick: false, autolink: true },
       }),
       Markdown,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image,
       Placeholder.configure({ placeholder: "내용을 입력해주세요." }),
     ],
@@ -448,17 +417,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             id="post-category"
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value === "" ? "" : Number(event.target.value))}
-            disabled={isSubmitting || postCreationCompleted || areCategoriesLoading || hasCategoryLoadError || categories.length === 0}
-            aria-busy={areCategoriesLoading}
+            disabled={isSubmitting || postCreationCompleted}
           >
             <option value="">
-              {areCategoriesLoading
-                ? "카테고리를 불러오는 중입니다..."
-                : hasCategoryLoadError
-                  ? "카테고리를 불러오지 못했습니다"
-                  : categories.length === 0
-                    ? "등록된 카테고리가 없습니다"
-                    : "카테고리를 선택해주세요"}
+              카테고리를 선택해주세요
             </option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -482,10 +444,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           <S.ToolButton type="button" $active={editor.isActive("italic")} aria-label="기울임" onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></S.ToolButton>
           <S.ToolButton type="button" $active={editor.isActive("underline")} aria-label="밑줄" onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></S.ToolButton>
           <S.ToolButton type="button" $active={editor.isActive("strike")} aria-label="취소선" onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></S.ToolButton>
-          <S.Divider />
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "left" })} aria-label="왼쪽 정렬" onClick={() => editor.chain().focus().setTextAlign("left").run()}>≡</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "center" })} aria-label="가운데 정렬" onClick={() => editor.chain().focus().setTextAlign("center").run()}>≡</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "right" })} aria-label="오른쪽 정렬" onClick={() => editor.chain().focus().setTextAlign("right").run()}>≡</S.ToolButton>
           <S.Divider />
           <S.ToolButton type="button" $active={editor.isActive("bulletList")} aria-label="글머리 기호 목록" onClick={() => editor.chain().focus().toggleBulletList().run()}>•</S.ToolButton>
           <S.ToolButton type="button" $active={editor.isActive("orderedList")} aria-label="번호 목록" onClick={() => editor.chain().focus().toggleOrderedList().run()}>1.</S.ToolButton>

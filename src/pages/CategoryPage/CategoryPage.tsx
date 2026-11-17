@@ -15,29 +15,32 @@ import type {
 } from "../../types/posts.types";
 import PAGE_SIZE from "../../constants/pagination";
 import postsApi from "../../api/posts.api";
+import profileApi from "../../api/profile/profile.api";
+import { hasStoredAccessToken } from "../../api/authSession";
 
 interface CategoryPageProps {
   categoryId: number;
   categoryName: string;
-  currentUserId: number;
 }
 
 const CategoryPage = ({
   categoryId,
   categoryName,
-  currentUserId,
 }: CategoryPageProps) => {
   const navigate = useNavigate();
+  // 정렬, 페이지, 게시글 상세 조회 상태를 관리한다.
   const [selectedSort, setSelectedSort] =
-    useState<PostSort>("createdAt,desc");
-  const [currentPage, setCurrentPage] = useState(1);
-  const previousCategoryId = useRef(categoryId);
+    useState<PostSort>("likeCount,desc");
+  const [pagination, setPagination] = useState({ categoryId, page: 1 });
+  const currentPage =
+    pagination.categoryId === categoryId ? pagination.page : 1;
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -45,17 +48,6 @@ const CategoryPage = ({
 
   // 카테고리, 정렬 기준, 페이지가 바뀌면 서버 목록을 다시 조회한다.
   useEffect(() => {
-    if (previousCategoryId.current !== categoryId) {
-      previousCategoryId.current = categoryId;
-
-      if (currentPage !== 1) {
-        // 카테고리 변경 시 첫 페이지로 초기화하는 의도적인 상태 변경이다.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentPage(1);
-        return;
-      }
-    }
-
     let isActive = true;
 
     const fetchCategoryPosts = async () => {
@@ -88,7 +80,10 @@ const CategoryPage = ({
         const nextTotalPages = Math.max(1, response.totalPages);
         setTotalPages(nextTotalPages);
         setTotalElements(response.totalElements);
-        setCurrentPage((page) => Math.min(page, nextTotalPages));
+        setPagination({
+          categoryId,
+          page: Math.min(currentPage, nextTotalPages),
+        });
       } catch {
         if (isActive) {
           setError("카테고리 게시글을 불러오지 못했습니다.");
@@ -108,6 +103,7 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
+    // 선택한 게시글과 현재 사용자의 정보를 함께 조회한다.
     if (!localStorage.getItem("accessToken")) {
       navigate("/login");
       return;
@@ -118,11 +114,14 @@ const CategoryPage = ({
     setDetailError(null);
 
     try {
+      const profile = await profileApi.getMyProfile();
+      if (requestId !== detailRequestId.current) return;
       const postDetail = await postsApi.getPost(postId);
       if (requestId !== detailRequestId.current) {
         return;
       }
 
+      setCurrentUserId(profile.id);
       setSelectedPost(postDetail);
     } catch {
       if (requestId !== detailRequestId.current) {
@@ -139,6 +138,7 @@ const CategoryPage = ({
 
   //게시글 삭제 함수
   const handlePostDelete = async (postId: number) => {
+    // 삭제 성공 후 목록과 페이지 데이터를 갱신한다.
     try {
       await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
@@ -153,6 +153,7 @@ const CategoryPage = ({
 
   //수정 성공한 후에 상태 갱신하는 로직
   const handlePostUpdate = (postId: number, title: string, content: string) => {
+    // 수정된 제목과 본문을 목록과 상세 모달에 반영한다.
     setPosts((currentPage) =>
       currentPage.map((currentPost) =>
         currentPost.id === postId ? { ...currentPost, title } : currentPost,
@@ -173,13 +174,21 @@ const CategoryPage = ({
           selectedSort={selectedSort}
           onChange={(sort) => {
             setSelectedSort(sort);
-            setCurrentPage(1);
+            setPagination({ categoryId, page: 1 });
           }}
         />
       </S.SortMenuArea>
 
       <S.Content>
-        <S.Title>{categoryName}</S.Title>
+        <S.ContentHeader>
+          <S.Title>{categoryName}</S.Title>
+          <S.WriteButton
+            type="button"
+            onClick={() => navigate(hasStoredAccessToken() ? "/posts/new" : "/login")}
+          >
+            글쓰기
+          </S.WriteButton>
+        </S.ContentHeader>
         <S.Description>{categoryName} 게시판입니다.</S.Description>
         <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
@@ -200,8 +209,7 @@ const CategoryPage = ({
         {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
         {detailError && <p role="alert">{detailError}</p>}
 
-        {selectedPost && (
-          <PostDetailModal
+        {selectedPost && currentUserId !== null && (          <PostDetailModal
             key={selectedPost.id}
             post={selectedPost}
             currentUserId={currentUserId}
@@ -220,7 +228,7 @@ const CategoryPage = ({
           <PostPagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onChange={setCurrentPage}
+            onChange={(page) => setPagination({ categoryId, page })}
           />
         )}
       </S.Content>

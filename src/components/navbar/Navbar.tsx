@@ -7,6 +7,10 @@ import profile from "../../assets/profile.svg";
 import searchIcon from "../../assets/searchIcon.svg";
 import profileApi from "../../api/profile/profile.api.ts";
 
+import { CATEGORIES } from "../../constants/categories";
+import toast from "react-hot-toast";
+
+
 const NavBar = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
@@ -30,17 +34,6 @@ const currentCategoryId = new URLSearchParams(location.search).get("categoryId")
     return () => window.removeEventListener("profile-updated", fetchProfile);
 
   },[isLoggedIn]);
-
-  // 카테고리 목록
-  const CATEGORIES = [
-    { id: 1, name: "전공" },
-    { id: 2, name: "일상" },
-    { id: 3, name: "교과" },
-    { id: 4, name: "급식" },
-    { id: 5, name: "프로젝트" },
-    { id: 6, name: "기숙사" },
-    { id: 7, name: "분실물" },
-  ];
 
   // 검색 실행
   const handleSearch = () => {
@@ -91,6 +84,12 @@ const currentCategoryId = new URLSearchParams(location.search).get("categoryId")
               key={category.id}
               to={`/Categorypage?categoryId=${category.id}&categoryName=${encodeURIComponent(category.name)}`}
               className={currentCategoryId=== String(category.id) ?  "active" : ""}
+              onClick={(e) =>{
+                if (!isLoggedIn) {
+                  e. preventDefault();
+                  toast.error("로그인이 필요합니다.")
+                  navigate("/login");
+                }}}
             >
               {category.name}
             </Link>
