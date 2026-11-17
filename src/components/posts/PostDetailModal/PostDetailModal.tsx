@@ -443,16 +443,23 @@ const PostDetailModal = ({
                       <S.CommentDeleteButton
                         type="button"
                         aria-label="게시글 삭제"
+
                         onClick={() => {
                           setIsPostMenuOpen(false);
                           setIsDeleteConfirmOpen(true);
                         }}
+                        onClick={handlePostDelete}
+
                       >
                         삭제하기
                       </S.CommentDeleteButton>
                     </>
                   )}
+
                   {deleteError && <p role="alert">{deleteError}</p>}
+                  {deleteError && (
+                    <p role="alert">{deleteError}</p>
+                  )}
                 </S.PostMenuPopover>
               )}
             </S.PostMenuArea>
