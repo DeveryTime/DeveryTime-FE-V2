@@ -123,6 +123,8 @@ const PostDetailModal = ({
   );
   const [isCommentActionLoading, setIsCommentActionLoading] = useState(false);
   const [commentReloadKey, setCommentReloadKey] = useState(0);
+  const commentListRef = useRef<HTMLDivElement>(null);
+  const shouldScrollCommentsToBottomRef = useRef(false);
 
   // 게시글 수정 모드 여부를 관리한다.
   const [isPostEditing, setIsPostEditing] = useState(false);
@@ -302,6 +304,28 @@ const PostDetailModal = ({
     };
   }, [post.id, commentReloadKey]);
 
+  // 새 댓글을 등록한 뒤 댓글 목록의 마지막 위치로 이동한다.
+  useEffect(() => {
+    if (!shouldScrollCommentsToBottomRef.current) {
+      return;
+    }
+
+    shouldScrollCommentsToBottomRef.current = false;
+    const commentList = commentListRef.current;
+    if (!commentList) {
+      return;
+    }
+
+    const animationFrame = requestAnimationFrame(() => {
+      commentList.scrollTo({
+        top: commentList.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [comments]);
+
   const handleCommentSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
@@ -316,6 +340,7 @@ const PostDetailModal = ({
     try {
       await commentsApi.createComment(post.id, { content: trimmedComment });
       setCommentContent("");
+      shouldScrollCommentsToBottomRef.current = true;
       setCommentReloadKey((current) => current + 1);
     } catch {
       setCommentSubmitError("댓글을 작성하지 못했습니다.");
@@ -653,7 +678,7 @@ const PostDetailModal = ({
         {likeError && <p role="alert">{likeError}</p>}
 
         {/* 댓글 목록과 댓글별 메뉴 */}
-        <S.CommentList>
+        <S.CommentList ref={commentListRef}>
           {isCommentLoading && <p> 댓글을 불러오는 중입니다... </p>}
 
           {!isCommentLoading && !isCommentError && (

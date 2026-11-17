@@ -297,6 +297,8 @@ const S = {
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
     border-top: 1px solid ${colors.gray[200]};
   `,
 
