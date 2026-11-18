@@ -418,7 +418,7 @@ const PostDetailModal = ({
       const createdComment = await commentsApi.createComment(post.id, {
         content: trimmedComment,
       });
-      let authorName = createdComment.authorName ?? currentUserNickname;
+      let authorName: string | null = currentUserNickname;
       if (!authorName) {
         try {
           const profile = await profileApi.getMyProfile();
@@ -428,6 +428,7 @@ const PostDetailModal = ({
           // 댓글 생성은 성공했으므로 닉네임 조회 실패가 등록을 실패시키지 않도록 한다.
         }
       }
+      authorName ??= createdComment.authorName ?? null;
       setCommentContent("");
       setIsCommentError(null);
       createdCommentIdRef.current = createdComment.id;
