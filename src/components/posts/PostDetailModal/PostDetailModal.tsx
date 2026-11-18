@@ -28,6 +28,7 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type { PostComment, PostDetailData } from "../../../types/posts.types";
 import type { UpdatePostRequest } from "../../../api/posts/request/posts.request";
+import type { ProfileData } from "../../../api/profile/profile.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
@@ -145,9 +146,9 @@ const PostDetailModal = ({
   const [isCommentError, setIsCommentError] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState("");
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
-  const [currentUserNickname, setCurrentUserNickname] = useState<string | null>(
-    null,
-  );
+  const [currentUserProfile, setCurrentUserProfile] = useState<
+    Pick<ProfileData, "username" | "profileImageUrl"> | null
+  >(null);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(
     null,
   );
@@ -418,17 +419,24 @@ const PostDetailModal = ({
       const createdComment = await commentsApi.createComment(post.id, {
         content: trimmedComment,
       });
-      let authorName: string | null = currentUserNickname;
-      if (!authorName) {
+      let currentUserProfileSnapshot = currentUserProfile;
+      if (!currentUserProfileSnapshot) {
         try {
           const profile = await profileApi.getMyProfile();
-          authorName = profile.username;
-          setCurrentUserNickname(profile.username);
+          currentUserProfileSnapshot = profile;
+          setCurrentUserProfile(profile);
         } catch {
           // 댓글 생성은 성공했으므로 닉네임 조회 실패가 등록을 실패시키지 않도록 한다.
         }
       }
-      authorName ??= createdComment.authorName ?? null;
+      const authorName =
+        currentUserProfileSnapshot?.username ??
+        createdComment.authorName ??
+        "사용자";
+      const profileImageUrl =
+        currentUserProfileSnapshot?.profileImageUrl ??
+        createdComment.profileImageUrl ??
+        null;
       setCommentContent("");
       setIsCommentError(null);
       createdCommentIdRef.current = createdComment.id;
@@ -438,10 +446,10 @@ const PostDetailModal = ({
         {
           id: createdComment.id,
           userId: createdComment.userId,
-          authorName: authorName ?? "사용자",
+          authorName,
           content: createdComment.content,
           createdAt: createdComment.createdAt,
-          profileImageUrl: createdComment.profileImageUrl ?? null,
+          profileImageUrl,
         },
       ]);
     } catch {
