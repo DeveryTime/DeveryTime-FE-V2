@@ -34,6 +34,7 @@ import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 import profileApi from "../../../api/profile/profile.api";
+import { normalizeDisplayText } from "../../../utils/normalizeDisplayText";
 
 interface PostDetailModalProps {
   post: PostDetailData;
@@ -704,7 +705,7 @@ const PostDetailModal = ({
           ) : (
             <>
               <S.PostTitle id="post-detail-title">
-                {displayedPostTitle}
+                {normalizeDisplayText(displayedPostTitle)}
               </S.PostTitle>
               <S.PostContent>
                 <PostMarkdown content={displayedPostContent} />

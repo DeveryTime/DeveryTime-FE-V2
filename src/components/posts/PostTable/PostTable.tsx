@@ -1,5 +1,6 @@
 import type { PostTableItem } from "../../../types/posts.types";
 import S from "./PostTable.styles";
+import { normalizeDisplayText } from "../../../utils/normalizeDisplayText";
 
 interface PostTableProps {
   posts: PostTableItem[];
@@ -55,7 +56,7 @@ const PostTable = ({ posts, onPostClick }: PostTableProps) => {
           >
             <S.TableCell> {post.number} </S.TableCell>
             <S.TableCell> {post.category} </S.TableCell>
-            <S.TableCell> {post.title} </S.TableCell>
+            <S.TableCell> {normalizeDisplayText(post.title)} </S.TableCell>
             <S.TableCell> {formatPostDate(post.createdAt)} </S.TableCell>
           </S.TableRow>
         ))}
