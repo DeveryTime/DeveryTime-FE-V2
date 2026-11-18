@@ -542,10 +542,10 @@ const S = {
 
   PostMenuArea: styled.div`
     position: fixed;
-    top: 52px;
+    top: 72px;
     right: max(
-      40px,
-      calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 40px)
+      20px,
+      calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 20px)
     );
     z-index: 20;
 
