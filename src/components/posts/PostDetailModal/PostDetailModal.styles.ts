@@ -91,9 +91,7 @@ const S = {
   `,
 
   DetailActionLayer: styled.div`
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     width: 100%;
     height: 0;
     flex: 0 0 0;
