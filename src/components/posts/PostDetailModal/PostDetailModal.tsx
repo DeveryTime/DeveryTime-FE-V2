@@ -618,8 +618,7 @@ const PostDetailModal = ({
       onClose={onClose}
       aria-labelledby="post-detail-title"
     >
-      <S.ModalScrollArea>
-        <S.DetailActionLayer>
+      <S.DetailActionLayer>
           <S.DetailCloseButton
             type="button"
             aria-label="모달 닫기"
@@ -676,7 +675,8 @@ const PostDetailModal = ({
               </S.PostMenuPopover>
             )}
           </S.PostMenuArea>
-        </S.DetailActionLayer>
+      </S.DetailActionLayer>
+      <S.ModalScrollArea>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>

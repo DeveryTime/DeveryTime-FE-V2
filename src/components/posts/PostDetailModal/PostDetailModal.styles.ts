@@ -88,8 +88,9 @@ const S = {
   `,
 
   DetailActionLayer: styled.div`
-    position: sticky;
+    position: absolute;
     top: 0;
+    left: 0;
     width: 100%;
     height: 0;
     flex: 0 0 0;
