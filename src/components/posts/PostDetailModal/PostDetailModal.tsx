@@ -170,6 +170,12 @@ const PostDetailModal = ({
     y: number;
   } | null>(null);
 
+  const closeCommentMenu = () => {
+    setOpenCommentMenuId(null);
+    setCommentMenuAnchor(null);
+    setCommentMenuPosition(null);
+  };
+
   // 게시글 수정 모드 여부를 관리한다.
   const [isPostEditing, setIsPostEditing] = useState(false);
   const [editingPostTitle, setEditingPostTitle] = useState("");
@@ -407,9 +413,7 @@ const PostDetailModal = ({
       }).then(({ x, y, middlewareData }) => {
         // 댓글 버튼이 스크롤 영역 밖으로 나가면 팝업도 닫는다.
         if (middlewareData.hide?.referenceHidden) {
-          setOpenCommentMenuId(null);
-          setCommentMenuAnchor(null);
-          setCommentMenuPosition(null);
+          closeCommentMenu();
           return;
         }
 
@@ -477,7 +481,7 @@ const PostDetailModal = ({
   const handleCommentEditStart = (comment: PostComment): void => {
     setEditingCommentId(comment.id);
     setEditingCommentContent(comment.content);
-    setOpenCommentMenuId(null);
+    closeCommentMenu();
     setCommentActionError(null);
   };
 
@@ -524,7 +528,7 @@ const PostDetailModal = ({
 
     setIsCommentActionLoading(true);
     setCommentActionError(null);
-    setOpenCommentMenuId(null);
+    closeCommentMenu();
 
     try {
       await commentsApi.deleteComment(post.id, commentId);
@@ -791,9 +795,7 @@ const PostDetailModal = ({
                         aria-label="댓글 메뉴"
                         onClick={(event) => {
                           if (openCommentMenuId === comment.id) {
-                            setOpenCommentMenuId(null);
-                            setCommentMenuAnchor(null);
-                            setCommentMenuPosition(null);
+                            closeCommentMenu();
                             return;
                           }
 
@@ -890,6 +892,7 @@ const PostDetailModal = ({
                   href="https://docs.google.com/forms/d/e/1FAIpQLSdZfb16smuoFx3K4JUiB-dqX5hKLywfr2FcyAI4KqWuSYdLZg/viewform"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={closeCommentMenu}
                 >
                   신고하기
                 </S.CommentMenuPopoverLink>
@@ -933,6 +936,7 @@ const PostDetailModal = ({
                 href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => setIsPostMenuOpen(false)}
               >
                 신고하기
               </S.ReportPopoverLink>
