@@ -344,7 +344,7 @@ const S = {
     font-weight: 700;
   `,
 
-  CommentBody: styled.p`
+  CommentBody: styled.div`
     min-width: 0;
     margin: 0;
     padding-top: 7px;
@@ -353,6 +353,22 @@ const S = {
     overflow-wrap: anywhere;
     word-break: break-word;
     white-space: pre-wrap;
+
+    .tiptap {
+      min-width: 0;
+    }
+
+    .tiptap p {
+      margin: 0;
+    }
+
+    .tiptap img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 8px 0;
+      border-radius: 8px;
+    }
   `,
 
   CommentDateCreatedAt: styled.p`

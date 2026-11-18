@@ -855,7 +855,9 @@ const PostDetailModal = ({
                       </S.CommentEditSaveButton>
                     </S.CommentEditForm>
                   ) : (
-                    <S.CommentBody>{comment.content}</S.CommentBody>
+                    <S.CommentBody>
+                      <PostMarkdown content={comment.content} />
+                    </S.CommentBody>
                   )}
                 </S.CommentItem>
               ))}
