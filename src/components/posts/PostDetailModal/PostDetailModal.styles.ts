@@ -64,11 +64,10 @@ const S = {
     background-color: ${colors.gray[0]};
 
     position: relative;
-    overflow-x: hidden !important;
-    overflow-y: hidden !important;
+    overflow: clip !important;
 
     & > button:first-of-type {
-      position: fixed;
+      position: absolute;
       top: 55px;
       right: 56px;
       z-index: 100;
@@ -538,7 +537,7 @@ const S = {
   `,
 
   PostMenuArea: styled.div`
-    position: fixed;
+    position: absolute;
     top: 62px;
     right: 43px;
     z-index: 20;
