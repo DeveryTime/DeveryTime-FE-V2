@@ -11,6 +11,7 @@ import {
   autoUpdate,
   computePosition,
   flip,
+  hide,
   offset,
   shift,
 } from "@floating-ui/dom";
@@ -397,8 +398,21 @@ const PostDetailModal = ({
       void computePosition(commentMenuAnchor, popover, {
         placement: "top-end",
         strategy: "fixed",
-        middleware: [offset(8), flip(), shift({ padding: 8 })],
-      }).then(({ x, y }) => {
+        middleware: [
+          offset(8),
+          flip(),
+          shift({ padding: 8 }),
+          hide({ strategy: "referenceHidden" }),
+        ],
+      }).then(({ x, y, middlewareData }) => {
+        // 댓글 버튼이 스크롤 영역 밖으로 나가면 팝업도 닫는다.
+        if (middlewareData.hide?.referenceHidden) {
+          setOpenCommentMenuId(null);
+          setCommentMenuAnchor(null);
+          setCommentMenuPosition(null);
+          return;
+        }
+
         setCommentMenuPosition({ x, y });
       });
     });
