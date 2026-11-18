@@ -4,15 +4,11 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { Markdown } from "@tiptap/markdown";
 
-const MAX_CONSECUTIVE_COMBINING_MARKS = 3;
-
-// 일반 유니코드는 유지하고, 화면을 세로로 무너뜨리는 결합 문자 반복만 제한한다.
+// 일반 유니코드는 유지하고, 화면을 무너뜨리는 과도한 결합 문자 묶음만 제거한다.
 const normalizeDisplayContent = (content: string) =>
   content
     .normalize("NFC")
-    .replace(/\p{M}{4,}/gu, (marks) =>
-      marks.slice(0, MAX_CONSECUTIVE_COMBINING_MARKS),
-    );
+    .replace(/\p{M}{4,}/gu, "");
 
 const PostMarkdown = ({ content }: { content: string }) => {
   const normalizedContent = normalizeDisplayContent(content);
