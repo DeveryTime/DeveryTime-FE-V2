@@ -615,6 +615,15 @@ const PostDetailModal = ({
       closeIcon={<X aria-hidden="true" />}
     >
       <S.ModalScrollArea>
+        <S.DetailCloseBar>
+          <S.DetailCloseButton
+            type="button"
+            aria-label="모달 닫기"
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </S.DetailCloseButton>
+        </S.DetailCloseBar>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>
