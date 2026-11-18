@@ -65,7 +65,7 @@ const S = {
 
     position: fixed;
     inset: 0;
-    overflow: clip !important;
+    overflow: hidden !important;
 
     & > button:first-of-type {
       display: none;
@@ -78,9 +78,7 @@ const S = {
   `,
 
   ModalScrollArea: styled.div`
-    position: absolute;
-    inset: 0;
-
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
 
