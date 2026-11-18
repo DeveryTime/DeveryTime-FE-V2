@@ -69,7 +69,7 @@ const S = {
 
     & > button:first-of-type {
       position: fixed;
-      top: 30px;
+      top: 45px;
       right: max(
         30px,
         calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 30px)
@@ -544,8 +544,8 @@ const S = {
     position: fixed;
     top: 72px;
     right: max(
-      20px,
-      calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 20px)
+      30px,
+      calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 30px)
     );
     z-index: 20;
 
