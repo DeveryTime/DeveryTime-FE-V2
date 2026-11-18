@@ -538,10 +538,10 @@ const S = {
   `,
 
   PostMenuArea: styled.div`
-    position: relative;
-    margin-left: auto;
-    margin-right: -30px;
-    flex-shrink: 0;
+    position: absolute;
+    top: 52px;
+    right: 24px;
+    z-index: 20;
 
     display: flex;
     align-items: center;

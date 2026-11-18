@@ -632,55 +632,6 @@ const PostDetailModal = ({
               </S.PostMeta>
             </S.WriterInfo>
 
-            <S.PostMenuArea>
-              <S.PostMenuButton
-                type="button"
-                aria-label="게시글 메뉴"
-                disabled={isPostEditing}
-                onClick={() => setIsPostMenuOpen((previous) => !previous)}
-                aria-expanded={isPostMenuOpen}
-              >
-                <S.KebabIcon src={KebabMenu} alt="" />
-              </S.PostMenuButton>
-
-              {isPostMenuOpen && (
-                <S.PostMenuPopover>
-                  {!isMyPost && (
-                    <S.ReportPopoverLink
-                      href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      신고하기
-                    </S.ReportPopoverLink>
-                  )}
-
-                  {isMyPost && (
-                    <>
-                      <S.CommentEditButton
-                        type="button"
-                        aria-label="게시글 수정"
-                        onClick={handlePostEditStart}
-                      >
-                        글 수정
-                      </S.CommentEditButton>
-
-                      <S.CommentDeleteButton
-                        type="button"
-                        aria-label="게시글 삭제"
-
-                        onClick={() => {
-                          setIsPostMenuOpen(false);
-                          setIsDeleteConfirmOpen(true);
-                        }}
-                      >
-                        삭제하기
-                      </S.CommentDeleteButton>
-                    </>
-                  )}
-                </S.PostMenuPopover>
-              )}
-            </S.PostMenuArea>
           </S.PostHeader>
 
           {isPostEditing ? (
@@ -964,6 +915,54 @@ const PostDetailModal = ({
         </S.CommentComposer>
         {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
       </S.ModalScrollArea>
+      <S.PostMenuArea>
+        <S.PostMenuButton
+          type="button"
+          aria-label="게시글 메뉴"
+          disabled={isPostEditing}
+          onClick={() => setIsPostMenuOpen((previous) => !previous)}
+          aria-expanded={isPostMenuOpen}
+        >
+          <S.KebabIcon src={KebabMenu} alt="" />
+        </S.PostMenuButton>
+
+        {isPostMenuOpen && (
+          <S.PostMenuPopover>
+            {!isMyPost && (
+              <S.ReportPopoverLink
+                href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                신고하기
+              </S.ReportPopoverLink>
+            )}
+
+            {isMyPost && (
+              <>
+                <S.CommentEditButton
+                  type="button"
+                  aria-label="게시글 수정"
+                  onClick={handlePostEditStart}
+                >
+                  글 수정
+                </S.CommentEditButton>
+
+                <S.CommentDeleteButton
+                  type="button"
+                  aria-label="게시글 삭제"
+                  onClick={() => {
+                    setIsPostMenuOpen(false);
+                    setIsDeleteConfirmOpen(true);
+                  }}
+                >
+                  삭제하기
+                </S.CommentDeleteButton>
+              </>
+            )}
+          </S.PostMenuPopover>
+        )}
+      </S.PostMenuArea>
       {isDeleteConfirmOpen && (
         <S.DeleteConfirmDialog
           onClose={() => {
