@@ -5,7 +5,12 @@ export const normalizeDisplayText = (content: string) => {
   const hasExcessiveCombiningMarks =
     combiningMarks.length > 3 || /\p{M}{4,}/u.test(normalizedContent);
 
-  return hasExcessiveCombiningMarks
-    ? normalizedContent.replace(/\p{M}/gu, "")
-    : normalizedContent;
+  if (!hasExcessiveCombiningMarks) {
+    return normalizedContent;
+  }
+
+  // 결합 문자를 제거한 뒤 남는 Zalgo 기본 문자 반복도 한 글자로 축약한다.
+  return normalizedContent
+    .replace(/\p{M}/gu, "")
+    .replace(/(.)\1{2,}/gu, "$1");
 };
