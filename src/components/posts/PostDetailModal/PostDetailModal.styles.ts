@@ -64,12 +64,13 @@ const S = {
     background-color: ${colors.gray[0]};
 
     position: relative;
-    overflow: clip !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
 
     & > button:first-of-type {
       position: absolute;
-      top: 10px;
-      right: 46px;
+      top: 15px;
+      right: 30px;
       z-index: 100;
     }
 
@@ -533,14 +534,14 @@ const S = {
     border-radius: 10px;
     box-shadow: 0px 4px 12px ${colors.alpha.black45};
     top: calc(100% + 8px);
-    right: 0;
+    right: 5px;
   `,
 
   PostMenuArea: styled.div`
-    position: absolute;
-    top: 10px;
-    right: 5px;
-    z-index: 20;
+    position: relative;
+    margin-left: auto;
+    margin-right: 0;
+    flex-shrink: 0;
 
     display: flex;
     align-items: center;
