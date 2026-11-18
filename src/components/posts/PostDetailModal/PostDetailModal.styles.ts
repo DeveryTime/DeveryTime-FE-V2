@@ -68,9 +68,12 @@ const S = {
     overflow-y: hidden !important;
 
     & > button:first-of-type {
-      position: absolute;
+      position: fixed;
       top: 15px;
-      right: 30px;
+      right: max(
+        30px,
+        calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 30px)
+      );
       z-index: 100;
     }
 
@@ -538,9 +541,12 @@ const S = {
   `,
 
   PostMenuArea: styled.div`
-    position: absolute;
+    position: fixed;
     top: 52px;
-    right: 40px;
+    right: max(
+      40px,
+      calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 40px)
+    );
     z-index: 20;
 
     display: flex;
