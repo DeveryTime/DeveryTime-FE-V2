@@ -31,6 +31,7 @@ import type { UpdatePostRequest } from "../../../api/posts/request/posts.request
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
+import profileApi from "../../../api/profile/profile.api";
 
 interface PostDetailModalProps {
   post: PostDetailData;
@@ -144,6 +145,9 @@ const PostDetailModal = ({
   const [isCommentError, setIsCommentError] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState("");
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [currentUserNickname, setCurrentUserNickname] = useState<string | null>(
+    null,
+  );
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(
     null,
   );
@@ -414,6 +418,16 @@ const PostDetailModal = ({
       const createdComment = await commentsApi.createComment(post.id, {
         content: trimmedComment,
       });
+      let authorName = createdComment.authorName ?? currentUserNickname;
+      if (!authorName) {
+        try {
+          const profile = await profileApi.getMyProfile();
+          authorName = profile.username;
+          setCurrentUserNickname(profile.username);
+        } catch {
+          // 댓글 생성은 성공했으므로 닉네임 조회 실패가 등록을 실패시키지 않도록 한다.
+        }
+      }
       setCommentContent("");
       setIsCommentError(null);
       createdCommentIdRef.current = createdComment.id;
@@ -423,7 +437,7 @@ const PostDetailModal = ({
         {
           id: createdComment.id,
           userId: createdComment.userId,
-          authorName: createdComment.authorName ?? "나",
+          authorName: authorName ?? "사용자",
           content: createdComment.content,
           createdAt: createdComment.createdAt,
           profileImageUrl: createdComment.profileImageUrl ?? null,
