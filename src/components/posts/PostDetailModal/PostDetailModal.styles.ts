@@ -534,14 +534,14 @@ const S = {
     border-radius: 10px;
     box-shadow: 0px 4px 12px ${colors.alpha.black45};
     top: calc(100% + 8px);
-    right: 5px;
+    right: 0;
   `,
 
   PostMenuArea: styled.div`
-    position: relative;
-    margin-left: auto;
-    margin-right: 0;
-    flex-shrink: 0;
+    position: absolute;
+    top: 52px;
+    right: 40px;
+    z-index: 20;
 
     display: flex;
     align-items: center;
