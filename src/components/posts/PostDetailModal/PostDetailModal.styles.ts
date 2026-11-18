@@ -87,8 +87,11 @@ const S = {
   `,
 
   DetailActionLayer: styled.div`
-    position: absolute;
-    inset: 0;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 0;
+    flex: 0 0 0;
     z-index: 100;
     pointer-events: none;
   `,
