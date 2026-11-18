@@ -618,84 +618,84 @@ const PostDetailModal = ({
       aria-labelledby="post-detail-title"
       closeIcon={<X aria-hidden="true" />}
     >
+      <S.DetailTopBar>
+        <S.PostMenuArea>
+          <S.PostMenuButton
+            type="button"
+            aria-label="게시글 메뉴"
+            disabled={isPostEditing}
+            onClick={() => setIsPostMenuOpen((previous) => !previous)}
+            aria-expanded={isPostMenuOpen}
+          >
+            <S.KebabIcon src={KebabMenu} alt="" />
+          </S.PostMenuButton>
+
+          {isPostMenuOpen && (
+            <S.PostMenuPopover>
+              {!isMyPost && (
+                <S.ReportPopoverLink
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsPostMenuOpen(false)}
+                >
+                  신고하기
+                </S.ReportPopoverLink>
+              )}
+
+              {isMyPost && (
+                <>
+                  <S.CommentEditButton
+                    type="button"
+                    aria-label="게시글 수정"
+                    onClick={handlePostEditStart}
+                  >
+                    글 수정
+                  </S.CommentEditButton>
+
+                  <S.CommentDeleteButton
+                    type="button"
+                    aria-label="게시글 삭제"
+                    onClick={() => {
+                      setIsPostMenuOpen(false);
+                      setIsDeleteConfirmOpen(true);
+                    }}
+                  >
+                    삭제하기
+                  </S.CommentDeleteButton>
+                </>
+              )}
+            </S.PostMenuPopover>
+          )}
+        </S.PostMenuArea>
+        <S.DetailCloseButton
+          type="button"
+          aria-label="모달 닫기"
+          onClick={onClose}
+        >
+          <X aria-hidden="true" />
+        </S.DetailCloseButton>
+      </S.DetailTopBar>
       <S.ModalScrollArea>
-        <S.StickyPostHeader>
-          <S.PostHeader>
-            <S.PostHeaderInfo>
-              {post.writerProfileImageUrl ? (
-                <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
-              ) : (
-                <S.DefaultProfileImage>
-                  <UserRound aria-hidden="true" />
-                </S.DefaultProfileImage>
-              )}
-              <S.WriterInfo>
-                <S.WriterName> {post.writerNickname} </S.WriterName>
-                <S.PostMeta>
-                  {formatPostDate(post.createdAt)} - {post.viewCount} 조회
-                </S.PostMeta>
-              </S.WriterInfo>
-            </S.PostHeaderInfo>
-
-            <S.PostMenuArea>
-              <S.PostMenuButton
-                type="button"
-                aria-label="게시글 메뉴"
-                disabled={isPostEditing}
-                onClick={() => setIsPostMenuOpen((previous) => !previous)}
-                aria-expanded={isPostMenuOpen}
-              >
-                <S.KebabIcon src={KebabMenu} alt="" />
-              </S.PostMenuButton>
-
-              {isPostMenuOpen && (
-                <S.PostMenuPopover>
-                  {!isMyPost && (
-                    <S.ReportPopoverLink
-                      href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setIsPostMenuOpen(false)}
-                    >
-                      신고하기
-                    </S.ReportPopoverLink>
-                  )}
-
-                  {isMyPost && (
-                    <>
-                      <S.CommentEditButton
-                        type="button"
-                        aria-label="게시글 수정"
-                        onClick={handlePostEditStart}
-                      >
-                        글 수정
-                      </S.CommentEditButton>
-
-                      <S.CommentDeleteButton
-                        type="button"
-                        aria-label="게시글 삭제"
-                        onClick={() => {
-                          setIsPostMenuOpen(false);
-                          setIsDeleteConfirmOpen(true);
-                        }}
-                      >
-                        삭제하기
-                      </S.CommentDeleteButton>
-                    </>
-                  )}
-                </S.PostMenuPopover>
-              )}
-            </S.PostMenuArea>
-            <S.DetailCloseButton
-              type="button"
-              aria-label="모달 닫기"
-              onClick={onClose}
-            >
-              <X aria-hidden="true" />
-            </S.DetailCloseButton>
-          </S.PostHeader>
-        </S.StickyPostHeader>
         <S.DetailContent>
+          {/* 작성자 정보와 게시글 메뉴 */}
+          <S.PostHeader>
+            {post.writerProfileImageUrl ? (
+              <S.ProfileImage src={post.writerProfileImageUrl} alt="" />
+            ) : (
+              <S.DefaultProfileImage>
+                <UserRound aria-hidden="true" />
+              </S.DefaultProfileImage>
+            )}
+            <S.WriterInfo>
+              <S.WriterName> {post.writerNickname} </S.WriterName>
+              <S.PostMeta>
+                {formatPostDate(post.createdAt)} - {post.viewCount} 조회
+              </S.PostMeta>
+            </S.WriterInfo>
+
+          </S.PostHeader>
+
           {isPostEditing ? (
             <S.PostEditForm>
               <S.PostTitle id="post-detail-title">게시글 수정</S.PostTitle>

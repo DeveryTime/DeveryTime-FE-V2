@@ -86,15 +86,25 @@ const S = {
     flex-direction: column;
   `,
 
-  StickyPostHeader: styled.div`
-    position: sticky;
+  DetailTopBar: styled.div`
+    position: absolute;
     top: 0;
+    right: 0;
     z-index: 100;
-    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 4px;
+    height: 56px;
     box-sizing: border-box;
-    width: 100%;
-    padding: 40px 40px 0;
-    background-color: ${colors.gray[0]};
+    padding: 12px 22px 0;
+    background: linear-gradient(
+      to bottom,
+      ${colors.gray[0]} 0%,
+      ${colors.gray[0]} 72%,
+      transparent 100%
+    );
+    pointer-events: none;
   `,
 
   DetailCloseButton: styled.button`
@@ -113,17 +123,7 @@ const S = {
   PostHeader: styled.header`
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 15px;
-    min-width: 0;
-
-  `,
-
-  PostHeaderInfo: styled.div`
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    min-width: 0;
 
   `,
 
@@ -253,7 +253,7 @@ const S = {
   `,
 
   DetailContent: styled.div`
-    padding: 0 40px 40px;
+    padding: 40px;
   `,
 
   WriterInfo: styled.div`
