@@ -77,8 +77,9 @@ const S = {
   `,
 
   ModalScrollArea: styled.div`
-    flex: 1;
-    min-height: 0;
+    position: absolute;
+    inset: 0;
+
     overflow-y: auto;
     overscroll-behavior: contain;
 
