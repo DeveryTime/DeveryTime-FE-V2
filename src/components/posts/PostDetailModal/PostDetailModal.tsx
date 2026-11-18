@@ -130,6 +130,18 @@ const PostDetailModal = ({
   const currentPostRef = useRef(post);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
+
   // effect 안에서 상태를 즉시 변경하면 불필요한 추가 렌더링이 발생할 수 있음
   useLayoutEffect(() => {
     currentPostRef.current = post;
