@@ -69,7 +69,7 @@ const S = {
 
     & > button:first-of-type {
       position: fixed;
-      top: 15px;
+      top: 30px;
       right: max(
         30px,
         calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 30px)
