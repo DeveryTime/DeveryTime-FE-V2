@@ -539,7 +539,7 @@ const S = {
   PostMenuArea: styled.div`
     position: absolute;
     top: 52px;
-    right: 55px;
+    right: 50px;
     z-index: 20;
 
     display: flex;
