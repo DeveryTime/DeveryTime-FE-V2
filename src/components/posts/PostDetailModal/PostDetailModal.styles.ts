@@ -63,7 +63,8 @@ const S = {
     border: none;
     background-color: ${colors.gray[0]};
 
-    position: relative;
+    position: fixed;
+    inset: 0;
     overflow: clip !important;
 
     & > button:first-of-type {
