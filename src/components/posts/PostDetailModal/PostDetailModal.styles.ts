@@ -109,13 +109,15 @@ const S = {
     margin-top: 35px;
     font-size: 32px;
     font-weight: 700;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
   `,
 
   PostContent: styled.div`
     margin-top: 40px;
     line-height: 1.6;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
 
     .tiptap > :first-child {
       margin-top: 0;
@@ -230,7 +232,8 @@ const S = {
     flex-direction: column;
     gap: 4px;
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
   `,
   WriterName: styled.strong`
     font-weight: 600;
@@ -347,7 +350,8 @@ const S = {
     align-items: center;
     gap: 13px;
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
     font-size: 16px;
     font-weight: 700;
   `,
@@ -358,8 +362,8 @@ const S = {
     padding-top: 7px;
     padding-left: 13px;
     font-size: 18px;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
     white-space: pre-wrap;
 
     .tiptap {
