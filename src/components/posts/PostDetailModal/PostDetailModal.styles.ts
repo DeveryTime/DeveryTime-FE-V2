@@ -87,17 +87,15 @@ const S = {
   `,
 
   DetailTopBar: styled.div`
-    position: sticky;
+    position: absolute;
     top: 0;
+    right: 0;
     z-index: 100;
     display: flex;
-    flex: 0 0 56px;
     align-items: flex-start;
     justify-content: flex-end;
     gap: 4px;
-    width: 100%;
     height: 56px;
-    margin-bottom: -56px;
     box-sizing: border-box;
     padding: 12px 22px 0;
     background: linear-gradient(
