@@ -64,8 +64,7 @@ const S = {
     background-color: ${colors.gray[0]};
 
     position: relative;
-    overflow-x: hidden !important;
-    overflow-y: hidden !important;
+    overflow: hidden !important;
 
     & > button:first-of-type {
       position: absolute;
@@ -84,6 +83,7 @@ const S = {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
 
     display: flex;
     flex-direction: column;
