@@ -64,9 +64,9 @@ const S = {
     background-color: ${colors.gray[0]};
 
     position: relative;
-    overflow: hidden !important;
+    overflow: clip !important;
 
-    & > button.post-detail-close-button {
+    & > button:first-of-type {
       position: absolute;
       top: 10px;
       right: 46px;

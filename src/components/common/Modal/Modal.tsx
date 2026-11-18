@@ -15,7 +15,6 @@ type ModalProps = Omit<
     onClose: () => void;
     closeButtonLabel?: string;
     closeIcon?: ReactNode;
-  closeButtonClassName?: string;
   };
 
 const Modal = ({
@@ -23,7 +22,6 @@ const Modal = ({
   onClose,
   closeButtonLabel = "모달 닫기",
   closeIcon = "×",
-  closeButtonClassName,
   ...props
 }: ModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -47,7 +45,6 @@ const Modal = ({
       {...props}
     >
       <S.CloseButton
-        className={closeButtonClassName}
         type="button"
         onClick={() => dialogRef.current?.close()}
         aria-label={closeButtonLabel}
