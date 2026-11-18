@@ -67,7 +67,10 @@ const S = {
     overflow: hidden !important;
 
     & > button:first-of-type {
-      display: none;
+      position: absolute;
+      top: 15px;
+      right: 30px;
+      z-index: 100;
     }
 
     &[open] {
@@ -84,32 +87,6 @@ const S = {
 
     display: flex;
     flex-direction: column;
-  `,
-
-  DetailCloseBar: styled.div`
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    flex: 0 0 0;
-    justify-content: flex-end;
-    width: 100%;
-    height: 0;
-    pointer-events: none;
-  `,
-
-  DetailCloseButton: styled.button`
-    position: relative;
-    top: 15px;
-    right: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    pointer-events: auto;
   `,
 
   PostHeader: styled.header`
