@@ -618,6 +618,7 @@ const PostDetailModal = ({
       onClose={onClose}
       aria-labelledby="post-detail-title"
     >
+      <S.DetailFrame>
       <S.DetailActionLayer>
           <S.DetailCloseButton
             type="button"
@@ -976,6 +977,7 @@ const PostDetailModal = ({
         </S.CommentComposer>
         {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
       </S.ModalScrollArea>
+      </S.DetailFrame>
       {isDeleteConfirmOpen && (
         <S.DeleteConfirmDialog
           onClose={() => {

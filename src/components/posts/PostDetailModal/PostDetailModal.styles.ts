@@ -71,10 +71,14 @@ const S = {
       display: none;
     }
 
-    &[open] {
-      display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
-    }
+  `,
+
+  DetailFrame: styled.div`
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    overflow: hidden;
   `,
 
   ModalScrollArea: styled.div`
