@@ -67,7 +67,10 @@ const S = {
     overflow: hidden !important;
 
     & > button:first-of-type {
-      display: none;
+      position: absolute;
+      top: 15px;
+      right: 30px;
+      z-index: 100;
     }
 
     &[open] {
@@ -84,42 +87,6 @@ const S = {
 
     display: flex;
     flex-direction: column;
-  `,
-
-  DetailTopBar: styled.div`
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    flex: 0 0 56px;
-    align-items: flex-start;
-    justify-content: flex-end;
-    gap: 4px;
-    width: 100%;
-    height: 56px;
-    margin-bottom: -56px;
-    box-sizing: border-box;
-    padding: 12px 22px 0;
-    background: linear-gradient(
-      to bottom,
-      ${colors.gray[0]} 0%,
-      ${colors.gray[0]} 72%,
-      transparent 100%
-    );
-    pointer-events: none;
-  `,
-
-  DetailCloseButton: styled.button`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    pointer-events: auto;
   `,
 
   PostHeader: styled.header`
@@ -567,11 +534,15 @@ const S = {
     border-radius: 10px;
     box-shadow: 0px 4px 12px ${colors.alpha.black45};
     top: calc(100% + 8px);
-    right: 0;
+    right: 5px;
   `,
 
   PostMenuArea: styled.div`
-    position: relative;
+    position: absolute;
+    top: 52px;
+    right: 24px;
+    z-index: 20;
+
     display: flex;
     align-items: center;
   `,
