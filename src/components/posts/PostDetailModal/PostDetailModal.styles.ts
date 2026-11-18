@@ -71,8 +71,8 @@ const S = {
       position: fixed;
       top: 55px;
       right: max(
-        30px,
-        calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 30px)
+        40px,
+        calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 40px)
       );
       z-index: 100;
     }
