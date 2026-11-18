@@ -68,7 +68,7 @@ const S = {
 
     & > button:first-of-type {
       position: absolute;
-      top: 55px;
+      top: 35px;
       right: 56px;
       z-index: 100;
     }
