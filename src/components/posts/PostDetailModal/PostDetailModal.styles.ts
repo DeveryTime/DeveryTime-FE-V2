@@ -64,7 +64,14 @@ const S = {
     background-color: ${colors.gray[0]};
 
     position: relative;
-    overflow: hidden;
+    overflow: hidden !important;
+
+    & > button:first-of-type {
+      position: absolute;
+      top: 15px;
+      right: 30px;
+      z-index: 100;
+    }
 
     &[open] {
       display: grid;
