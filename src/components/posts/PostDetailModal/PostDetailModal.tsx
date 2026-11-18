@@ -930,7 +930,7 @@ const PostDetailModal = ({
                 </S.CommentMenuPopoverLink>
               )}
             </S.CommentMenuPopover>,
-            document.body,
+            commentMenuAnchor.closest("dialog") ?? document.body,
           )}
 
         <S.CommentComposer onSubmit={handleCommentSubmit}>

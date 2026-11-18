@@ -64,7 +64,8 @@ const S = {
     background-color: ${colors.gray[0]};
 
     position: relative;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
 
     & > button:first-of-type {
       position: absolute;
@@ -451,7 +452,7 @@ const S = {
 
   CommentMenuPopover: styled.div`
     position: fixed;
-    z-index: 30;
+    z-index: 100;
 
     display: flex;
     flex-direction: column;
@@ -539,7 +540,7 @@ const S = {
   PostMenuArea: styled.div`
     position: relative;
     margin-left: auto;
-    margin-right: -16px;
+    margin-right: 0;
     flex-shrink: 0;
 
     display: flex;
