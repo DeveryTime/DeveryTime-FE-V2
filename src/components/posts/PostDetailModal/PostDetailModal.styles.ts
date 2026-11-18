@@ -70,10 +70,7 @@ const S = {
     & > button:first-of-type {
       position: fixed;
       top: 55px;
-      right: max(
-        40px,
-        calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 40px)
-      );
+      right: 56px;
       z-index: 100;
     }
 
@@ -543,10 +540,7 @@ const S = {
   PostMenuArea: styled.div`
     position: fixed;
     top: 62px;
-    right: max(
-      27px,
-      calc((100vw - min(875px, calc(100vw - 32px))) / 2 + 27px)
-    );
+    right: 43px;
     z-index: 20;
 
     display: flex;
