@@ -68,8 +68,8 @@ const S = {
 
     & > button:first-of-type {
       position: absolute;
-      top: 35px;
-      right: 56px;
+      top: 25px;
+      right: 46px;
       z-index: 100;
     }
 
@@ -538,8 +538,8 @@ const S = {
 
   PostMenuArea: styled.div`
     position: absolute;
-    top: 12px;
-    right: 10px;
+    top: 2px;
+    right: 5px;
     z-index: 20;
 
     display: flex;
