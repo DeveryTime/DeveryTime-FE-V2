@@ -613,6 +613,7 @@ const PostDetailModal = ({
       onClose={onClose}
       aria-labelledby="post-detail-title"
       closeIcon={<X aria-hidden="true" />}
+      closeButtonClassName="post-detail-close-button"
     >
       <S.ModalScrollArea>
         <S.DetailContent>
