@@ -67,10 +67,7 @@ const S = {
     overflow: hidden !important;
 
     & > button:first-of-type {
-      position: absolute;
-      top: 15px;
-      right: 30px;
-      z-index: 100;
+      display: none;
     }
 
     &[open] {
@@ -87,6 +84,29 @@ const S = {
 
     display: flex;
     flex-direction: column;
+  `,
+
+  DetailActionLayer: styled.div`
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+  `,
+
+  DetailCloseButton: styled.button`
+    position: absolute;
+    top: 15px;
+    right: 30px;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
   `,
 
   PostHeader: styled.header`
@@ -549,6 +569,7 @@ const S = {
 
     display: flex;
     align-items: center;
+    pointer-events: auto;
   `,
 
   PostEditForm: styled.div`
