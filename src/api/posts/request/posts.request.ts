@@ -24,10 +24,5 @@ export interface CreatePostRequest {
   title: string;
   content: string;
   categoryId: number;
-  status: "PUBLISHED";
-}
-
-export interface UploadPostImageRequest {
-  file: File;
-  sortOrder?: number;
+  status: "DRAFT" | "PUBLISHED";
 }

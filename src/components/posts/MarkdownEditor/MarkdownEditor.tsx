@@ -21,7 +21,7 @@ interface MarkdownEditorProps {
   onChange: (markdown: string) => void;
   disabled?: boolean;
   actions?: ReactNode;
-  onSelectImages: (files: File[]) => void;
+  onSelectImages: (files: File[], selectedImageUrl?: string) => void;
   selectedImages: File[];
   onRemoveImage: (index: number) => void;
   onDeleteImage?: (imageUrl: string) => void;
@@ -29,12 +29,14 @@ interface MarkdownEditorProps {
 
 type EditableImageViewProps = ReactNodeViewProps & {
   onDeleteImage?: (imageUrl: string) => void;
+  onImageClick?: (imageUrl: string) => void;
 };
 
 const EditableImageView = ({
   node,
   deleteNode,
   onDeleteImage,
+  onImageClick,
 }: EditableImageViewProps) => {
   const imageUrl = typeof node.attrs.src === "string" ? node.attrs.src : "";
 
@@ -43,6 +45,7 @@ const EditableImageView = ({
       <img
         src={imageUrl}
         alt={typeof node.attrs.alt === "string" ? node.attrs.alt : ""}
+        onClick={() => onImageClick?.(imageUrl)}
       />
       {onDeleteImage && (
         <button
@@ -73,6 +76,7 @@ const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const latestValueRef = useRef(value);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const selectedImageUrlRef = useRef<string | null>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -85,7 +89,14 @@ const MarkdownEditor = ({
       Image.extend({
         addNodeView() {
           return ReactNodeViewRenderer((props) => (
-            <EditableImageView {...props} onDeleteImage={onDeleteImage} />
+            <EditableImageView
+              {...props}
+              onDeleteImage={onDeleteImage}
+              onImageClick={(imageUrl) => {
+                selectedImageUrlRef.current = imageUrl;
+                imageInputRef.current?.click();
+              }}
+            />
           ));
         },
       }),
@@ -262,7 +273,14 @@ const MarkdownEditor = ({
       )}
       <WriteStyles.Footer>
         <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => {
-          onSelectImages(Array.from(event.currentTarget.files ?? []));
+          const selectedImageUrl = selectedImageUrlRef.current ?? (editor.isActive("image")
+            ? (editor.getAttributes("image").src as string | undefined)
+            : undefined);
+          selectedImageUrlRef.current = null;
+          onSelectImages(
+            Array.from(event.currentTarget.files ?? []),
+            selectedImageUrl,
+          );
           event.currentTarget.value = "";
         }} />
         <WriteStyles.ImageButton type="button" aria-label="이미지 파일 추가" disabled={disabled} onClick={() => imageInputRef.current?.click()}>

@@ -92,6 +92,12 @@ const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) =>
     return markdown.replace(imagePattern, "");
   }, content);
 
+const replaceImageUrlInMarkdown = (
+  content: string,
+  previousUrl: string,
+  nextUrl: string,
+) => content.split(previousUrl).join(nextUrl);
+
 const COMMENT_SKELETON_COUNT = 2;
 
 const CommentSkeleton = () => (
@@ -185,9 +191,9 @@ const PostDetailModal = ({
   const [isPostSaving, setIsPostSaving] = useState(false);
   const [isPostDeleting, setIsPostDeleting] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<
-    { id: number; imageUrl: string }[]
-  >([]);
+  const [replacementFiles, setReplacementFiles] = useState<
+    Record<number, File>
+  >({});
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [savedDeletedImageIds, setSavedDeletedImageIds] = useState<number[]>(
     [],
@@ -236,7 +242,7 @@ const PostDetailModal = ({
   ]);
 
   // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
-  const visibleImages = [...postImages, ...uploadedImages].filter(
+  const visibleImages = postImages.filter(
     (image) =>
       !hiddenImageUrls.has(image.imageUrl) &&
       (image.id === undefined || !hiddenImageIds.has(image.id)),
@@ -258,6 +264,11 @@ const PostDetailModal = ({
           ? current
           : [...current, image.id as number],
       );
+      setReplacementFiles((current) => {
+        const next = { ...current };
+        delete next[image.id as number];
+        return next;
+      });
     }
     setDeletedImageUrls((current) =>
       current.includes(image.imageUrl) ? current : [...current, image.imageUrl],
@@ -318,6 +329,7 @@ const PostDetailModal = ({
   const handlePostEditStart = () => {
     // 수정할 때 이전 수정 시도의 임시 삭제 상태를 초기화한다.
     setSelectedImages([]);
+    setReplacementFiles({});
     setDeletedImageIds([]);
     setDeletedImageUrls([]);
     setIsPostEditing(true);
@@ -570,27 +582,36 @@ const PostDetailModal = ({
       trimmedPostContent,
       [...new Set([...deletedContentImageUrls, ...deletedImageUrlsFromIds])],
     );
-    const updateData: UpdatePostRequest = {
-      categoryId,
-      title: trimmedPostTitle,
-      content: contentWithoutDeletedImages,
-      status: "PUBLISHED",
-      deleteImageIds: deletedImageIds,
-    };
     setIsPostSaving(true);
     try {
-      for (const [index, file] of selectedImages.entries()) {
-        const uploaded = await postsApi.uploadPostImage(post.id, {
+      let nextContent = contentWithoutDeletedImages;
+      for (const [imageIdString, file] of Object.entries(replacementFiles)) {
+        const imageId = Number(imageIdString);
+        const image = postImages.find((postImage) => postImage.id === imageId);
+        if (!image) continue;
+
+        const replacedImage = await postsApi.replacePostImage(
+          post.id,
+          imageId,
           file,
-          sortOrder:
-            (post.images?.length ?? post.imageUrls?.length ?? 0) +
-            uploadedImages.length +
-            index,
-        });
-        setUploadedImages((current) => [...current, uploaded]);
-        setSelectedImages((current) => current.slice(1));
+        );
+        nextContent = replaceImageUrlInMarkdown(
+          nextContent,
+          image.imageUrl,
+          replacedImage.imageUrl,
+        );
       }
+
+      const updateData: UpdatePostRequest = {
+        categoryId,
+        title: trimmedPostTitle,
+        content: nextContent,
+        status: "PUBLISHED",
+        deleteImageIds: deletedImageIds,
+      };
       await postsApi.updatePost(post.id, updateData);
+
+      setReplacementFiles({});
 
       // 저장된 삭제 상태를 유지해 화면에 삭제한 이미지를 다시 표시하지 않는다.
       setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
@@ -606,7 +627,7 @@ const PostDetailModal = ({
       setIsPostEditing(false);
     } catch {
       setPostUpdateError(
-        "저장에 실패했습니다. 업로드된 이미지는 유지되며 다시 시도할 수 있습니다.",
+        "이미지 교체 또는 게시글 저장에 실패했습니다. 다시 시도해주세요.",
       );
     } finally {
       setIsPostSaving(false);
@@ -655,6 +676,30 @@ const PostDetailModal = ({
                 value={editingPostContent}
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
+                onSelectImages={(files, selectedImageUrl) => {
+                  if (!selectedImageUrl || !files[0]) {
+                    setPostUpdateError(
+                      "교체할 기존 이미지를 먼저 선택해주세요.",
+                    );
+                    return;
+                  }
+
+                  const image = postImages.find(
+                    (postImage) => postImage.imageUrl === selectedImageUrl,
+                  );
+                  if (image?.id === undefined) {
+                    setPostUpdateError(
+                      "이미지 ID를 확인할 수 없어 교체할 수 없습니다.",
+                    );
+                    return;
+                  }
+
+                  setPostUpdateError(null);
+                  setReplacementFiles((current) => ({
+                    ...current,
+                    [image.id as number]: files[0],
+                  }));
+                }}
                 onDeleteImage={(imageUrl) => {
                   // 에디터에서 삭제한 이미지의 ID와 URL을 찾아 기록한다.
                   const image = postImages.find(
@@ -668,9 +713,6 @@ const PostDetailModal = ({
                     current.filter((_, itemIndex) => itemIndex !== index),
                   )
                 }
-                onSelectImages={(files) =>
-                  setSelectedImages((current) => [...current, ...files])
-                }
                 actions={
                   <S.PostEditActions>
                     <S.PostEditCancelButton
@@ -679,6 +721,7 @@ const PostDetailModal = ({
                       disabled={isPostSaving}
                       onClick={() => {
                         setSelectedImages([]);
+                        setReplacementFiles({});
                         setDeletedImageIds([]);
                         setDeletedImageUrls([]);
                         setIsPostEditing(false);
