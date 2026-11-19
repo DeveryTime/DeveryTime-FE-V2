@@ -35,6 +35,10 @@ import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 import profileApi from "../../../api/profile/profile.api";
 import { normalizeDisplayText } from "../../../utils/normalizeDisplayText";
+import { type JSONContent } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import { Markdown, MarkdownManager } from "@tiptap/markdown";
 
 interface PostDetailModalProps {
   post: PostDetailData;
@@ -50,7 +54,15 @@ type PostImage = {
   id?: number;
   imageUrl: string;
   sortOrder?: number;
+  previousImageUrls?: string[];
 };
+
+const MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_POST_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 // 게시글 작성일을 상세 모달에 표시할 형식으로 변환한다.
 const formatPostDate = (dateString: string) => {
@@ -79,18 +91,69 @@ const CommentDate = (dateString: string) => {
     .replace(/\.$/, "");
 };
 
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const MARKDOWN_IMAGE_EXTENSIONS = [StarterKit, Markdown, Image];
 
-const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) =>
-  imageUrls.reduce((markdown, imageUrl) => {
-    const imagePattern = new RegExp(
-      `!\\[[^\\]]*\\]\\(${escapeRegExp(imageUrl)}(?:\\s+["'][^"']*["'])?\\)`,
-      "g",
-    );
+const updateImageNodes = (
+  node: JSONContent,
+  updateSrc: (src: string) => string | null,
+): JSONContent => {
+  if (node.type === "image") {
+    const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
+    const nextSrc = updateSrc(src);
 
-    return markdown.replace(imagePattern, "");
-  }, content);
+    if (nextSrc === null) {
+      return { ...node, type: "removedImage" };
+    }
+
+    return {
+      ...node,
+      attrs: {
+        ...node.attrs,
+        src: nextSrc,
+      },
+    };
+  }
+
+  if (!node.content) {
+    return node;
+  }
+
+  return {
+    ...node,
+    content: node.content
+      .map((child) => updateImageNodes(child, updateSrc))
+      .filter((child) => child.type !== "removedImage"),
+  };
+};
+
+const transformMarkdownImageNodes = (
+  content: string,
+  updateSrc: (src: string) => string | null,
+) => {
+  const manager = new MarkdownManager({
+    extensions: MARKDOWN_IMAGE_EXTENSIONS,
+  });
+  const document = manager.parse(content);
+
+  return manager.serialize(updateImageNodes(document, updateSrc));
+};
+
+const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) => {
+  const deletedUrls = new Set(imageUrls);
+
+  return transformMarkdownImageNodes(content, (src) =>
+    deletedUrls.has(src) ? null : src,
+  );
+};
+
+const replaceImageUrlInMarkdown = (
+  content: string,
+  previousUrl: string,
+  nextUrl: string,
+) =>
+  transformMarkdownImageNodes(content, (src) =>
+    src === previousUrl ? nextUrl : src,
+  );
 
 const COMMENT_SKELETON_COUNT = 2;
 
@@ -197,9 +260,13 @@ const PostDetailModal = ({
   const [isPostSaving, setIsPostSaving] = useState(false);
   const [isPostDeleting, setIsPostDeleting] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<
-    { id: number; imageUrl: string }[]
-  >([]);
+  const [replacementFiles, setReplacementFiles] = useState<
+    Record<number, File>
+  >({});
+  const [postImageOverrides, setPostImageOverrides] = useState<{
+    postId: number;
+    images: Record<number, PostImage>;
+  }>({ postId: post.id, images: {} });
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [savedDeletedImageIds, setSavedDeletedImageIds] = useState<number[]>(
     [],
@@ -235,10 +302,26 @@ const PostDetailModal = ({
   }
 
   // 상세 응답 형식에 맞춰 게시글 이미지를 구성한다.
-  const postImages: PostImage[] =
+  const sourcePostImages: PostImage[] =
     post.images?.length > 0
       ? post.images
       : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
+  const postImages = sourcePostImages.map((image) => {
+    if (image.id === undefined || postImageOverrides.postId !== post.id) {
+      return image;
+    }
+
+    return {
+      ...image,
+      ...postImageOverrides.images[image.id],
+    };
+  });
+  const findPostImage = (imageUrl: string) =>
+    postImages.find(
+      (image) =>
+        image.imageUrl === imageUrl ||
+        image.previousImageUrls?.includes(imageUrl),
+    );
 
   // 삭제된 이미지는 ID 또는 URL 기준으로 숨긴다.
   const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
@@ -248,7 +331,7 @@ const PostDetailModal = ({
   ]);
 
   // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
-  const visibleImages = [...postImages, ...uploadedImages].filter(
+  const visibleImages = postImages.filter(
     (image) =>
       !hiddenImageUrls.has(image.imageUrl) &&
       (image.id === undefined || !hiddenImageIds.has(image.id)),
@@ -270,6 +353,11 @@ const PostDetailModal = ({
           ? current
           : [...current, image.id as number],
       );
+      setReplacementFiles((current) => {
+        const next = { ...current };
+        delete next[image.id as number];
+        return next;
+      });
     }
     setDeletedImageUrls((current) =>
       current.includes(image.imageUrl) ? current : [...current, image.imageUrl],
@@ -330,6 +418,7 @@ const PostDetailModal = ({
   const handlePostEditStart = () => {
     // 수정할 때 이전 수정 시도의 임시 삭제 상태를 초기화한다.
     setSelectedImages([]);
+    setReplacementFiles({});
     setDeletedImageIds([]);
     setDeletedImageUrls([]);
     setIsPostEditing(true);
@@ -582,27 +671,65 @@ const PostDetailModal = ({
       trimmedPostContent,
       [...new Set([...deletedContentImageUrls, ...deletedImageUrlsFromIds])],
     );
-    const updateData: UpdatePostRequest = {
-      categoryId,
-      title: trimmedPostTitle,
-      content: contentWithoutDeletedImages,
-      status: "PUBLISHED",
-      deleteImageIds: deletedImageIds,
-    };
     setIsPostSaving(true);
     try {
-      for (const [index, file] of selectedImages.entries()) {
-        const uploaded = await postsApi.uploadPostImage(post.id, {
+      let nextContent = contentWithoutDeletedImages;
+      for (const [imageIdString, file] of Object.entries(replacementFiles)) {
+        const imageId = Number(imageIdString);
+        const image = postImages.find((postImage) => postImage.id === imageId);
+        if (!image) continue;
+
+        const replacedImage = await postsApi.replacePostImage(
+          post.id,
+          imageId,
           file,
-          sortOrder:
-            (post.images?.length ?? post.imageUrls?.length ?? 0) +
-            uploadedImages.length +
-            index,
+        );
+        nextContent = [
+          image.imageUrl,
+          ...(image.previousImageUrls ?? []),
+        ].reduce(
+          (content, imageUrl) =>
+            replaceImageUrlInMarkdown(
+              content,
+              imageUrl,
+              replacedImage.imageUrl,
+            ),
+          nextContent,
+        );
+        setPostImageOverrides((current) => {
+          const currentImages =
+            current.postId === post.id ? current.images : {};
+          const currentImage = currentImages[imageId] ?? image;
+
+          return {
+            postId: post.id,
+            images: {
+              ...currentImages,
+              [imageId]: {
+                ...currentImage,
+                ...replacedImage,
+                previousImageUrls: [
+                  ...new Set([
+                    ...(currentImage.previousImageUrls ?? []),
+                    currentImage.imageUrl,
+                  ]),
+                ],
+              },
+            },
+          };
         });
-        setUploadedImages((current) => [...current, uploaded]);
-        setSelectedImages((current) => current.slice(1));
       }
+
+      const updateData: UpdatePostRequest = {
+        categoryId,
+        title: trimmedPostTitle,
+        content: nextContent,
+        status: "PUBLISHED",
+        deleteImageIds: deletedImageIds,
+      };
       await postsApi.updatePost(post.id, updateData);
+
+      setReplacementFiles({});
 
       // 저장된 삭제 상태를 유지해 화면에 삭제한 이미지를 다시 표시하지 않는다.
       setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
@@ -618,7 +745,7 @@ const PostDetailModal = ({
       setIsPostEditing(false);
     } catch {
       setPostUpdateError(
-        "저장에 실패했습니다. 업로드된 이미지는 유지되며 다시 시도할 수 있습니다.",
+        "이미지 교체 또는 게시글 저장에 실패했습니다. 다시 시도해주세요.",
       );
     } finally {
       setIsPostSaving(false);
@@ -725,11 +852,46 @@ const PostDetailModal = ({
                 value={editingPostContent}
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
+                onSelectImages={(files, selectedImageUrl) => {
+                  if (!selectedImageUrl || !files[0]) {
+                    setPostUpdateError(
+                      "교체할 기존 이미지를 먼저 선택해주세요.",
+                    );
+                    return;
+                  }
+
+                  const file = files[0];
+                  if (!ALLOWED_POST_IMAGE_TYPES.has(file.type)) {
+                    setPostUpdateError(
+                      "JPEG, PNG 또는 WebP 파일만 교체할 수 있습니다.",
+                    );
+                    return;
+                  }
+                  if (file.size > MAX_POST_IMAGE_SIZE) {
+                    setPostUpdateError(
+                      "이미지 파일은 10MB 이하만 교체할 수 있습니다.",
+                    );
+                    return;
+                  }
+
+                  const image = findPostImage(selectedImageUrl);
+                  if (image?.id === undefined) {
+                    setPostUpdateError(
+                      "이미지 ID를 확인할 수 없어 교체할 수 없습니다.",
+                    );
+                    return;
+                  }
+
+                  setPostUpdateError(null);
+                  const imageId = image.id;
+                  setReplacementFiles((current) => ({
+                    ...current,
+                    [imageId]: file,
+                  }));
+                }}
                 onDeleteImage={(imageUrl) => {
                   // 에디터에서 삭제한 이미지의 ID와 URL을 찾아 기록한다.
-                  const image = postImages.find(
-                    (postImage) => postImage.imageUrl === imageUrl,
-                  );
+                  const image = findPostImage(imageUrl);
                   handleImageDelete(image ?? { imageUrl });
                 }}
                 selectedImages={selectedImages}
@@ -737,9 +899,6 @@ const PostDetailModal = ({
                   setSelectedImages((current) =>
                     current.filter((_, itemIndex) => itemIndex !== index),
                   )
-                }
-                onSelectImages={(files) =>
-                  setSelectedImages((current) => [...current, ...files])
                 }
                 actions={
                   <S.PostEditActions>
@@ -749,6 +908,7 @@ const PostDetailModal = ({
                       disabled={isPostSaving}
                       onClick={() => {
                         setSelectedImages([]);
+                        setReplacementFiles({});
                         setDeletedImageIds([]);
                         setDeletedImageUrls([]);
                         setIsPostEditing(false);
