@@ -207,7 +207,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
           post={selectedPost}
           currentUserId={selectedPost.writerId}
           isMyPost
-          isLikeEnabled={false}
+          isLikeEnabled={true}
           onClose={() => {
             detailRequestId.current += 1;
             setSelectedPost(null);
