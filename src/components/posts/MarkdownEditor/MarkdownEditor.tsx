@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import {
   EditorContent,
   NodeViewWrapper,
@@ -77,6 +77,7 @@ const MarkdownEditor = ({
   const latestValueRef = useRef(value);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const selectedImageUrlRef = useRef<string | null>(null);
+  const disabledRef = useRef(disabled);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -93,6 +94,10 @@ const MarkdownEditor = ({
               {...props}
               onDeleteImage={onDeleteImage}
               onImageClick={(imageUrl) => {
+                if (disabledRef.current) {
+                  return;
+                }
+
                 selectedImageUrlRef.current = imageUrl;
                 imageInputRef.current?.click();
               }}
@@ -148,6 +153,24 @@ const MarkdownEditor = ({
   useEffect(() => {
     editor?.setEditable(!disabled);
   }, [editor, disabled]);
+
+  useEffect(() => {
+    const imageInput = imageInputRef.current;
+    if (!imageInput) {
+      return;
+    }
+
+    const handleCancel = () => {
+      selectedImageUrlRef.current = null;
+    };
+
+    imageInput.addEventListener("cancel", handleCancel);
+    return () => imageInput.removeEventListener("cancel", handleCancel);
+  }, []);
+
+  useLayoutEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
 
   if (!editor) {
     return null;
@@ -272,7 +295,13 @@ const MarkdownEditor = ({
         </WriteStyles.SelectedImageList>
       )}
       <WriteStyles.Footer>
-        <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => {
+        <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden disabled={disabled} onChange={(event) => {
+          if (disabledRef.current) {
+            selectedImageUrlRef.current = null;
+            event.currentTarget.value = "";
+            return;
+          }
+
           const selectedImageUrl = selectedImageUrlRef.current ?? (editor.isActive("image")
             ? (editor.getAttributes("image").src as string | undefined)
             : undefined);

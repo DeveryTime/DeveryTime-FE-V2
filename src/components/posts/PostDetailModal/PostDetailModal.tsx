@@ -50,7 +50,15 @@ type PostImage = {
   id?: number;
   imageUrl: string;
   sortOrder?: number;
+  previousImageUrls?: string[];
 };
+
+const MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_POST_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 // 게시글 작성일을 상세 모달에 표시할 형식으로 변환한다.
 const formatPostDate = (dateString: string) => {
@@ -96,7 +104,17 @@ const replaceImageUrlInMarkdown = (
   content: string,
   previousUrl: string,
   nextUrl: string,
-) => content.split(previousUrl).join(nextUrl);
+) => {
+  const imagePattern = new RegExp(
+    `(!\\[[^\\]]*\\]\\()${escapeRegExp(previousUrl)}(?=\\s*(?:["'][^"']*["'])?\\))`,
+    "g",
+  );
+
+  return content.replace(
+    imagePattern,
+    (_match, imagePrefix: string) => `${imagePrefix}${nextUrl}`,
+  );
+};
 
 const COMMENT_SKELETON_COUNT = 2;
 
@@ -194,6 +212,10 @@ const PostDetailModal = ({
   const [replacementFiles, setReplacementFiles] = useState<
     Record<number, File>
   >({});
+  const [postImageOverrides, setPostImageOverrides] = useState<{
+    postId: number;
+    images: Record<number, PostImage>;
+  }>({ postId: post.id, images: {} });
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
   const [savedDeletedImageIds, setSavedDeletedImageIds] = useState<number[]>(
     [],
@@ -229,10 +251,26 @@ const PostDetailModal = ({
   }
 
   // 상세 응답 형식에 맞춰 게시글 이미지를 구성한다.
-  const postImages: PostImage[] =
+  const sourcePostImages: PostImage[] =
     post.images?.length > 0
       ? post.images
       : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
+  const postImages = sourcePostImages.map((image) => {
+    if (image.id === undefined || postImageOverrides.postId !== post.id) {
+      return image;
+    }
+
+    return {
+      ...image,
+      ...postImageOverrides.images[image.id],
+    };
+  });
+  const findPostImage = (imageUrl: string) =>
+    postImages.find(
+      (image) =>
+        image.imageUrl === imageUrl ||
+        image.previousImageUrls?.includes(imageUrl),
+    );
 
   // 삭제된 이미지는 ID 또는 URL 기준으로 숨긴다.
   const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
@@ -595,11 +633,40 @@ const PostDetailModal = ({
           imageId,
           file,
         );
-        nextContent = replaceImageUrlInMarkdown(
-          nextContent,
+        nextContent = [
           image.imageUrl,
-          replacedImage.imageUrl,
+          ...(image.previousImageUrls ?? []),
+        ].reduce(
+          (content, imageUrl) =>
+            replaceImageUrlInMarkdown(
+              content,
+              imageUrl,
+              replacedImage.imageUrl,
+            ),
+          nextContent,
         );
+        setPostImageOverrides((current) => {
+          const currentImages =
+            current.postId === post.id ? current.images : {};
+          const currentImage = currentImages[imageId] ?? image;
+
+          return {
+            postId: post.id,
+            images: {
+              ...currentImages,
+              [imageId]: {
+                ...currentImage,
+                ...replacedImage,
+                previousImageUrls: [
+                  ...new Set([
+                    ...(currentImage.previousImageUrls ?? []),
+                    currentImage.imageUrl,
+                  ]),
+                ],
+              },
+            },
+          };
+        });
       }
 
       const updateData: UpdatePostRequest = {
@@ -684,9 +751,21 @@ const PostDetailModal = ({
                     return;
                   }
 
-                  const image = postImages.find(
-                    (postImage) => postImage.imageUrl === selectedImageUrl,
-                  );
+                  const file = files[0];
+                  if (!ALLOWED_POST_IMAGE_TYPES.has(file.type)) {
+                    setPostUpdateError(
+                      "JPEG, PNG 또는 WebP 파일만 교체할 수 있습니다.",
+                    );
+                    return;
+                  }
+                  if (file.size > MAX_POST_IMAGE_SIZE) {
+                    setPostUpdateError(
+                      "이미지 파일은 10MB 이하만 교체할 수 있습니다.",
+                    );
+                    return;
+                  }
+
+                  const image = findPostImage(selectedImageUrl);
                   if (image?.id === undefined) {
                     setPostUpdateError(
                       "이미지 ID를 확인할 수 없어 교체할 수 없습니다.",
@@ -695,16 +774,15 @@ const PostDetailModal = ({
                   }
 
                   setPostUpdateError(null);
+                  const imageId = image.id;
                   setReplacementFiles((current) => ({
                     ...current,
-                    [image.id as number]: files[0],
+                    [imageId]: file,
                   }));
                 }}
                 onDeleteImage={(imageUrl) => {
                   // 에디터에서 삭제한 이미지의 ID와 URL을 찾아 기록한다.
-                  const image = postImages.find(
-                    (postImage) => postImage.imageUrl === imageUrl,
-                  );
+                  const image = findPostImage(imageUrl);
                   handleImageDelete(image ?? { imageUrl });
                 }}
                 selectedImages={selectedImages}

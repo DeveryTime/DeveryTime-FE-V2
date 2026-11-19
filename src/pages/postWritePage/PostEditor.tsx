@@ -84,12 +84,21 @@ const hasMeaningfulContent = (node: EditorNode): boolean => {
 const appendImageMarkdown = (
   content: string,
   images: UploadPostImageData[],
+  uploadedIndexes: number[],
   files: File[],
 ) => {
   if (images.length === 0) return content;
 
   const imageMarkdown = images
-    .map((image, index) => `![${files[index]?.name ?? "첨부 이미지"}](${image.imageUrl})`)
+    .map((image, index) => ({
+      image,
+      fileIndex: uploadedIndexes[index],
+    }))
+    .sort((a, b) => a.fileIndex - b.fileIndex)
+    .map(
+      ({ image, fileIndex }) =>
+        `![${files[fileIndex]?.name ?? "첨부 이미지"}](${image.imageUrl})`,
+    )
     .join("\n\n");
 
   return content ? `${content}\n\n${imageMarkdown}` : imageMarkdown;
@@ -112,6 +121,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [uploadedPostImages, setUploadedPostImages] = useState<
     UploadPostImageData[]
   >([]);
+  const [uploadedIndexes, setUploadedIndexes] = useState<number[]>([]);
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -416,21 +426,56 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         }
 
         let uploadedImages = uploadedPostImages;
-        if (selectedImages.length > 0 && uploadedImages.length === 0) {
-          uploadedImages = await postsApi.uploadPostImages(
+        let currentUploadedIndexes = uploadedIndexes;
+        const uploadedIndexSet = new Set(currentUploadedIndexes);
+        const pendingIndexes = selectedImages
+          .map((_, index) => index)
+          .filter((index) => !uploadedIndexSet.has(index));
+
+        if (pendingIndexes.length > 0) {
+          const newlyUploadedImages = await postsApi.uploadPostImages(
             postId as number,
-            selectedImages,
+            pendingIndexes.map((index) => selectedImages[index]),
           );
+          if (newlyUploadedImages.length > pendingIndexes.length) {
+            throw new Error(
+              "이미지 업로드 응답이 요청한 파일 수와 일치하지 않습니다.",
+            );
+          }
+
+          const confirmedIndexes = pendingIndexes.slice(
+            0,
+            newlyUploadedImages.length,
+          );
+          uploadedImages = [...uploadedImages, ...newlyUploadedImages];
+          currentUploadedIndexes = [
+            ...currentUploadedIndexes,
+            ...confirmedIndexes,
+          ];
           setUploadedPostImages(uploadedImages);
+          setUploadedIndexes(currentUploadedIndexes);
+
+          if (newlyUploadedImages.length !== pendingIndexes.length) {
+            throw new Error(
+              "일부 이미지 업로드에 실패했습니다. 다시 시도해주세요.",
+            );
+          }
         }
 
         if (selectedImages.length > 0) {
+          if (currentUploadedIndexes.length !== selectedImages.length) {
+            throw new Error(
+              "모든 이미지가 업로드되지 않아 게시글을 저장하지 못했습니다.",
+            );
+          }
+
           await postsApi.updatePost(postId as number, {
             categoryId: categoryId as number,
             title: title.trim(),
             content: appendImageMarkdown(
               editor.getMarkdown().trim(),
               uploadedImages,
+              currentUploadedIndexes,
               selectedImages,
             ),
             status: "PUBLISHED",
@@ -444,7 +489,9 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           error,
         )
           ? error.response?.data?.error?.message
-          : undefined;
+          : error instanceof Error
+            ? error.message
+            : undefined;
         alert(
           message ?? "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.",
         );
