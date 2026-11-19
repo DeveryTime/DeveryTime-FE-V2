@@ -155,6 +155,23 @@ const replaceImageUrlInMarkdown = (
     src === previousUrl ? nextUrl : src,
   );
 
+const appendImageMarkdown = (
+  content: string,
+  images: { imageUrl: string }[],
+  files: File[],
+) => {
+  if (images.length === 0) return content;
+
+  const imageMarkdown = images
+    .map(
+      (image, index) =>
+        `![${files[index]?.name ?? "첨부 이미지"}](${image.imageUrl})`,
+    )
+    .join("\n\n");
+
+  return content ? `${content}\n\n${imageMarkdown}` : imageMarkdown;
+};
+
 const COMMENT_SKELETON_COUNT = 2;
 
 const CommentSkeleton = () => (
@@ -263,6 +280,9 @@ const PostDetailModal = ({
   const [replacementFiles, setReplacementFiles] = useState<
     Record<number, File>
   >({});
+  const [uploadedImages, setUploadedImages] = useState<
+    { id: number; imageUrl: string }[]
+  >([]);
   const [postImageOverrides, setPostImageOverrides] = useState<{
     postId: number;
     images: Record<number, PostImage>;
@@ -331,7 +351,7 @@ const PostDetailModal = ({
   ]);
 
   // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
-  const visibleImages = postImages.filter(
+  const visibleImages = [...postImages, ...uploadedImages].filter(
     (image) =>
       !hiddenImageUrls.has(image.imageUrl) &&
       (image.id === undefined || !hiddenImageIds.has(image.id)),
@@ -720,6 +740,19 @@ const PostDetailModal = ({
         });
       }
 
+      if (selectedImages.length > 0) {
+        const uploaded = await postsApi.uploadPostImages(
+          post.id,
+          selectedImages,
+        );
+        setUploadedImages((current) => [...current, ...uploaded]);
+        nextContent = appendImageMarkdown(
+          nextContent,
+          uploaded,
+          selectedImages,
+        );
+      }
+
       const updateData: UpdatePostRequest = {
         categoryId,
         title: trimmedPostTitle,
@@ -730,6 +763,7 @@ const PostDetailModal = ({
       await postsApi.updatePost(post.id, updateData);
 
       setReplacementFiles({});
+      setSelectedImages([]);
 
       // 저장된 삭제 상태를 유지해 화면에 삭제한 이미지를 다시 표시하지 않는다.
       setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
@@ -853,24 +887,27 @@ const PostDetailModal = ({
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
                 onSelectImages={(files, selectedImageUrl) => {
-                  if (!selectedImageUrl || !files[0]) {
-                    setPostUpdateError(
-                      "교체할 기존 이미지를 먼저 선택해주세요.",
-                    );
+                  const file = files[0];
+                  if (!file) {
                     return;
                   }
 
-                  const file = files[0];
                   if (!ALLOWED_POST_IMAGE_TYPES.has(file.type)) {
                     setPostUpdateError(
-                      "JPEG, PNG 또는 WebP 파일만 교체할 수 있습니다.",
+                      "JPEG, PNG 또는 WebP 파일만 업로드할 수 있습니다.",
                     );
                     return;
                   }
                   if (file.size > MAX_POST_IMAGE_SIZE) {
                     setPostUpdateError(
-                      "이미지 파일은 10MB 이하만 교체할 수 있습니다.",
+                      "이미지 파일은 10MB 이하만 업로드할 수 있습니다.",
                     );
+                    return;
+                  }
+
+                  if (!selectedImageUrl) {
+                    setPostUpdateError(null);
+                    setSelectedImages((current) => [...current, ...files]);
                     return;
                   }
 
