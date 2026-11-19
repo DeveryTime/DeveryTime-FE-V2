@@ -111,7 +111,7 @@ const S = {
     border-radius: 14px;
     font-size: 14px;
     font-weight: 500;
-    color: #999999;
+    color: #000;
 
     &:focus {
       outline: none;
