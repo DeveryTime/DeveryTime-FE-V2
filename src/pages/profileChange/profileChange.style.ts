@@ -111,7 +111,11 @@ const S = {
     border-radius: 14px;
     font-size: 14px;
     font-weight: 500;
-    color: #000;
+    color: #999;
+      
+      &.editing {
+          color: #000;
+      }
 
     &:focus {
       outline: none;

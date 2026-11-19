@@ -14,6 +14,7 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUsernameEditing, setIsUsernameEditing] = useState(false);
 
   // 수정할 아이디
   const [username, setUsername] = useState("");
@@ -252,6 +253,8 @@ const Profile = () => {
 
               <S.NameInput
                 value={username}
+                className={isUsernameEditing ? "editing" : ""}
+                onFocus={() => setIsUsernameEditing(true)}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="10글자 이내로 입력해 주세요"
                 maxLength={10}
