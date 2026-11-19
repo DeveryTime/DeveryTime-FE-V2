@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, FocusEvent, HTMLInputTypeAttribute } from "react";
 import S from "./InputBoxStyle";
 
 interface InputBoxProps {
@@ -6,6 +6,10 @@ interface InputBoxProps {
   ariaLabel: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
+  type?: HTMLInputTypeAttribute;
+  autoComplete?: string;
+  maxLength?: number;
 }
 
 const InputBox = ({
@@ -13,14 +17,22 @@ const InputBox = ({
   ariaLabel,
   value,
   onChange,
+  onBlur,
+  type = "text",
+  autoComplete,
+  maxLength,
 }: InputBoxProps) => {
   return (
     <S.InputBoxWrapper>
       <S.Input
+        type={type}
         placeholder={placeholder}
         aria-label={ariaLabel}
+        autoComplete={autoComplete}
+        maxLength={maxLength}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
       />
     </S.InputBoxWrapper>
   );
