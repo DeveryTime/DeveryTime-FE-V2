@@ -76,6 +76,8 @@ const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const latestValueRef = useRef(value);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const selectedImageUrlRef = useRef<string | null>(null);
+  const disabledRef = useRef(disabled);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -88,7 +90,15 @@ const MarkdownEditor = ({
       Image.extend({
         addNodeView() {
           return ReactNodeViewRenderer((props) => (
-            <EditableImageView {...props} onDeleteImage={onDeleteImage} />
+            <EditableImageView
+              {...props}
+              onDeleteImage={onDeleteImage}
+              onImageClick={(imageUrl) => {
+                if (disabledRef.current) return;
+                selectedImageUrlRef.current = imageUrl;
+                imageInputRef.current?.click();
+              }}
+            />
           ));
         },
       }),
@@ -282,8 +292,23 @@ const MarkdownEditor = ({
         </WriteStyles.SelectedImageList>
       )}
       <WriteStyles.Footer>
-        <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => {
-          onSelectImages(Array.from(event.currentTarget.files ?? []));
+        <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden disabled={disabled} onChange={(event) => {
+          if (disabledRef.current) {
+            selectedImageUrlRef.current = null;
+            event.currentTarget.value = "";
+            return;
+          }
+
+          const selectedImageUrl = selectedImageUrlRef.current ?? (
+            editor.isActive("image")
+              ? (editor.getAttributes("image").src as string | undefined)
+              : undefined
+          );
+          selectedImageUrlRef.current = null;
+          onSelectImages(
+            Array.from(event.currentTarget.files ?? []),
+            selectedImageUrl,
+          );
           event.currentTarget.value = "";
         }} />
         <WriteStyles.ImageButton type="button" aria-label="이미지 파일 추가" disabled={disabled} onClick={() => imageInputRef.current?.click()}>

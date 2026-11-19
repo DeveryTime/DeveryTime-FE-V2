@@ -350,16 +350,30 @@ const PostDetailModal = ({
     ...savedDeletedImageUrls,
   ]);
 
+  // 게시글 응답과 업로드 직후 상태에 같은 이미지가 함께 있을 수 있으므로 ID 기준으로 합친다.
+  const imageMap = new Map<string, PostImage>();
+  [...postImages, ...uploadedImages].forEach((image) => {
+    const key = image.id === undefined ? `url:${image.imageUrl}` : `id:${image.id}`;
+    imageMap.set(key, image);
+  });
+
   // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
-  const visibleImages = [...postImages, ...uploadedImages].filter(
+  const visibleImages = [...imageMap.values()].filter(
     (image) =>
       !hiddenImageUrls.has(image.imageUrl) &&
       (image.id === undefined || !hiddenImageIds.has(image.id)),
   );
 
   // 본문에 포함된 이미지는 별도 목록에서 중복 표시하지 않는다.
+  const contentForImageVisibility = isPostEditing
+    ? editingPostContent
+    : displayedPostContent;
   const visibleStandaloneImages = visibleImages.filter(
-    (image) => !isPostEditing || !editingPostContent.includes(image.imageUrl),
+    (image) =>
+      !contentForImageVisibility.includes(image.imageUrl) &&
+      !(image.previousImageUrls ?? []).some((url) =>
+        contentForImageVisibility.includes(url),
+      ),
   );
   const openComment = comments.find(
     (comment) => comment.id === openCommentMenuId,
