@@ -35,6 +35,10 @@ import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
 import profileApi from "../../../api/profile/profile.api";
 import { normalizeDisplayText } from "../../../utils/normalizeDisplayText";
+import { type JSONContent } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import { Markdown, MarkdownManager } from "@tiptap/markdown";
 
 interface PostDetailModalProps {
   post: PostDetailData;
@@ -87,34 +91,69 @@ const CommentDate = (dateString: string) => {
     .replace(/\.$/, "");
 };
 
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const MARKDOWN_IMAGE_EXTENSIONS = [StarterKit, Markdown, Image];
 
-const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) =>
-  imageUrls.reduce((markdown, imageUrl) => {
-    const imagePattern = new RegExp(
-      `!\\[[^\\]]*\\]\\(${escapeRegExp(imageUrl)}(?:\\s+["'][^"']*["'])?\\)`,
-      "g",
-    );
+const updateImageNodes = (
+  node: JSONContent,
+  updateSrc: (src: string) => string | null,
+): JSONContent => {
+  if (node.type === "image") {
+    const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
+    const nextSrc = updateSrc(src);
 
-    return markdown.replace(imagePattern, "");
-  }, content);
+    if (nextSrc === null) {
+      return { ...node, type: "removedImage" };
+    }
+
+    return {
+      ...node,
+      attrs: {
+        ...node.attrs,
+        src: nextSrc,
+      },
+    };
+  }
+
+  if (!node.content) {
+    return node;
+  }
+
+  return {
+    ...node,
+    content: node.content
+      .map((child) => updateImageNodes(child, updateSrc))
+      .filter((child) => child.type !== "removedImage"),
+  };
+};
+
+const transformMarkdownImageNodes = (
+  content: string,
+  updateSrc: (src: string) => string | null,
+) => {
+  const manager = new MarkdownManager({
+    extensions: MARKDOWN_IMAGE_EXTENSIONS,
+  });
+  const document = manager.parse(content);
+
+  return manager.serialize(updateImageNodes(document, updateSrc));
+};
+
+const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) => {
+  const deletedUrls = new Set(imageUrls);
+
+  return transformMarkdownImageNodes(content, (src) =>
+    deletedUrls.has(src) ? null : src,
+  );
+};
 
 const replaceImageUrlInMarkdown = (
   content: string,
   previousUrl: string,
   nextUrl: string,
-) => {
-  const imagePattern = new RegExp(
-    `(!\\[[^\\]]*\\]\\()${escapeRegExp(previousUrl)}(?=\\s*(?:["'][^"']*["'])?\\))`,
-    "g",
+) =>
+  transformMarkdownImageNodes(content, (src) =>
+    src === previousUrl ? nextUrl : src,
   );
-
-  return content.replace(
-    imagePattern,
-    (_match, imagePrefix: string) => `${imagePrefix}${nextUrl}`,
-  );
-};
 
 const COMMENT_SKELETON_COUNT = 2;
 

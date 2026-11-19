@@ -97,7 +97,10 @@ const appendImageMarkdown = (
     .sort((a, b) => a.fileIndex - b.fileIndex)
     .map(
       ({ image, fileIndex }) =>
-        `![${files[fileIndex]?.name ?? "첨부 이미지"}](${image.imageUrl})`,
+        `![${(files[fileIndex]?.name ?? "첨부 이미지")
+          .replaceAll("\\", "\\\\")
+          .replaceAll("[", "\\[")
+          .replaceAll("]", "\\]")}](${image.imageUrl})`,
     )
     .join("\n\n");
 
