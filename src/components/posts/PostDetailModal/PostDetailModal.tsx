@@ -57,6 +57,12 @@ type PostImage = {
   previousImageUrls?: string[];
 };
 
+type PendingImageReplacement = {
+  file: File;
+  currentUrl: string;
+  previewUrl: string;
+};
+
 const MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_POST_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -172,6 +178,14 @@ const appendImageMarkdown = (
   return content ? `${content}\n\n${imageMarkdown}` : imageMarkdown;
 };
 
+const revokeReplacementPreviews = (
+  replacements: Record<number, PendingImageReplacement>,
+) => {
+  Object.values(replacements).forEach(({ previewUrl }) => {
+    URL.revokeObjectURL(previewUrl);
+  });
+};
+
 const COMMENT_SKELETON_COUNT = 2;
 
 const CommentSkeleton = () => (
@@ -278,8 +292,9 @@ const PostDetailModal = ({
   const [isPostDeleting, setIsPostDeleting] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [replacementFiles, setReplacementFiles] = useState<
-    Record<number, File>
+    Record<number, PendingImageReplacement>
   >({});
+  const replacementFilesRef = useRef(replacementFiles);
   const [uploadedImages, setUploadedImages] = useState<
     { id: number; imageUrl: string }[]
   >([]);
@@ -298,6 +313,15 @@ const PostDetailModal = ({
   const [displayedPostTitle, setDisplayedPostTitle] = useState(post.title);
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
+  );
+
+  useEffect(() => {
+    replacementFilesRef.current = replacementFiles;
+  }, [replacementFiles]);
+
+  useEffect(
+    () => () => revokeReplacementPreviews(replacementFilesRef.current),
+    [],
   );
 
   const [previousPost, setPreviousPost] = useState(post);
@@ -336,12 +360,28 @@ const PostDetailModal = ({
       ...postImageOverrides.images[image.id],
     };
   });
-  const findPostImage = (imageUrl: string) =>
-    postImages.find(
-      (image) =>
-        image.imageUrl === imageUrl ||
-        image.previousImageUrls?.includes(imageUrl),
+  const findPostImage = (imageUrl: string) => {
+    const image = postImages.find(
+      (postImage) =>
+        postImage.imageUrl === imageUrl ||
+        postImage.previousImageUrls?.includes(imageUrl),
     );
+    if (image) {
+      return image;
+    }
+
+    const pendingReplacement = Object.entries(replacementFiles).find(
+      ([, replacement]) =>
+        replacement.currentUrl === imageUrl ||
+        replacement.previewUrl === imageUrl,
+    );
+    if (!pendingReplacement) {
+      return undefined;
+    }
+
+    const imageId = Number(pendingReplacement[0]);
+    return postImages.find((postImage) => postImage.id === imageId);
+  };
 
   // 삭제된 이미지는 ID 또는 URL 기준으로 숨긴다.
   const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
@@ -369,11 +409,21 @@ const PostDetailModal = ({
     ? editingPostContent
     : displayedPostContent;
   const visibleStandaloneImages = visibleImages.filter(
-    (image) =>
-      !contentForImageVisibility.includes(image.imageUrl) &&
-      !(image.previousImageUrls ?? []).some((url) =>
-        contentForImageVisibility.includes(url),
-      ),
+    (image) => {
+      const pendingReplacement =
+        image.id === undefined ? undefined : replacementFiles[image.id];
+      const isRenderedInContent =
+        contentForImageVisibility.includes(image.imageUrl) ||
+        Boolean(
+          pendingReplacement &&
+            contentForImageVisibility.includes(pendingReplacement.previewUrl),
+        ) ||
+        (image.previousImageUrls ?? []).some((url) =>
+          contentForImageVisibility.includes(url),
+        );
+
+      return !isRenderedInContent;
+    },
   );
   const openComment = comments.find(
     (comment) => comment.id === openCommentMenuId,
@@ -382,6 +432,10 @@ const PostDetailModal = ({
   // 이미지 ID와 URL을 삭제 목록에 추가한다.
   const handleImageDelete = (image: PostImage) => {
     if (image.id !== undefined) {
+      const pendingReplacement = replacementFiles[image.id];
+      if (pendingReplacement) {
+        URL.revokeObjectURL(pendingReplacement.previewUrl);
+      }
       setDeletedImageIds((current) =>
         current.includes(image.id as number)
           ? current
@@ -451,6 +505,7 @@ const PostDetailModal = ({
   // 게시글 수정 모드를 시작하고 게시글 메뉴를 닫는다.
   const handlePostEditStart = () => {
     // 수정할 때 이전 수정 시도의 임시 삭제 상태를 초기화한다.
+    revokeReplacementPreviews(replacementFiles);
     setSelectedImages([]);
     setReplacementFiles({});
     setDeletedImageIds([]);
@@ -709,7 +764,9 @@ const PostDetailModal = ({
     try {
       let nextContent = contentWithoutDeletedImages;
       const replacedImages: Record<number, PostImage> = {};
-      for (const [imageIdString, file] of Object.entries(replacementFiles)) {
+      for (const [imageIdString, replacement] of Object.entries(
+        replacementFiles,
+      )) {
         const imageId = Number(imageIdString);
         const image = postImages.find((postImage) => postImage.id === imageId);
         if (!image) continue;
@@ -717,9 +774,10 @@ const PostDetailModal = ({
         const replacedImage = await postsApi.replacePostImage(
           post.id,
           imageId,
-          file,
+          replacement.file,
         );
         nextContent = [
+          replacement.currentUrl,
           image.imageUrl,
           ...(image.previousImageUrls ?? []),
         ].reduce(
@@ -779,6 +837,7 @@ const PostDetailModal = ({
         }));
       }
 
+      revokeReplacementPreviews(replacementFiles);
       setReplacementFiles({});
       setSelectedImages([]);
 
@@ -943,9 +1002,26 @@ const PostDetailModal = ({
 
                   setPostUpdateError(null);
                   const imageId = image.id;
+                  const previewUrl = URL.createObjectURL(file);
+                  const previousReplacement = replacementFiles[imageId];
+                  if (previousReplacement) {
+                    URL.revokeObjectURL(previousReplacement.previewUrl);
+                  }
+
+                  setEditingPostContent((currentContent) =>
+                    replaceImageUrlInMarkdown(
+                      currentContent,
+                      selectedImageUrl,
+                      previewUrl,
+                    ),
+                  );
                   setReplacementFiles((current) => ({
                     ...current,
-                    [imageId]: file,
+                    [imageId]: {
+                      file,
+                      currentUrl: selectedImageUrl,
+                      previewUrl,
+                    },
                   }));
                 }}
                 onDeleteImage={(imageUrl) => {
@@ -966,6 +1042,7 @@ const PostDetailModal = ({
                       variant="secondary"
                       disabled={isPostSaving}
                       onClick={() => {
+                        revokeReplacementPreviews(replacementFiles);
                         setSelectedImages([]);
                         setReplacementFiles({});
                         setDeletedImageIds([]);
@@ -1006,7 +1083,12 @@ const PostDetailModal = ({
               {visibleStandaloneImages.map((image, index) => (
                 <S.ImageItem key={`${image.imageUrl}-${index}`}>
                   <S.ContentImage
-                    src={image.imageUrl}
+                    src={
+                      image.id === undefined
+                        ? image.imageUrl
+                        : replacementFiles[image.id]?.previewUrl ??
+                          image.imageUrl
+                    }
                     alt={`${displayedPostTitle} 첨부된 이미지`}
                   />
                   {isPostEditing && (
