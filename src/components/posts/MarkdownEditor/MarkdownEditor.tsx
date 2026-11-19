@@ -163,7 +163,7 @@ const MarkdownEditor = ({
 
     imageInput.addEventListener("cancel", handleCancel);
     return () => imageInput.removeEventListener("cancel", handleCancel);
-  }, []);
+  }, [editor]);
 
   useLayoutEffect(() => {
     disabledRef.current = disabled;
@@ -299,11 +299,11 @@ const MarkdownEditor = ({
             return;
           }
 
-          const selectedImageUrl = selectedImageUrlRef.current ?? (
-            editor.isActive("image")
-              ? (editor.getAttributes("image").src as string | undefined)
-              : undefined
-          );
+          // 새 이미지 버튼과 기존 이미지 클릭은 서로 다른 API를 사용한다.
+          // 에디터의 현재 selection은 이미지에서 벗어나지 않을 수 있으므로
+          // `editor.isActive("image")`를 fallback으로 사용하면 새 이미지가
+          // 기존 이미지 교체로 잘못 분기될 수 있다.
+          const selectedImageUrl = selectedImageUrlRef.current ?? undefined;
           selectedImageUrlRef.current = null;
           onSelectImages(
             Array.from(event.currentTarget.files ?? []),
@@ -311,7 +311,12 @@ const MarkdownEditor = ({
           );
           event.currentTarget.value = "";
         }} />
-        <WriteStyles.ImageButton type="button" aria-label="이미지 파일 추가" disabled={disabled} onClick={() => imageInputRef.current?.click()}>
+        <WriteStyles.ImageButton type="button" aria-label="이미지 파일 추가" disabled={disabled} onClick={() => {
+          // 이미지 교체용 target이 남아 있어도 일반 추가 버튼은 항상
+          // POST /posts/{id}/images 경로를 사용해야 한다.
+          selectedImageUrlRef.current = null;
+          imageInputRef.current?.click();
+        }}>
           <IoImageOutline />
         </WriteStyles.ImageButton>
         {actions}

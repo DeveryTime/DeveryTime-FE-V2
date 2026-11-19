@@ -708,6 +708,7 @@ const PostDetailModal = ({
     setIsPostSaving(true);
     try {
       let nextContent = contentWithoutDeletedImages;
+      const replacedImages: Record<number, PostImage> = {};
       for (const [imageIdString, file] of Object.entries(replacementFiles)) {
         const imageId = Number(imageIdString);
         const image = postImages.find((postImage) => postImage.id === imageId);
@@ -730,28 +731,20 @@ const PostDetailModal = ({
             ),
           nextContent,
         );
-        setPostImageOverrides((current) => {
-          const currentImages =
-            current.postId === post.id ? current.images : {};
-          const currentImage = currentImages[imageId] ?? image;
-
-          return {
-            postId: post.id,
-            images: {
-              ...currentImages,
-              [imageId]: {
-                ...currentImage,
-                ...replacedImage,
-                previousImageUrls: [
-                  ...new Set([
-                    ...(currentImage.previousImageUrls ?? []),
-                    currentImage.imageUrl,
-                  ]),
-                ],
-              },
-            },
-          };
-        });
+        const currentImage =
+          (postImageOverrides.postId === post.id
+            ? postImageOverrides.images[imageId]
+            : undefined) ?? image;
+        replacedImages[imageId] = {
+          ...currentImage,
+          ...replacedImage,
+          previousImageUrls: [
+            ...new Set([
+              ...(currentImage.previousImageUrls ?? []),
+              currentImage.imageUrl,
+            ]),
+          ],
+        };
       }
 
       if (selectedImages.length > 0) {
@@ -775,6 +768,16 @@ const PostDetailModal = ({
         deleteImageIds: deletedImageIds,
       };
       await postsApi.updatePost(post.id, updateData);
+
+      if (Object.keys(replacedImages).length > 0) {
+        setPostImageOverrides((current) => ({
+          postId: post.id,
+          images: {
+            ...(current.postId === post.id ? current.images : {}),
+            ...replacedImages,
+          },
+        }));
+      }
 
       setReplacementFiles({});
       setSelectedImages([]);
@@ -906,13 +909,18 @@ const PostDetailModal = ({
                     return;
                   }
 
-                  if (!ALLOWED_POST_IMAGE_TYPES.has(file.type)) {
+                  const invalidFile = files.find(
+                    (candidate) =>
+                      !ALLOWED_POST_IMAGE_TYPES.has(candidate.type) ||
+                      candidate.size > MAX_POST_IMAGE_SIZE,
+                  );
+                  if (invalidFile && !ALLOWED_POST_IMAGE_TYPES.has(invalidFile.type)) {
                     setPostUpdateError(
                       "JPEG, PNG 또는 WebP 파일만 업로드할 수 있습니다.",
                     );
                     return;
                   }
-                  if (file.size > MAX_POST_IMAGE_SIZE) {
+                  if (invalidFile) {
                     setPostUpdateError(
                       "이미지 파일은 10MB 이하만 업로드할 수 있습니다.",
                     );
