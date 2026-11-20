@@ -375,7 +375,8 @@ const PostDetailModal = ({
     const pendingReplacement = Object.entries(replacementFiles).find(
       ([, replacement]) =>
         replacement.currentUrl === imageUrl ||
-        replacement.previewUrl === imageUrl,
+        replacement.previewUrl === imageUrl ||
+        replacement.uploadedImage?.imageUrl === imageUrl,
     );
     if (!pendingReplacement) {
       return undefined;
