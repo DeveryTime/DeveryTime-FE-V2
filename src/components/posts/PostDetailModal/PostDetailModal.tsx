@@ -762,61 +762,71 @@ const PostDetailModal = ({
     );
     setIsPostSaving(true);
     try {
-      let nextContent = contentWithoutDeletedImages;
-      const replacedImages: Record<number, PostImage> = {};
-      for (const [imageIdString, replacement] of Object.entries(
-        replacementFiles,
-      )) {
-        const imageId = Number(imageIdString);
-        const image = postImages.find((postImage) => postImage.id === imageId);
-        if (!image) continue;
+      const replacementEntries = Object.entries(replacementFiles).map(
+        ([imageIdString, replacement]) => {
+          const imageId = Number(imageIdString);
+          const image = postImages.find((postImage) => postImage.id === imageId);
+          if (!image) {
+            throw new Error(`교체할 이미지 정보를 찾을 수 없습니다. (imageId: ${imageId})`);
+          }
+          return { imageId, image, replacement };
+        },
+      );
 
-        const replacedImage = await postsApi.replacePostImage(
-          post.id,
-          imageId,
-          replacement.file,
-        );
-        nextContent = [
-          replacement.currentUrl,
-          image.imageUrl,
-          ...(image.previousImageUrls ?? []),
-        ].reduce(
-          (content, imageUrl) =>
-            replaceImageUrlInMarkdown(
-              content,
-              imageUrl,
-              replacedImage.imageUrl,
-            ),
-          nextContent,
-        );
-        const currentImage =
-          (postImageOverrides.postId === post.id
-            ? postImageOverrides.images[imageId]
-            : undefined) ?? image;
-        replacedImages[imageId] = {
-          ...currentImage,
-          ...replacedImage,
-          previousImageUrls: [
-            ...new Set([
-              ...(currentImage.previousImageUrls ?? []),
-              currentImage.imageUrl,
-            ]),
-          ],
-        };
-      }
+      // 이미지 교체와 신규 업로드는 서로 독립적이므로 동시에 처리한다.
+      const [replacementResults, uploaded] = await Promise.all([
+        Promise.all(
+          replacementEntries.map(async ({ imageId, image, replacement }) => {
+            const result = await postsApi.replacePostImage(
+              post.id,
+              imageId,
+              replacement.file,
+            );
+            const currentImage =
+              (postImageOverrides.postId === post.id
+                ? postImageOverrides.images[imageId]
+                : undefined) ?? image;
+            return {
+              imageId,
+              image,
+              replacement,
+              result,
+              override: {
+                ...currentImage,
+                ...result,
+                previousImageUrls: [
+                  ...new Set([
+                    ...(currentImage.previousImageUrls ?? []),
+                    currentImage.imageUrl,
+                  ]),
+                ],
+              } satisfies PostImage,
+            };
+          }),
+        ),
+        selectedImages.length > 0
+          ? postsApi.uploadPostImages(post.id, selectedImages)
+          : Promise.resolve([]),
+      ]);
 
-      if (selectedImages.length > 0) {
-        const uploaded = await postsApi.uploadPostImages(
-          post.id,
-          selectedImages,
-        );
-        setUploadedImages((current) => [...current, ...uploaded]);
-        nextContent = appendImageMarkdown(
-          nextContent,
-          uploaded,
-          selectedImages,
-        );
-      }
+      let nextContent = replacementResults.reduce(
+        (content, { image, replacement, result }) =>
+          [
+            replacement.currentUrl,
+            image.imageUrl,
+            ...(image.previousImageUrls ?? []),
+          ].reduce(
+            (currentContent, imageUrl) =>
+              replaceImageUrlInMarkdown(
+                currentContent,
+                imageUrl,
+                result.imageUrl,
+              ),
+            content,
+          ),
+        contentWithoutDeletedImages,
+      );
+      nextContent = appendImageMarkdown(nextContent, uploaded, selectedImages);
 
       const updateData: UpdatePostRequest = {
         categoryId,
@@ -827,14 +837,23 @@ const PostDetailModal = ({
       };
       await postsApi.updatePost(post.id, updateData);
 
-      if (Object.keys(replacedImages).length > 0) {
+      if (replacementResults.length > 0) {
         setPostImageOverrides((current) => ({
           postId: post.id,
           images: {
             ...(current.postId === post.id ? current.images : {}),
-            ...replacedImages,
+            ...Object.fromEntries(
+              replacementResults.map(({ imageId, override }) => [
+                imageId,
+                override,
+              ]),
+            ),
           },
         }));
+      }
+
+      if (uploaded.length > 0) {
+        setUploadedImages((current) => [...current, ...uploaded]);
       }
 
       revokeReplacementPreviews(replacementFiles);
