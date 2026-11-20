@@ -86,6 +86,8 @@ const hasMeaningfulContent = (node: EditorNode): boolean => {
   return node.content?.some(hasMeaningfulContent) ?? false;
 };
 
+const MAX_IMAGE_COUNT = 3;
+
 const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [initialDraft] = useState(() => readPostWriteDraft(userId));
   const [categoryId, setCategoryId] = useState<PostCategoryId | "">(
@@ -304,9 +306,19 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       return;
     }
     const files = Array.from(event.currentTarget.files ?? []);
-    if (files.length > 0) {
-      setSelectedImages((current) => [...current, ...files]);
-    }
+    setSelectedImages((current) => {
+      const remainingCount = MAX_IMAGE_COUNT - current.length;
+      if (remainingCount <= 0) {
+        alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
+        return current;
+      }
+
+      const acceptedFiles = files.slice(0, remainingCount);
+      if (files.length > acceptedFiles.length) {
+        alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
+      }
+      return [...current, ...acceptedFiles];
+    });
     event.currentTarget.value = "";
   };
 
@@ -483,7 +495,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             hidden
             onChange={handleImageSelection}
           />
-          <S.ImageButton type="button" aria-label="이미지 파일 추가" onClick={() => imageInputRef.current?.click()} disabled={isSubmitting || postCreationCompleted}><IoImageOutline /></S.ImageButton>
+          <S.ImageButton type="button" aria-label="이미지 파일 추가" onClick={() => imageInputRef.current?.click()} disabled={isSubmitting || postCreationCompleted || selectedImages.length >= MAX_IMAGE_COUNT}><IoImageOutline /></S.ImageButton>
           <S.SubmitButton type="button" onClick={handleSubmit} disabled={isSubmitting || (postCreationCompleted && !createdPostId)}>
             {isSubmitting ? (postCreationCompleted ? "이미지 업로드 중..." : "게시 중...") : postCreationCompleted ? "이미지 다시 시도" : "게시"}
           </S.SubmitButton>
