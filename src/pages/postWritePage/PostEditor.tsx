@@ -81,6 +81,7 @@ const hasMeaningfulContent = (node: EditorNode): boolean => {
   return node.content?.some(hasMeaningfulContent) ?? false;
 };
 
+const MAX_IMAGE_COUNT = 3;
 const appendImageMarkdown = (
   content: string,
   images: UploadPostImageData[],
@@ -367,9 +368,19 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       return;
     }
     const files = Array.from(event.currentTarget.files ?? []);
-    if (files.length > 0) {
-      setSelectedImages((current) => [...current, ...files]);
-    }
+    setSelectedImages((current) => {
+      const remainingCount = MAX_IMAGE_COUNT - current.length;
+      if (remainingCount <= 0) {
+        alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
+        return current;
+      }
+
+      const acceptedFiles = files.slice(0, remainingCount);
+      if (files.length > acceptedFiles.length) {
+        alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
+      }
+      return [...current, ...acceptedFiles];
+    });
     event.currentTarget.value = "";
   };
 
