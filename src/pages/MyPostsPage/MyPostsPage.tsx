@@ -30,14 +30,13 @@ const formatPostDate = (dateString: string) => {
 
 const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   const navigate = useNavigate();
+  // 내가 작성한 게시글 목록과 상세 조회 상태를 관리한다.
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(
-    null,
-  );
+  const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const detailRequestId = useRef(0);
@@ -57,6 +56,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   };
 
   useEffect(() => {
+    // 현재 페이지의 내가 작성한 게시글을 조회한다.
     let isActive = true;
 
     const fetchMyPosts = async () => {
@@ -77,15 +77,13 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
         const nextTotalPages = Math.max(1, response.totalPages);
 
         setPosts(
-          response.content.map(
-            (post: PostListResponseItem, index: number) => ({
-              id: post.id,
-              number: responsePage * response.size + index + 1,
-              category: post.categoryName,
-              title: post.title,
-              createdAt: formatPostDate(post.createdAt),
-            }),
-          ),
+          response.content.map((post: PostListResponseItem, index: number) => ({
+            id: post.id,
+            number: responsePage * response.size + index + 1,
+            category: post.categoryName,
+            title: post.title,
+            createdAt: formatPostDate(post.createdAt),
+          })),
         );
         setTotalPages(nextTotalPages);
         setCurrentPage((page) => Math.min(page, nextTotalPages));
@@ -113,6 +111,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   }, [currentPage]);
 
   const handlePostClick = async (postId: number) => {
+    // 선택한 게시글의 상세 정보를 조회한다.
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -140,6 +139,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   };
 
   const handlePostDelete = async (postId: number) => {
+    // 삭제 성공 후 목록에서 해당 게시글을 제거한다.
     try {
       await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
@@ -153,11 +153,8 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
     }
   };
 
-  const handlePostUpdate = (
-    postId: number,
-    title: string,
-    content: string,
-  ) => {
+  const handlePostUpdate = (postId: number, title: string, content: string) => {
+    // 수정된 게시글 정보를 목록과 상세 모달에 반영한다.
     setPosts((currentPosts) =>
       currentPosts.map((post) =>
         post.id === postId ? { ...post, title } : post,
@@ -172,7 +169,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
     <S.PageContainer>
       <S.PageHeader>
         <S.BackButton type="button" aria-label="뒤로가기" onClick={handleBack}>
-          &lt; 뒤로 가기
+          &lt;
         </S.BackButton>
         <S.Title>내가 쓴 글</S.Title>
       </S.PageHeader>
@@ -200,7 +197,9 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
           게시글 상세 정보를 불러오는 중입니다...
         </S.StatusMessage>
       )}
-      {detailError && <S.ErrorMessage role="alert">{detailError}</S.ErrorMessage>}
+      {detailError && (
+        <S.ErrorMessage role="alert">{detailError}</S.ErrorMessage>
+      )}
 
       {selectedPost && (
         <PostDetailModal
@@ -208,7 +207,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
           post={selectedPost}
           currentUserId={selectedPost.writerId}
           isMyPost
-          isLikeEnabled={false}
+          isLikeEnabled={true}
           onClose={() => {
             detailRequestId.current += 1;
             setSelectedPost(null);

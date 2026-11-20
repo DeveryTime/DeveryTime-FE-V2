@@ -17,8 +17,18 @@ const updateMyProfile = async (
 ): Promise<UpdateProfileResponse> => {
   const formData = new FormData();
 
-  formData.append("username", request.username);
-  formData.append("deleteProfileImage", String(request.deleteProfileImage));
+  formData.append(
+    "request",
+    new Blob(
+      [
+        JSON.stringify({
+          username: request.username,
+          deleteProfileImage: request.deleteProfileImage,
+        }),
+      ],
+      {type: "application/json"},
+    ),
+  );
 
   if (request.profileImage) {
     formData.append("profileImage", request.profileImage);
@@ -27,9 +37,6 @@ const updateMyProfile = async (
   const response = await client.patch<UpdateProfileResponse>(
     "/users/me",
     formData,
-    {
-      headers: {"Content-Type": undefined}
-    },
   );
 
   return response.data;

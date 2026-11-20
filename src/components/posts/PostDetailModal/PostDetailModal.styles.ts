@@ -5,6 +5,54 @@ import Input from "../../common/Input/Input";
 import Modal from "../../common/Modal/Modal";
 
 const S = {
+  DeleteConfirmDialog: styled(Modal)`
+    width: min(610px, calc(100vw - 32px));
+    padding: 110px 44px 30px;
+    border-radius: 36px;
+
+    & > button:first-of-type {
+      display: none;
+    }
+
+  `,
+
+  DeleteConfirmTitle: styled.h2`
+    margin: 0 0 90px;
+    text-align: center;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 500;
+
+  `,
+
+  DeleteConfirmActions: styled.div`
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+  `,
+
+  DeleteConfirmButton: styled(Button)`
+    flex: 1;
+    max-width: 220px;
+    height: 64px;
+    border: 0;
+    border-radius: 25px;
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+  `,
+
+  DeleteCancelButton: styled.button`
+    flex: 1;
+    max-width: 220px;
+    height: 64px;
+    border: 2px solid #aaa;
+    border-radius: 25px;
+    background: white;
+    color: black;
+    font-size: 24px;
+    cursor: pointer;
+  `,
+
   DetailDialog: styled(Modal)`
     width: 875px;
     height: calc(100vh - 48px);
@@ -15,22 +63,56 @@ const S = {
     border: none;
     background-color: ${colors.gray[0]};
 
-    position: relative;
-    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    overflow: hidden !important;
 
-    &[open] {
-      display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
+    & > button:first-of-type {
+      display: none;
     }
+
+  `,
+
+  DetailFrame: styled.div`
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    overflow: hidden;
   `,
 
   ModalScrollArea: styled.div`
-    flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
 
     display: flex;
     flex-direction: column;
+  `,
+
+  DetailActionLayer: styled.div`
+    position: relative;
+    width: 100%;
+    height: 0;
+    flex: 0 0 0;
+    z-index: 100;
+    pointer-events: none;
+  `,
+
+  DetailCloseButton: styled.button`
+    position: absolute;
+    top: 15px;
+    right: 30px;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
   `,
 
   PostHeader: styled.header`
@@ -38,9 +120,6 @@ const S = {
     align-items: center;
     gap: 15px;
 
-    @media (max-width: 580px) {
-      gap: 10px;
-    }
   `,
 
   ProfileImage: styled.img`
@@ -56,13 +135,15 @@ const S = {
     margin-top: 35px;
     font-size: 32px;
     font-weight: 700;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
   `,
 
   PostContent: styled.div`
     margin-top: 40px;
     line-height: 1.6;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
 
     .tiptap > :first-child {
       margin-top: 0;
@@ -136,6 +217,32 @@ const S = {
     }
   `,
 
+  ImageItem: styled.div`
+    position: relative;
+    align-self: flex-start;
+    max-width: 100%;
+
+    &:hover button, &:focus-within button { opacity: 1; }
+  `,
+
+  ImageDeleteButton: styled.button<{ $alwaysVisible?: boolean }>`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    opacity: ${({ $alwaysVisible }) => ($alwaysVisible ? 1 : 0)};
+    transition: opacity 0.15s;
+    &:focus-visible { opacity: 1; }
+    &:disabled { cursor: not-allowed; }
+  `,
+
   ContentImage: styled.img`
     display: block;
     max-width: 100%;
@@ -151,7 +258,8 @@ const S = {
     flex-direction: column;
     gap: 4px;
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
   `,
   WriterName: styled.strong`
     font-weight: 600;
@@ -185,7 +293,7 @@ const S = {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 13px;
+    gap: 24px;
     border-top: 10px solid ${colors.gray[200]};
     margin-top: auto;
     padding-top: 9px;
@@ -196,7 +304,7 @@ const S = {
   LikeCount: styled.span`
     font-size: 20px;
     font-weight: 500;
-    padding-top: 3px;
+    line-height: 24px;
   `,
 
   LikeButton: styled.button`
@@ -209,30 +317,36 @@ const S = {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-left: 13px;
-    padding-top: 4px;
   `,
 
   CommentImage: styled.img`
-    padding-bottom: 2px;
-    padding-right: 2px;
+    width: 17px;
+    height: 17px;
   `,
 
   CommentCount: styled.span`
-    display: inline-block;
     font-size: 20px;
     font-weight: 500;
-    padding-bottom: 5px;
+    line-height: 24px;
   `,
 
   CommentList: styled.div`
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-height: 220px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     border-top: 1px solid ${colors.gray[200]};
   `,
 
   CommentItem: styled.article`
+    flex: 0 0 auto;
+    min-width: 0;
     padding: 10px;
     border-bottom: 1px solid ${colors.gray[200]};
     flex-direction: column;
@@ -244,6 +358,7 @@ const S = {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-width: 0;
     padding-left: 10px;
   `,
 
@@ -261,18 +376,42 @@ const S = {
     align-items: center;
     gap: 13px;
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
     font-size: 16px;
     font-weight: 700;
   `,
 
-  CommentBody: styled.p`
+  CommentBody: styled.div`
+    min-width: 0;
+    margin: 0;
     padding-top: 7px;
     padding-left: 13px;
     font-size: 18px;
+    overflow-wrap: break-word;
+    word-break: normal;
+    white-space: pre-wrap;
+
+    .tiptap {
+      min-width: 0;
+    }
+
+    .tiptap p {
+      margin: 0;
+    }
+
+    .tiptap img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 8px 0;
+      border-radius: 8px;
+    }
   `,
 
   CommentDateCreatedAt: styled.p`
+    flex-shrink: 0;
+    margin: 0;
     font-size: 18px;
     color: ${colors.gray[500]};
     font-weight: 500;
@@ -342,10 +481,8 @@ const S = {
   `,
 
   CommentMenuPopover: styled.div`
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
-    z-index: 30;
+    position: fixed;
+    z-index: 100;
 
     display: flex;
     flex-direction: column;
@@ -431,13 +568,14 @@ const S = {
   `,
 
   PostMenuArea: styled.div`
-    position: relative;
-    margin-left: auto;
-    margin-right: -16px;
-    flex-shrink: 0;
+    position: absolute;
+    top: 52px;
+    right: 24px;
+    z-index: 20;
 
     display: flex;
     align-items: center;
+    pointer-events: auto;
   `,
 
   PostEditForm: styled.div`
@@ -492,6 +630,7 @@ const S = {
   `,
 
   CommentComposer: styled.form`
+    flex: 0 0 auto;
     display: flex;
     gap: 8px;
     padding: 16px;

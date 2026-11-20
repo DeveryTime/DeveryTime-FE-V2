@@ -1,5 +1,12 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import {
+  EditorContent,
+  NodeViewWrapper,
+  ReactNodeViewRenderer,
+  useEditor,
+  useEditorState,
+  type ReactNodeViewProps,
+} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
@@ -7,21 +14,70 @@ import { Markdown } from "@tiptap/markdown";
 import S from "./MarkdownEditor.styles";
 import WriteStyles from "../../../pages/postWritePage/PostEditorStyle";
 import { IoImageOutline, IoLinkOutline } from "react-icons/io5";
+import deleteImageIcon from "../../../assets/delete-image.svg";
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (markdown: string) => void;
   disabled?: boolean;
   actions?: ReactNode;
+  onSelectImages: (files: File[], selectedImageUrl?: string) => void;
+  selectedImages: File[];
+  onRemoveImage: (index: number) => void;
+  onDeleteImage?: (imageUrl: string) => void;
 }
+
+type EditableImageViewProps = ReactNodeViewProps & {
+  onDeleteImage?: (imageUrl: string) => void;
+  onImageClick?: (imageUrl: string) => void;
+};
+
+const EditableImageView = ({
+  node,
+  deleteNode,
+  onDeleteImage,
+  onImageClick,
+}: EditableImageViewProps) => {
+  const imageUrl = typeof node.attrs.src === "string" ? node.attrs.src : "";
+
+  return (
+    <NodeViewWrapper className="editable-image-node">
+      <img
+        src={imageUrl}
+        alt={typeof node.attrs.alt === "string" ? node.attrs.alt : ""}
+        onClick={() => onImageClick?.(imageUrl)}
+      />
+      {onDeleteImage && (
+        <button
+          type="button"
+          aria-label="이미지 삭제"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            deleteNode();
+            onDeleteImage(imageUrl);
+          }}
+        >
+          <img src={deleteImageIcon} alt="" />
+        </button>
+      )}
+    </NodeViewWrapper>
+  );
+};
 
 const MarkdownEditor = ({
   value,
   onChange,
   disabled = false,
   actions,
+  onSelectImages,
+  selectedImages,
+  onRemoveImage,
+  onDeleteImage,
 }: MarkdownEditorProps) => {
   const latestValueRef = useRef(value);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const selectedImageUrlRef = useRef<string | null>(null);
+  const disabledRef = useRef(disabled);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -31,7 +87,21 @@ const MarkdownEditor = ({
         },
       }),
       Markdown,
-      Image,
+      Image.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer((props) => (
+            <EditableImageView
+              {...props}
+              onDeleteImage={onDeleteImage}
+              onImageClick={(imageUrl) => {
+                if (disabledRef.current) return;
+                selectedImageUrlRef.current = imageUrl;
+                imageInputRef.current?.click();
+              }}
+            />
+          ));
+        },
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     content: value,
@@ -60,9 +130,6 @@ const MarkdownEditor = ({
       isOrderedList: currentEditor.isActive("orderedList"),
       isBlockquote: currentEditor.isActive("blockquote"),
       isLink: currentEditor.isActive("link"),
-      isAlignLeft: currentEditor.isActive({ textAlign: "left" }),
-      isAlignCenter: currentEditor.isActive({ textAlign: "center" }),
-      isAlignRight: currentEditor.isActive({ textAlign: "right" }),
     }),
   });
 
@@ -83,6 +150,24 @@ const MarkdownEditor = ({
   useEffect(() => {
     editor?.setEditable(!disabled);
   }, [editor, disabled]);
+
+  useEffect(() => {
+    const imageInput = imageInputRef.current;
+    if (!imageInput) {
+      return;
+    }
+
+    const handleCancel = () => {
+      selectedImageUrlRef.current = null;
+    };
+
+    imageInput.addEventListener("cancel", handleCancel);
+    return () => imageInput.removeEventListener("cancel", handleCancel);
+  }, [editor]);
+
+  useLayoutEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
 
   if (!editor) {
     return null;
@@ -105,17 +190,6 @@ const MarkdownEditor = ({
     }
 
     editor.chain().focus().setLink({ href: url.trim() }).run();
-  };
-
-  //이미지 URL 입력 처리
-  const handleImage = () => {
-    const imageUrl = window.prompt("이미지 URL을 입력해주세요.");
-
-    if (!imageUrl?.trim()) {
-      return;
-    }
-
-    editor.chain().focus().setImage({ src: imageUrl.trim() }).run();
   };
 
   return (
@@ -160,16 +234,6 @@ const MarkdownEditor = ({
           onClick={() => editor.chain().focus().toggleStrike().run()}
         >
           <s>S</s>
-        </WriteStyles.ToolButton>
-        <WriteStyles.Divider />
-        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignLeft} aria-label="왼쪽 정렬" aria-pressed={toolbarState.isAlignLeft} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
-          <span aria-hidden="true">≡</span>
-        </WriteStyles.ToolButton>
-        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignCenter} aria-label="가운데 정렬" aria-pressed={toolbarState.isAlignCenter} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
-          <span aria-hidden="true">≡</span>
-        </WriteStyles.ToolButton>
-        <WriteStyles.ToolButton type="button" $active={toolbarState.isAlignRight} aria-label="오른쪽 정렬" aria-pressed={toolbarState.isAlignRight} disabled={disabled} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
-          <span aria-hidden="true">≡</span>
         </WriteStyles.ToolButton>
         <WriteStyles.Divider />
         <WriteStyles.ToolButton
@@ -217,8 +281,42 @@ const MarkdownEditor = ({
       <S.EditorArea>
         <EditorContent editor={editor} />
       </S.EditorArea>
+      {selectedImages.length > 0 && (
+        <WriteStyles.SelectedImageList aria-label="업로드할 이미지">
+          {selectedImages.map((file, index) => (
+            <WriteStyles.SelectedImageItem key={`${file.name}-${file.lastModified}-${index}`}>
+              <span>{file.name}</span>
+              <button type="button" aria-label={`${file.name} 제거`} disabled={disabled} onClick={() => onRemoveImage(index)}>×</button>
+            </WriteStyles.SelectedImageItem>
+          ))}
+        </WriteStyles.SelectedImageList>
+      )}
       <WriteStyles.Footer>
-        <WriteStyles.ImageButton type="button" aria-label="이미지 URL 추가" disabled={disabled} onClick={handleImage}>
+        <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden disabled={disabled} onChange={(event) => {
+          if (disabledRef.current) {
+            selectedImageUrlRef.current = null;
+            event.currentTarget.value = "";
+            return;
+          }
+
+          // 새 이미지 버튼과 기존 이미지 클릭은 서로 다른 API를 사용한다.
+          // 에디터의 현재 selection은 이미지에서 벗어나지 않을 수 있으므로
+          // `editor.isActive("image")`를 fallback으로 사용하면 새 이미지가
+          // 기존 이미지 교체로 잘못 분기될 수 있다.
+          const selectedImageUrl = selectedImageUrlRef.current ?? undefined;
+          selectedImageUrlRef.current = null;
+          onSelectImages(
+            Array.from(event.currentTarget.files ?? []),
+            selectedImageUrl,
+          );
+          event.currentTarget.value = "";
+        }} />
+        <WriteStyles.ImageButton type="button" aria-label="이미지 파일 추가" disabled={disabled} onClick={() => {
+          // 이미지 교체용 target이 남아 있어도 일반 추가 버튼은 항상
+          // POST /posts/{id}/images 경로를 사용해야 한다.
+          selectedImageUrlRef.current = null;
+          imageInputRef.current?.click();
+        }}>
           <IoImageOutline />
         </WriteStyles.ImageButton>
         {actions}

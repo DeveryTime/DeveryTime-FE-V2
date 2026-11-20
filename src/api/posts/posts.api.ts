@@ -4,16 +4,18 @@ import type { PostCommentListResponse } from "../comments/response/comments.resp
 import likesApi from "../likes/likes.api";
 import type { PostLikeData } from "../likes/likes.types";
 import type {
+  CreatePostRequest,
   GetMyPostsRequest,
   PostListParams,
   UpdatePostRequest,
-  UploadPostImageRequest,
 } from "./request/posts.request";
 import type {
+  CreatePostResponse,
   PostDetailResponse,
   PostListResponse,
+  ReplacePostImageResponse,
   UpdatePostResponse,
-  UploadPostImageResponse,
+  UploadPostImagesResponse,
 } from "./response/posts.response";
 import type { PostDetailData, PostListData } from "./posts.types";
 
@@ -39,6 +41,23 @@ const getPost = async (postId: number): Promise<PostDetailData> => {
   return response.data.data;
 };
 
+const createPost = async (request: CreatePostRequest): Promise<number> => {
+  const response = await client.post<CreatePostResponse>("/posts", request);
+  const body = response.data;
+  const postId =
+    "data" in body
+      ? typeof body.data === "number"
+        ? body.data
+        : body.data.id
+      : body.id;
+
+  if (!Number.isInteger(postId) || postId <= 0) {
+    throw new Error("게시글 생성 응답에 올바른 게시글 ID가 없습니다.");
+  }
+
+  return postId;
+};
+
 const likePost = (postId: number): Promise<PostLikeData> =>
   likesApi.likePost(postId);
 
@@ -52,19 +71,34 @@ const deletePost = async (postId: number): Promise<void> => {
   await client.delete(`/posts/${postId}`);
 };
 
-const uploadPostImage = async (
+const uploadPostImages = async (
   postId: number,
-  request: UploadPostImageRequest,
+  files: File[],
 ) => {
   const formData = new FormData();
 
-  formData.append("file", request.file);
-  formData.append("sortOrder", String(request.sortOrder ?? 0));
+  files.forEach((file) => formData.append("files", file));
 
-  const response = await client.post<UploadPostImageResponse>(
+  const response = await client.post<UploadPostImagesResponse>(
     `/posts/${postId}/images`,
     formData,
-    // The shared Axios client defaults to JSON; clear it so the browser can add the multipart boundary.
+    { headers: { "Content-Type": undefined } },
+  );
+
+  return response.data.data;
+};
+
+const replacePostImage = async (
+  postId: number,
+  imageId: number,
+  file: File,
+) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await client.put<ReplacePostImageResponse>(
+    `/posts/${postId}/images/${imageId}`,
+    formData,
     { headers: { "Content-Type": undefined } },
   );
 
@@ -87,11 +121,13 @@ const postsApi = {
   getPosts,
   getMyPosts,
   getPost,
+  createPost,
   likePost,
   unlikePost,
   getComments,
   deletePost,
-  uploadPostImage,
+  uploadPostImages,
+  replacePostImage,
   updatePost,
 };
 

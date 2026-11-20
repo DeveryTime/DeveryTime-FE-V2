@@ -41,7 +41,6 @@ const S = {
 
     backdrop-filter: blur(12px) saturate(151%);
     -webkit-backdrop-filter: blur(12px) saturate(151%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
   `,
 
   MovingCircleright: styled(motion.div)`
@@ -60,7 +59,6 @@ const S = {
 
     backdrop-filter: blur(12px) saturate(151%);
     -webkit-backdrop-filter: blur(18px) saturate(151%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
   `,
 
   LoginWrapper: styled.div`

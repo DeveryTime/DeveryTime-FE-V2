@@ -1,19 +1,25 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extensions";
 import { IoArrowBack, IoImageOutline, IoLinkOutline } from "react-icons/io5";
 import { Markdown } from "@tiptap/markdown";
 import axios from "axios";
-import client from "../../api/client";
+import type { Category } from "../../api/categories/categories.types";
+import { CATEGORIES } from "../../constants/categories";
 import postsApi from "../../api/posts/posts.api";
 import type { CreatePostRequest } from "../../api/posts/request/posts.request";
 import type {
-  CreatePostResponse,
-  UploadPostImageErrorResponse,
+  UploadPostImageData,
 } from "../../api/posts/response/posts.response";
 
 import S from "./PostEditorStyle";
@@ -23,20 +29,8 @@ interface PostEditorProps {
   onClose: () => void;
 }
 
-const POST_CATEGORIES = [
-  { id: 1, name: "전공" },
-  { id: 2, name: "일상" },
-  { id: 3, name: "교과" },
-  { id: 4, name: "급식" },
-  { id: 5, name: "프로젝트" },
-  { id: 6, name: "기숙사" },
-  { id: 7, name: "분실물" },
-] as const;
-
-type PostCategoryId = (typeof POST_CATEGORIES)[number]["id"];
-
 interface PostWriteDraft {
-  categoryId: PostCategoryId | "";
+  categoryId: number | "";
   title: string;
   content: JSONContent;
 }
@@ -64,7 +58,8 @@ const readPostWriteDraft = (userId: number): PostWriteDraft | null => {
       draft.content === null ||
       !("categoryId" in draft) ||
       (draft.categoryId !== "" &&
-        !POST_CATEGORIES.some((category) => category.id === draft.categoryId))
+        (typeof draft.categoryId !== "number" ||
+          !Number.isInteger(draft.categoryId)))
     ) {
       return null;
     }
@@ -87,12 +82,38 @@ const hasMeaningfulContent = (node: EditorNode): boolean => {
 };
 
 const MAX_IMAGE_COUNT = 3;
+const appendImageMarkdown = (
+  content: string,
+  images: UploadPostImageData[],
+  uploadedIndexes: number[],
+  files: File[],
+) => {
+  if (images.length === 0) return content;
+
+  const imageMarkdown = images
+    .map((image, index) => ({
+      image,
+      fileIndex: uploadedIndexes[index],
+    }))
+    .sort((a, b) => a.fileIndex - b.fileIndex)
+    .map(
+      ({ image, fileIndex }) =>
+        `![${(files[fileIndex]?.name ?? "첨부 이미지")
+          .replaceAll("\\", "\\\\")
+          .replaceAll("[", "\\[")
+          .replaceAll("]", "\\]")}](${image.imageUrl})`,
+    )
+    .join("\n\n");
+
+  return content ? `${content}\n\n${imageMarkdown}` : imageMarkdown;
+};
 
 const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [initialDraft] = useState(() => readPostWriteDraft(userId));
-  const [categoryId, setCategoryId] = useState<PostCategoryId | "">(
+  const [categoryId, setCategoryId] = useState<number | "">(
     initialDraft?.categoryId ?? "",
   );
+  const categories = CATEGORIES satisfies readonly Category[];
   const [title, setTitle] = useState(initialDraft?.title ?? "");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
@@ -101,7 +122,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdPostId, setCreatedPostId] = useState<number | null>(null);
   const [postCreationCompleted, setPostCreationCompleted] = useState(false);
-  const [uploadedImageIndexes, setUploadedImageIndexes] = useState<Set<number>>(() => new Set());
+  const [uploadedPostImages, setUploadedPostImages] = useState<
+    UploadPostImageData[]
+  >([]);
+  const [uploadedIndexes, setUploadedIndexes] = useState<number[]>([]);
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -113,7 +137,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
 
   const saveDraft = (draft: PostWriteDraft, draftUserId: number) => {
     try {
-      localStorage.setItem(getPostWriteDraftKey(draftUserId), JSON.stringify(draft));
+      localStorage.setItem(
+        getPostWriteDraftKey(draftUserId),
+        JSON.stringify(draft),
+      );
     } catch {
       // Draft storage is best-effort; it must not block navigation or submit success.
     }
@@ -132,7 +159,6 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         link: { openOnClick: false, autolink: true },
       }),
       Markdown,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image,
       Placeholder.configure({ placeholder: "내용을 입력해주세요." }),
     ],
@@ -150,7 +176,10 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   const handleBack = useCallback(() => {
     if (isSubmitting) return;
 
-    if (editor && (categoryId || title.trim() || hasMeaningfulContent(editor.getJSON()))) {
+    if (
+      editor &&
+      (categoryId || title.trim() || hasMeaningfulContent(editor.getJSON()))
+    ) {
       const draft: PostWriteDraft = {
         categoryId,
         title,
@@ -165,17 +194,31 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     onClose();
   }, [categoryId, editor, isSubmitting, onClose, title, userId]);
 
-  useEffect(() => () => {
-    if (hasSubmittedRef.current) return;
-    const latest = latestDraftRef.current;
-    const currentContent = latest.editor?.getJSON();
-    if (!currentContent) return;
-    if (latest.categoryId || latest.title.trim() || hasMeaningfulContent(currentContent)) {
-      saveDraft({ categoryId: latest.categoryId, title: latest.title, content: currentContent }, latest.userId);
-    } else {
-      removeDraft(latest.userId);
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      if (hasSubmittedRef.current) return;
+      const latest = latestDraftRef.current;
+      const currentContent = latest.editor?.getJSON();
+      if (!currentContent) return;
+      if (
+        latest.categoryId ||
+        latest.title.trim() ||
+        hasMeaningfulContent(currentContent)
+      ) {
+        saveDraft(
+          {
+            categoryId: latest.categoryId,
+            title: latest.title,
+            content: currentContent,
+          },
+          latest.userId,
+        );
+      } else {
+        removeDraft(latest.userId);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     backHandlerRef.current = handleBack;
@@ -262,16 +305,28 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     event.preventDefault();
     const selection = linkSelectionRef.current;
     const rawHref = linkHref.trim();
-    const href = /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(rawHref)
-      || rawHref.includes("://")
-      ? rawHref
-      : `https://${rawHref}`;
+    const href =
+      /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(rawHref) ||
+      rawHref.includes("://")
+        ? rawHref
+        : `https://${rawHref}`;
     if (!selection || !rawHref) return;
 
     if (selection.from !== selection.to) {
-      editor.chain().focus().setTextSelection({ from: selection.from, to: selection.to }).setLink({ href }).run();
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from: selection.from, to: selection.to })
+        .setLink({ href })
+        .run();
     } else if (isLinkActive) {
-      editor.chain().focus().setTextSelection(selection.from).extendMarkRange("link").setLink({ href }).run();
+      editor
+        .chain()
+        .focus()
+        .setTextSelection(selection.from)
+        .extendMarkRange("link")
+        .setLink({ href })
+        .run();
     } else {
       editor
         .chain()
@@ -293,9 +348,16 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     if (!selection) return;
     const chain = editor.chain().focus();
     if (isLinkActive) {
-      chain.setTextSelection(selection.from).extendMarkRange("link").unsetLink().run();
+      chain
+        .setTextSelection(selection.from)
+        .extendMarkRange("link")
+        .unsetLink()
+        .run();
     } else {
-      chain.setTextSelection({ from: selection.from, to: selection.to }).unsetLink().run();
+      chain
+        .setTextSelection({ from: selection.from, to: selection.to })
+        .unsetLink()
+        .run();
     }
     closeLinkDialog();
   };
@@ -326,7 +388,11 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
     if (isSubmitting) return;
 
     if (!postCreationCompleted) {
-      if (!categoryId) {
+      if (categoryId === "") {
+        alert("카테고리를 선택해주세요.");
+        return;
+      }
+      if (!categories.some((category) => category.id === categoryId)) {
         alert("카테고리를 선택해주세요.");
         return;
       }
@@ -347,19 +413,18 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       try {
         let postId = createdPostId;
         if (!postCreationCompleted) {
+          if (typeof categoryId !== "number") {
+            throw new Error("카테고리를 선택해주세요.");
+          }
+
+          const initialContent = editor.getMarkdown().trim();
           const createPostRequest: CreatePostRequest = {
             title: title.trim(),
-            content: editor.getMarkdown().trim(),
-            categoryId: categoryId as PostCategoryId,
-            status: "PUBLISHED",
+            content: initialContent,
+            categoryId,
+            status: selectedImages.length > 0 ? "DRAFT" : "PUBLISHED",
           };
-          const response = await client.post<CreatePostResponse>("/posts", createPostRequest);
-          const responseBody = response.data;
-          postId = "data" in responseBody
-            ? typeof responseBody.data === "number"
-              ? responseBody.data
-              : responseBody.data.id
-            : responseBody.id;
+          postId = await postsApi.createPost(createPostRequest);
 
           setPostCreationCompleted(true);
           hasSubmittedRef.current = true;
@@ -368,40 +433,82 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         }
 
         if (selectedImages.length > 0 && !postId) {
-          alert("게시글은 등록됐지만 응답에서 게시글 ID를 찾지 못해 이미지를 업로드하지 못했습니다. 게시글 중복 등록을 막기 위해 다시 등록하지 않습니다.");
+          alert(
+            "게시글은 등록됐지만 응답에서 게시글 ID를 찾지 못해 이미지를 업로드하지 못했습니다. 게시글 중복 등록을 막기 위해 다시 등록하지 않습니다.",
+          );
           return;
         }
 
-        let failedImageCount = 0;
-        let firstImageErrorMessage: string | undefined;
-        const uploadedIndexes = new Set(uploadedImageIndexes);
-        for (const [sortOrder, file] of selectedImages.entries()) {
-          if (uploadedIndexes.has(sortOrder)) continue;
-          try {
-            await postsApi.uploadPostImage(postId as number, { file, sortOrder });
-            uploadedIndexes.add(sortOrder);
-            setUploadedImageIndexes(new Set(uploadedIndexes));
-          } catch (error: unknown) {
-            failedImageCount += 1;
-            if (!firstImageErrorMessage && axios.isAxiosError<UploadPostImageErrorResponse>(error)) {
-              firstImageErrorMessage = error.response?.data?.error?.message;
-            }
+        let uploadedImages = uploadedPostImages;
+        let currentUploadedIndexes = uploadedIndexes;
+        const uploadedIndexSet = new Set(currentUploadedIndexes);
+        const pendingIndexes = selectedImages
+          .map((_, index) => index)
+          .filter((index) => !uploadedIndexSet.has(index));
+
+        if (pendingIndexes.length > 0) {
+          const newlyUploadedImages = await postsApi.uploadPostImages(
+            postId as number,
+            pendingIndexes.map((index) => selectedImages[index]),
+          );
+          if (newlyUploadedImages.length > pendingIndexes.length) {
+            throw new Error(
+              "이미지 업로드 응답이 요청한 파일 수와 일치하지 않습니다.",
+            );
+          }
+
+          const confirmedIndexes = pendingIndexes.slice(
+            0,
+            newlyUploadedImages.length,
+          );
+          uploadedImages = [...uploadedImages, ...newlyUploadedImages];
+          currentUploadedIndexes = [
+            ...currentUploadedIndexes,
+            ...confirmedIndexes,
+          ];
+          setUploadedPostImages(uploadedImages);
+          setUploadedIndexes(currentUploadedIndexes);
+
+          if (newlyUploadedImages.length !== pendingIndexes.length) {
+            throw new Error(
+              "일부 이미지 업로드에 실패했습니다. 다시 시도해주세요.",
+            );
           }
         }
 
-        if (failedImageCount > 0) {
-          const errorDetails = firstImageErrorMessage ? `\n${firstImageErrorMessage}` : "";
-          alert(`게시글은 등록됐지만 이미지 ${failedImageCount}장을 업로드하지 못했습니다. 게시글을 중복 생성하지 않고 실패한 이미지만 다시 시도할 수 있습니다.${errorDetails}`);
-          return;
+        if (selectedImages.length > 0) {
+          if (currentUploadedIndexes.length !== selectedImages.length) {
+            throw new Error(
+              "모든 이미지가 업로드되지 않아 게시글을 저장하지 못했습니다.",
+            );
+          }
+
+          await postsApi.updatePost(postId as number, {
+            categoryId: categoryId as number,
+            title: title.trim(),
+            content: appendImageMarkdown(
+              editor.getMarkdown().trim(),
+              uploadedImages,
+              currentUploadedIndexes,
+              selectedImages,
+            ),
+            status: "PUBLISHED",
+          });
         }
 
         alert("게시글이 작성되었습니다.");
         onClose();
       } catch (error: unknown) {
-        const message = axios.isAxiosError<{ error?: { message?: string } }>(error)
+        const message = axios.isAxiosError<{ error?: { message?: string } }>(
+          error,
+        )
           ? error.response?.data?.error?.message
-          : undefined;
-        alert(message ?? "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+          : error instanceof Error
+            ? error.message
+            : undefined;
+        alert(
+          message ?? "게시글 작성에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        );
       } finally {
         setIsSubmitting(false);
       }
@@ -409,9 +516,11 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
   };
 
   return (
-    <S.ModalOverlay onMouseDown={(event) => {
-      if (event.target === event.currentTarget) handleBack();
-    }}>
+    <S.ModalOverlay
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) handleBack();
+      }}
+    >
       <S.EditorWrapper
         ref={dialogRef}
         role="dialog"
@@ -421,7 +530,12 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       >
         <S.Header>
           <S.Title id="post-editor-title">글쓰기</S.Title>
-          <S.BackButton type="button" aria-label="뒤로가기" onClick={handleBack} disabled={isSubmitting}>
+          <S.BackButton
+            type="button"
+            aria-label="뒤로가기"
+            onClick={handleBack}
+            disabled={isSubmitting}
+          >
             <IoArrowBack />
           </S.BackButton>
         </S.Header>
@@ -431,11 +545,15 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           <S.CategorySelect
             id="post-category"
             value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value === "" ? "" : (Number(event.target.value) as PostCategoryId))}
+            onChange={(event) =>
+              setCategoryId(
+                event.target.value === "" ? "" : Number(event.target.value),
+              )
+            }
             disabled={isSubmitting || postCreationCompleted}
           >
             <option value="">카테고리를 선택해주세요</option>
-            {POST_CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
@@ -453,32 +571,92 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
         />
 
         <S.Toolbar>
-          <S.ToolButton type="button" $active={editor.isActive("bold")} aria-label="굵게" onClick={() => editor.chain().focus().toggleBold().run()}><strong>B</strong></S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive("italic")} aria-label="기울임" onClick={() => editor.chain().focus().toggleItalic().run()}><em>I</em></S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive("underline")} aria-label="밑줄" onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive("strike")} aria-label="취소선" onClick={() => editor.chain().focus().toggleStrike().run()}><s>S</s></S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("bold")}
+            aria-label="굵게"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            <strong>B</strong>
+          </S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("italic")}
+            aria-label="기울임"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <em>I</em>
+          </S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("underline")}
+            aria-label="밑줄"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+          >
+            <u>U</u>
+          </S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("strike")}
+            aria-label="취소선"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <s>S</s>
+          </S.ToolButton>
           <S.Divider />
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "left" })} aria-label="왼쪽 정렬" onClick={() => editor.chain().focus().setTextAlign("left").run()}>≡</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "center" })} aria-label="가운데 정렬" onClick={() => editor.chain().focus().setTextAlign("center").run()}>≡</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive({ textAlign: "right" })} aria-label="오른쪽 정렬" onClick={() => editor.chain().focus().setTextAlign("right").run()}>≡</S.ToolButton>
-          <S.Divider />
-          <S.ToolButton type="button" $active={editor.isActive("bulletList")} aria-label="글머리 기호 목록" onClick={() => editor.chain().focus().toggleBulletList().run()}>•</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive("orderedList")} aria-label="번호 목록" onClick={() => editor.chain().focus().toggleOrderedList().run()}>1.</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive("blockquote")} aria-label="인용" onClick={() => editor.chain().focus().toggleBlockquote().run()}>❝</S.ToolButton>
-          <S.ToolButton type="button" $active={editor.isActive("link")} aria-label="링크 추가" onClick={handleLink}><IoLinkOutline /></S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("bulletList")}
+            aria-label="글머리 기호 목록"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            •
+          </S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("orderedList")}
+            aria-label="번호 목록"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          >
+            1.
+          </S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("blockquote")}
+            aria-label="인용"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          >
+            ❝
+          </S.ToolButton>
+          <S.ToolButton
+            type="button"
+            $active={editor.isActive("link")}
+            aria-label="링크 추가"
+            onClick={handleLink}
+          >
+            <IoLinkOutline />
+          </S.ToolButton>
         </S.Toolbar>
 
-        <S.ContentArea><EditorContent editor={editor} /></S.ContentArea>
+        <S.ContentArea>
+          <EditorContent editor={editor} />
+        </S.ContentArea>
         {selectedImages.length > 0 && (
           <S.SelectedImageList aria-label="업로드할 이미지">
             {selectedImages.map((file, index) => (
-              <S.SelectedImageItem key={`${file.name}-${file.lastModified}-${index}`}>
+              <S.SelectedImageItem
+                key={`${file.name}-${file.lastModified}-${index}`}
+              >
                 <span>{file.name}</span>
                 <button
                   type="button"
                   aria-label={`${file.name} 제거`}
                   disabled={isSubmitting || postCreationCompleted}
-                  onClick={() => setSelectedImages((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                  onClick={() =>
+                    setSelectedImages((current) =>
+                      current.filter((_, itemIndex) => itemIndex !== index),
+                    )
+                  }
                 >
                   ×
                 </button>
@@ -495,9 +673,26 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             hidden
             onChange={handleImageSelection}
           />
-          <S.ImageButton type="button" aria-label="이미지 파일 추가" onClick={() => imageInputRef.current?.click()} disabled={isSubmitting || postCreationCompleted || selectedImages.length >= MAX_IMAGE_COUNT}><IoImageOutline /></S.ImageButton>
-          <S.SubmitButton type="button" onClick={handleSubmit} disabled={isSubmitting || (postCreationCompleted && !createdPostId)}>
-            {isSubmitting ? (postCreationCompleted ? "이미지 업로드 중..." : "게시 중...") : postCreationCompleted ? "이미지 다시 시도" : "게시"}
+          <S.ImageButton
+            type="button"
+            aria-label="이미지 파일 추가"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isSubmitting || postCreationCompleted}
+          >
+            <IoImageOutline />
+          </S.ImageButton>
+          <S.SubmitButton
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting || (postCreationCompleted && !createdPostId)}
+          >
+            {isSubmitting
+              ? postCreationCompleted
+                ? "이미지 업로드 중..."
+                : "게시 중..."
+              : postCreationCompleted
+                ? "이미지 다시 시도"
+                : "게시"}
           </S.SubmitButton>
         </S.Footer>
       </S.EditorWrapper>
@@ -521,11 +716,17 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
             />
             <S.LinkDialogActions>
               {isLinkActive && (
-                <button type="button" onClick={handleLinkRemove}>링크 제거</button>
+                <button type="button" onClick={handleLinkRemove}>
+                  링크 제거
+                </button>
               )}
               <span />
-              <button type="button" onClick={closeLinkDialog}>취소</button>
-              <button type="submit" disabled={!linkHref.trim()}>적용</button>
+              <button type="button" onClick={closeLinkDialog}>
+                취소
+              </button>
+              <button type="submit" disabled={!linkHref.trim()}>
+                적용
+              </button>
             </S.LinkDialogActions>
           </S.LinkDialog>
         </S.LinkDialogOverlay>

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
+import PostTableSkeleton from "../../components/posts/PostTable/PostTableSkeleton";
+import PostDetailSkeleton from "../../components/posts/PostDetailSkeleton";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import type {
   PostDetailData,
@@ -197,7 +199,7 @@ const PostMainPage = ({ currentUserId, isProfileLoading }: PostMainPageProps) =>
           </S.WriteButton>
         </S.ContentHeader>
 
-        {isLoading && <p>게시글을 불러오는 중입니다...</p>}
+        {isLoading && <PostTableSkeleton />}
         {error && <p role="alert">{error}</p>}
 
         {!isLoading && !error && (
@@ -208,7 +210,7 @@ const PostMainPage = ({ currentUserId, isProfileLoading }: PostMainPageProps) =>
           )
         )}
 
-        {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
+        {isDetailLoading && <PostDetailSkeleton />}
         {detailError && <p role="alert">{detailError}</p>}
 
         {/* 게시글을 선택했을 때만 상세 모달을 표시한다. */}

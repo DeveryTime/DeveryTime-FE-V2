@@ -107,6 +107,40 @@ const S = {
       margin: 16px 0;
       border-radius: 8px;
     }
+
+    .editable-image-node {
+      position: relative;
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .editable-image-node > img {
+      margin: 16px 0;
+    }
+
+    .editable-image-node > button {
+      position: absolute;
+      top: 24px;
+      right: 8px;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      padding: 5px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+
+    .editable-image-node > button img {
+      width: 22px;
+      height: 22px;
+      margin: 0;
+    }
   `,
 };
 

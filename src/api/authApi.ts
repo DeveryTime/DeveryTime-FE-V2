@@ -1,4 +1,5 @@
 import client from "./client";
+import { getRefreshToken } from "./authSession";
 import type {
   CheckUsernameResponse,
   LoginRequest,
@@ -70,6 +71,13 @@ export const reissueTokenApi = async (
     "/auth/reissue",
     request,
   );
+
+  // Do not restore a session if logout or a different login happened while
+  // this refresh request was in flight.
+  if (getRefreshToken() !== request.refreshToken) {
+    throw new Error("인증 세션이 변경되어 토큰을 저장하지 않았습니다.");
+  }
+
   saveTokens(response.data.data.accessToken, response.data.data.refreshToken);
   return response.data;
 };
