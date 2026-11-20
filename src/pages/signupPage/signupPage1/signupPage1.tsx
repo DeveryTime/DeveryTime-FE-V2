@@ -47,8 +47,8 @@ const SignupPage1 = () => {
       return;
     }
 
-    if (username.length > 10) {
-      alert("아이디는 10자 이하로 입력해주세요.");
+    if (username.length > 20) {
+      alert("아이디는 20자 이하로 입력해주세요.");
       return;
     }
 
@@ -97,6 +97,7 @@ const SignupPage1 = () => {
           <InputBox
             placeholder="아이디"
             ariaLabel="아이디"
+            maxLength={20}
             value={username}
             onChange={(e) => {
               const value = e.target.value;
