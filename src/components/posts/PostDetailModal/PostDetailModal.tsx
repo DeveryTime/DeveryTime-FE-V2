@@ -2,6 +2,7 @@ import {
   useState,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   type ChangeEvent,
   type FormEvent,
@@ -143,14 +144,6 @@ const transformMarkdownImageNodes = (
   const document = manager.parse(content);
 
   return manager.serialize(updateImageNodes(document, updateSrc));
-};
-
-const removeDeletedImageMarkdown = (content: string, imageUrls: string[]) => {
-  const deletedUrls = new Set(imageUrls);
-
-  return transformMarkdownImageNodes(content, (src) =>
-    deletedUrls.has(src) ? null : src,
-  );
 };
 
 const replaceImageUrlInMarkdown = (
@@ -352,7 +345,11 @@ const PostDetailModal = ({
     post.images?.length > 0
       ? post.images
       : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
-  const postImages = sourcePostImages.map((image) => {
+  const imageMap = new Map<number | string, PostImage>();
+  for (const image of [...uploadedImages, ...sourcePostImages]) {
+    imageMap.set(image.id ?? image.imageUrl, image);
+  }
+  const postImages = [...imageMap.values()].map((image) => {
     if (image.id === undefined || postImageOverrides.postId !== post.id) {
       return image;
     }
@@ -393,15 +390,8 @@ const PostDetailModal = ({
     ...savedDeletedImageUrls,
   ]);
 
-  // 게시글 응답과 업로드 직후 상태에 같은 이미지가 함께 있을 수 있으므로 ID 기준으로 합친다.
-  const imageMap = new Map<string, PostImage>();
-  [...postImages, ...uploadedImages].forEach((image) => {
-    const key = image.id === undefined ? `url:${image.imageUrl}` : `id:${image.id}`;
-    imageMap.set(key, image);
-  });
-
   // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
-  const visibleImages = [...imageMap.values()].filter(
+  const visibleImages = postImages.filter(
     (image) =>
       !hiddenImageUrls.has(image.imageUrl) &&
       (image.id === undefined || !hiddenImageIds.has(image.id)),
@@ -410,24 +400,28 @@ const PostDetailModal = ({
   // 본문에 포함된 이미지는 별도 목록에서 중복 표시하지 않는다.
   const contentForImageVisibility = isPostEditing
     ? editingPostContent
-    : displayedPostContent;
-  const visibleStandaloneImages = visibleImages.filter(
-    (image) => {
-      const pendingReplacement =
-        image.id === undefined ? undefined : replacementFiles[image.id];
-      const isRenderedInContent =
-        contentForImageVisibility.includes(image.imageUrl) ||
-        Boolean(
-          pendingReplacement &&
-            contentForImageVisibility.includes(pendingReplacement.previewUrl),
-        ) ||
-        (image.previousImageUrls ?? []).some((url) =>
-          contentForImageVisibility.includes(url),
-        );
-
-      return !isRenderedInContent;
-    },
-  );
+    : normalizeDisplayText(displayedPostContent);
+  const bodyImageUrls = useMemo(() => {
+    const urls = new Set<string>();
+    if (!contentForImageVisibility.includes("![")) return urls;
+    const manager = new MarkdownManager({ extensions: MARKDOWN_IMAGE_EXTENSIONS });
+    updateImageNodes(manager.parse(contentForImageVisibility), (url) => {
+      urls.add(url);
+      return url;
+    });
+    return urls;
+  }, [contentForImageVisibility]);
+  const standaloneUrls = new Set<string>();
+  const visibleStandaloneImages = visibleImages.flatMap((image) => {
+    const replacement = image.id === undefined ? undefined : replacementFiles[image.id];
+    const src = replacement?.uploadedImage?.imageUrl ?? replacement?.previewUrl ?? image.imageUrl;
+    const aliases = [src, image.imageUrl, ...(image.previousImageUrls ?? [])];
+    if (aliases.some((url) => bodyImageUrls.has(url)) || standaloneUrls.has(src)) {
+      return [];
+    }
+    standaloneUrls.add(src);
+    return [{ image, src }];
+  });
   const openComment = comments.find(
     (comment) => comment.id === openCommentMenuId,
   );
@@ -764,10 +758,7 @@ const PostDetailModal = ({
     const deletedImageUrlsFromIds = (post.images ?? [])
       .filter((image) => deletedImageIds.includes(image.id))
       .map((image) => image.imageUrl);
-    const contentWithoutDeletedImages = removeDeletedImageMarkdown(
-      trimmedPostContent,
-      [...new Set([...deletedContentImageUrls, ...deletedImageUrlsFromIds])],
-    );
+    const deletedUrls = new Set([...deletedContentImageUrls, ...deletedImageUrlsFromIds]);
     setIsPostSaving(true);
     try {
       const replacementEntries = Object.entries(replacementFiles).map(
@@ -809,23 +800,30 @@ const PostDetailModal = ({
           ? await postsApi.uploadPostImages(post.id, selectedImages)
           : [];
 
-      let nextContent = replacementEntries.reduce(
-        (content, { image, replacement, result }) =>
-          [
-            replacement.currentUrl,
-            image.imageUrl,
-            ...(image.previousImageUrls ?? []),
-          ].reduce(
-            (currentContent, imageUrl) =>
-              replaceImageUrlInMarkdown(
-                currentContent,
-                imageUrl,
-                result.imageUrl,
-              ),
-            content,
-          ),
-        contentWithoutDeletedImages,
-      );
+      const replacementUrls = new Map<string, string>();
+      for (const { image, replacement, result } of replacementEntries) {
+        for (const url of [
+          image.imageUrl,
+          ...(image.previousImageUrls ?? []),
+          replacement.currentUrl,
+          replacement.previewUrl,
+          result.imageUrl,
+        ]) {
+          replacementUrls.set(url, result.imageUrl);
+        }
+      }
+      const seenReplacements = new Set<string>();
+      let nextContent = trimmedPostContent;
+      if (deletedUrls.size > 0 || replacementUrls.size > 0) {
+        nextContent = transformMarkdownImageNodes(nextContent, (url) => {
+          if (deletedUrls.has(url)) return null;
+          const replacementUrl = replacementUrls.get(url);
+          if (replacementUrl === undefined) return url;
+          if (seenReplacements.has(replacementUrl)) return null;
+          seenReplacements.add(replacementUrl);
+          return replacementUrl;
+        });
+      }
       nextContent = appendImageMarkdown(nextContent, uploaded, selectedImages);
 
       const updateData: UpdatePostRequest = {
@@ -1137,15 +1135,10 @@ const PostDetailModal = ({
           )}
           {visibleStandaloneImages.length > 0 && (
             <S.ImageList>
-              {visibleStandaloneImages.map((image, index) => (
-                <S.ImageItem key={`${image.imageUrl}-${index}`}>
+              {visibleStandaloneImages.map(({ image, src }) => (
+                <S.ImageItem key={image.id ?? src}>
                   <S.ContentImage
-                    src={
-                      image.id === undefined
-                        ? image.imageUrl
-                        : replacementFiles[image.id]?.previewUrl ??
-                          image.imageUrl
-                    }
+                    src={src}
                     alt={`${displayedPostTitle} 첨부된 이미지`}
                   />
                   {isPostEditing && (
