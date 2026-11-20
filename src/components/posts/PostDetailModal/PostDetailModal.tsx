@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { isAxiosError } from "axios";
 import {
   autoUpdate,
   computePosition,
@@ -30,6 +31,7 @@ import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
 import type { PostComment, PostDetailData } from "../../../types/posts.types";
 import type { UpdatePostRequest } from "../../../api/posts/request/posts.request";
+import type { UploadPostImageErrorResponse } from "../../../api/posts/response/posts.response";
 import type { ProfileData } from "../../../api/profile/profile.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
@@ -65,6 +67,8 @@ type PendingImageReplacement = {
   uploadedImage?: { id: number; imageUrl: string; sortOrder?: number };
 };
 
+const MAX_POST_IMAGE_COUNT = 3;
+const POST_IMAGE_LIMIT_MESSAGE = "게시글에는 이미지를 최대 3장까지 첨부할 수 있습니다.";
 const MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_POST_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -870,7 +874,14 @@ const PostDetailModal = ({
       setDisplayedPostContent(updateData.content);
       onUpdate?.(post.id, trimmedPostTitle, updateData.content);
       setIsPostEditing(false);
-    } catch {
+    } catch (error) {
+      if (
+        isAxiosError<UploadPostImageErrorResponse>(error) &&
+        error.response?.data?.error?.code === "POST_IMAGE_LIMIT_EXCEEDED"
+      ) {
+        window.alert(POST_IMAGE_LIMIT_MESSAGE);
+        return;
+      }
       setPostUpdateError(
         "이미지 교체 또는 게시글 저장에 실패했습니다. 다시 시도해주세요.",
       );
@@ -982,6 +993,15 @@ const PostDetailModal = ({
                 onSelectImages={async (files, selectedImageUrl) => {
                   const file = files[0];
                   if (!file) {
+                    return;
+                  }
+
+                  if (
+                    !selectedImageUrl &&
+                    visibleImages.length + selectedImages.length + files.length >
+                      MAX_POST_IMAGE_COUNT
+                  ) {
+                    window.alert(POST_IMAGE_LIMIT_MESSAGE);
                     return;
                   }
 
