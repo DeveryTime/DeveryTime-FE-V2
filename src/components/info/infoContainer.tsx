@@ -76,7 +76,7 @@ const InfoContainer = () => {
       {/* 제목과 이동 화살표 */}
       <S.SectionTitle>
         <p>내가 쓴 글</p>
-        <S.Arrow src={arrowIcon} alt="이동"onClick={() => navigate("/mypostsPage")} />
+        <S.Arrow src={arrowIcon} alt="이동" onClick={() => navigate("/mypostsPage")} />
       </S.SectionTitle>
 
       {/* 게시글 목록 */}

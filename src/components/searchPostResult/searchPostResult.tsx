@@ -6,6 +6,7 @@ import {
 } from "react-icons/fi";
 import S from "./searchPostResult.style";
 import type {SearchPost} from "../../types/search.types.ts";
+import { normalizeDisplayText } from "../../utils/normalizeDisplayText";
 
 // 검색 결과 컴포넌트 Props
 interface SearchPostResultProps {
@@ -80,10 +81,10 @@ export function SearchPostResult({
                     type="button"
                     onClick={() => onPostClick(post.id)}
                   >
-                    {post.title}
+                    {normalizeDisplayText(post.title)}
                   </S.TitleButton>
                 ) : (
-                  post.title
+                  normalizeDisplayText(post.title)
                 )}
               </S.TableCell>
 

@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
 import colors from "../../../styles/tokens/colors";
+import InputBoxStyle from "../../../components/loginPage/inputBox/InputBoxStyle";
 
 const Signup2S = {
   SignupWrapper: styled.div`
@@ -23,7 +24,9 @@ const Signup2S = {
     padding: 30px;
     background-color: #ffffff;
     gap: 40px;
-    box-shadow: 6px 4px 12px 8px #00000040;
+    box-sizing: border-box;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.12);
     border-radius: 15px;
   `,
 
@@ -68,20 +71,8 @@ const Signup2S = {
     border-bottom: 2px solid #6f6f6f;
   `,
 
-  EmailInput: styled.input`
-    width: 100%;
-    height: 64px;
-    box-sizing: border-box;
-    padding: 0 135px 0 0;
-    border: none;
-    outline: none;
-    color: #333333;
-    font-family: Pretendard;
-    font-size: 24px;
-
-    &::placeholder {
-      color: #6f6f6f;
-    }
+  EmailInput: styled(InputBoxStyle.Input)`
+    padding-right: 135px;
   `,
 
   VerifyButton: styled.button`
@@ -122,26 +113,8 @@ VerificationArea: styled.div`
   transform: translateY(30px);
 `,
 
-  VerificationInput: styled.input`
-    width: 100%;
-    height: 64px;
-    box-sizing: border-box;
-    padding: 0 80px 0 0;
-    border: none;
-    outline: none;
-    color: #333333;
-    font-family: Pretendard;
-    font-size: 24px;
-
-    &::placeholder {
-      color: #6f6f6f;
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${colors.blue[400]};
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
+  VerificationInput: styled(InputBoxStyle.Input)`
+    padding-right: 80px;
   `,
 
   Timer: styled.div`

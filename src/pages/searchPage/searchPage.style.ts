@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 export const S = {
   // 전체 페이지
   PageContainer: styled.div`
-    max-width: 1000px;
+      width: min(1479px, calc(100% - 48px));
     margin: 0 auto;
     padding: 40px 20px;
   `,

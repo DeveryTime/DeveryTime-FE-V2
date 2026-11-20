@@ -1,26 +1,31 @@
-import {useEffect, useState, useRef} from "react";
-import postsApi from "../../api/posts/posts.api.ts";
-import type { PostDetailData } from "../../types/posts.types.ts"
-import {useSearchParams} from "react-router-dom";
-import {useNavigate} from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import S from "./searchPage.style";
 import { SearchPostResult } from "../../components/searchPostResult/searchPostResult";
-import type {SearchPost} from "../../types/search.types.ts";
-import {searchApi} from "../../api/search/search.api.ts";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal.tsx";
-import {hasStoredAccessToken} from "../../api/authSession.ts";
+import PostDetailSkeleton from "../../components/posts/PostDetailSkeleton.tsx";
+import type { PostDetailData } from "../../types/posts.types.ts";
+import type { SearchPost } from "../../types/search.types.ts";
+import { searchApi } from "../../api/search/search.api.ts";
+import postsApi from "../../api/posts/posts.api.ts";
+import { hasStoredAccessToken } from "../../api/authSession.ts";
 import profileApi from "../../api/profile/profile.api.ts";
 
 const PAGE_SIZE = 10;
 
 export function SearchPage() {
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const keyword = searchParams.get("keyword") || "";
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(hasStoredAccessToken);
 
   useEffect(() => {
     let isActive = true;
-    if (!hasStoredAccessToken()) return;
+
+    if (!hasStoredAccessToken()) {
+      return;
+    }
+
     const fetchCurrentUser = async () => {
       try {
         const profile = await profileApi.getMyProfile();
@@ -28,53 +33,68 @@ export function SearchPage() {
           setCurrentUserId(profile.id);
         }
       } catch {
+        return;
       } finally {
-        if (isActive) setIsProfileLoading(false);
+        if (isActive) {
+          setIsProfileLoading(false);
+        }
       }
     };
+
     void fetchCurrentUser();
+
     return () => {
       isActive = false;
     };
   }, []);
-  // URL의 검색어 가져오기
-  const [searchParams] = useSearchParams();
-  const keyword = searchParams.get("keyword") || "";
 
-  // 현재 페이지 상태
+  return (
+    <SearchResults
+      key={keyword}
+      keyword={keyword}
+      currentUserId={currentUserId}
+      isProfileLoading={isProfileLoading}
+    />
+  );
+}
+
+interface SearchResultsProps {
+  keyword: string;
+  currentUserId: number | null;
+  isProfileLoading: boolean;
+}
+
+function SearchResults({
+  keyword,
+  currentUserId,
+  isProfileLoading,
+}: SearchResultsProps) {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-
-  // 검색 결과 데이터
   const [posts, setPosts] = useState<SearchPost[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-
   const [selectedPost, setSelectedPost] = useState<PostDetailData | null>(null);
-const [isDetailLoading, setIsDetailLoading] = useState(false);
-const [detailError, setDetailError] = useState<string | null>(null);
-const detailRequestId = useRef(0)
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const detailRequestId = useRef(0);
 
   useEffect(() => {
-    setCurrentPage(1);
-  },[keyword]);
-
-  useEffect(() => {
-    if(!keyword) {
-      setTotalPages(1);
-      setTotalElements(0);
-      setPosts([]);
+    if (!keyword) {
       return;
     }
+
     const controller = new AbortController();
 
     searchApi(
       {
         keyword,
-        page: currentPage - 1, // 서버는 0부터 시작
+        page: currentPage - 1,
         size: PAGE_SIZE,
         sort: "createdAt,desc",
       },
-      controller.signal, )
+      controller.signal,
+    )
       .then((res) => {
         if (!res.success) {
           setPosts([]);
@@ -82,43 +102,58 @@ const detailRequestId = useRef(0)
           setTotalElements(0);
           return;
         }
-        const {content,totalPages} = res.data.posts;
+
+        const { content, totalElements: resultCount, totalPages: resultPages } =
+          res.data.posts;
         setPosts(content);
-        setTotalPages(Math.max(totalPages,1));
+        setTotalPages(Math.max(resultPages, 1));
+        setTotalElements(resultCount);
       })
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        console.error(err);
+      .catch((error) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error(error);
         setPosts([]);
         setTotalPages(1);
         setTotalElements(0);
       });
+
     return () => controller.abort();
   }, [keyword, currentPage]);
 
   const handlePostClick = async (postId: number) => {
-    if(!hasStoredAccessToken()) {
+    if (!hasStoredAccessToken()) {
       navigate("/login");
       return;
     }
+
     if (currentUserId === null) {
       setDetailError(
         isProfileLoading
-        ? "사용자 정보를 확인하는 중입니다. 잠시 후 다시 시도해 주세요."
-          : "사용자 정보를 불러오지 못했습니다. 다시 로그인해 주세요."
+          ? "사용자 정보를 확인하는 중입니다. 잠시 후 다시 시도해 주세요."
+          : "사용자 정보를 불러오지 못했습니다. 다시 로그인해 주세요.",
       );
       return;
     }
+
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
 
     try {
       const postDetail = await postsApi.getPost(postId);
-      if (requestId !== detailRequestId.current) return;
+      if (requestId !== detailRequestId.current) {
+        return;
+      }
+
       setSelectedPost(postDetail);
     } catch {
-      if (requestId !== detailRequestId.current) return;
+      if (requestId !== detailRequestId.current) {
+        return;
+      }
+
       setDetailError("게시글 상세 정보를 불러오지 못했습니다.");
     } finally {
       if (requestId === detailRequestId.current) {
@@ -154,6 +189,7 @@ const detailRequestId = useRef(0)
         : currentPost,
     );
   };
+
   return (
     <S.PageContainer>
       <S.Title>'{keyword}' 검색 결과</S.Title>
@@ -169,12 +205,11 @@ const detailRequestId = useRef(0)
           pageSize={PAGE_SIZE}
         />
       ) : (
-        // 검색 결과가 없으면 안내 문구 표시
         <S.EmptyMessage role="status">
           '{keyword}'에 대한 검색 결과가 없습니다.
         </S.EmptyMessage>
       )}
-      {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
+      {isDetailLoading && <PostDetailSkeleton />}
       {detailError && <p role="alert">{detailError}</p>}
 
       {selectedPost && currentUserId !== null && (

@@ -9,6 +9,11 @@ export const GlobalStyle = () => (
         box-sizing: border-box;
       }
 
+      html,
+      body {
+        background-color: #fff;
+      }
+
       body {
         font-family: Pretendard, sans-serif;
       }

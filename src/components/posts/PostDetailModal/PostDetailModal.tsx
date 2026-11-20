@@ -2,26 +2,46 @@ import {
   useState,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { createPortal } from "react-dom";
+import { isAxiosError } from "axios";
+import {
+  autoUpdate,
+  computePosition,
+  flip,
+  hide,
+  offset,
+  shift,
+} from "@floating-ui/dom";
 import PostMarkdown from "./PostMarkdown";
+import { CATEGORIES } from "../../../constants/categories";
 import S from "./PostDetailModal.styles";
 import { X, UserRound } from "lucide-react";
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import commentIcon from "../../../assets/comment.svg";
+import deleteImageIcon from "../../../assets/delete-image.svg";
 import likeDefaultIcon from "../../../assets/Like.svg";
 import likeActiveIcon from "../../../assets/Like-active.svg";
 import KebabMenu from "../../../assets/Kebab-menu.svg";
-import type {
-  PostComment,
-  PostDetailData,
-  UpdatePostRequest,
-} from "../../../types/posts.types";
+import type { PostComment, PostDetailData } from "../../../types/posts.types";
+import type { UpdatePostRequest } from "../../../api/posts/request/posts.request";
+import type { UploadPostImageErrorResponse } from "../../../api/posts/response/posts.response";
+import type { ProfileData } from "../../../api/profile/profile.types";
 import postsApi from "../../../api/posts.api";
 import commentsApi from "../../../api/comments/comments.api";
 import likesApi from "../../../api/likes/likes.api";
+import profileApi from "../../../api/profile/profile.api";
+import { normalizeDisplayText } from "../../../utils/normalizeDisplayText";
+import { type JSONContent } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import { Markdown, MarkdownManager } from "@tiptap/markdown";
 
 interface PostDetailModalProps {
   post: PostDetailData;
@@ -32,6 +52,29 @@ interface PostDetailModalProps {
   isLikeEnabled?: boolean;
   isMyPost?: boolean;
 }
+
+type PostImage = {
+  id?: number;
+  imageUrl: string;
+  sortOrder?: number;
+  previousImageUrls?: string[];
+};
+
+type PendingImageReplacement = {
+  file: File;
+  currentUrl: string;
+  previewUrl: string;
+  uploadedImage?: { id: number; imageUrl: string; sortOrder?: number };
+};
+
+const MAX_POST_IMAGE_COUNT = 3;
+const POST_IMAGE_LIMIT_MESSAGE = "게시글에는 이미지를 최대 3장까지 첨부할 수 있습니다.";
+const MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_POST_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 // 게시글 작성일을 상세 모달에 표시할 형식으로 변환한다.
 const formatPostDate = (dateString: string) => {
@@ -60,6 +103,108 @@ const CommentDate = (dateString: string) => {
     .replace(/\.$/, "");
 };
 
+const MARKDOWN_IMAGE_EXTENSIONS = [StarterKit, Markdown, Image];
+
+const updateImageNodes = (
+  node: JSONContent,
+  updateSrc: (src: string) => string | null,
+): JSONContent => {
+  if (node.type === "image") {
+    const src = typeof node.attrs?.src === "string" ? node.attrs.src : "";
+    const nextSrc = updateSrc(src);
+
+    if (nextSrc === null) {
+      return { ...node, type: "removedImage" };
+    }
+
+    return {
+      ...node,
+      attrs: {
+        ...node.attrs,
+        src: nextSrc,
+      },
+    };
+  }
+
+  if (!node.content) {
+    return node;
+  }
+
+  return {
+    ...node,
+    content: node.content
+      .map((child) => updateImageNodes(child, updateSrc))
+      .filter((child) => child.type !== "removedImage"),
+  };
+};
+
+const transformMarkdownImageNodes = (
+  content: string,
+  updateSrc: (src: string) => string | null,
+) => {
+  const manager = new MarkdownManager({
+    extensions: MARKDOWN_IMAGE_EXTENSIONS,
+  });
+  const document = manager.parse(content);
+
+  return manager.serialize(updateImageNodes(document, updateSrc));
+};
+
+const replaceImageUrlInMarkdown = (
+  content: string,
+  previousUrl: string,
+  nextUrl: string,
+) =>
+  transformMarkdownImageNodes(content, (src) =>
+    src === previousUrl ? nextUrl : src,
+  );
+
+const appendImageMarkdown = (
+  content: string,
+  images: { imageUrl: string }[],
+  files: File[],
+) => {
+  if (images.length === 0) return content;
+
+  const imageMarkdown = images
+    .map(
+      (image, index) =>
+        `![${files[index]?.name ?? "첨부 이미지"}](${image.imageUrl})`,
+    )
+    .join("\n\n");
+
+  return content ? `${content}\n\n${imageMarkdown}` : imageMarkdown;
+};
+
+const revokeReplacementPreviews = (
+  replacements: Record<number, PendingImageReplacement>,
+) => {
+  Object.values(replacements).forEach(({ previewUrl }) => {
+    URL.revokeObjectURL(previewUrl);
+  });
+};
+
+const COMMENT_SKELETON_COUNT = 2;
+
+const CommentSkeleton = () => (
+  <>
+    {Array.from({ length: COMMENT_SKELETON_COUNT }, (_, index) => (
+      <S.CommentItem key={index} aria-hidden="true">
+        <S.CommentHeader>
+          <S.CommentAuthor>
+            <Skeleton circle width={45} height={45} />
+            <Skeleton width={80} height={20} />
+          </S.CommentAuthor>
+          <Skeleton width={72} height={20} />
+        </S.CommentHeader>
+        <S.CommentBody>
+          <Skeleton width="82%" height={20} />
+        </S.CommentBody>
+      </S.CommentItem>
+    ))}
+  </>
+);
+
 const PostDetailModal = ({
   post,
   currentUserId,
@@ -77,18 +222,26 @@ const PostDetailModal = ({
   const currentPostRef = useRef(post);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // 의도적으로 게시글 상태 변경 시점에만 동기화한다.
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
+
+  // effect 안에서 상태를 즉시 변경하면 불필요한 추가 렌더링이 발생할 수 있음
   useLayoutEffect(() => {
     currentPostRef.current = post;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsLiked(post.liked ?? false);
-    setLikeCount(post.likeCount ?? 0);
-    setIsLikeLoading(false);
-    setLikeError(null);
-  }, [post.id, post.liked, post.likeCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [post]);
 
   // 게시글 메뉴와 댓글 메뉴의 열림 상태를 관리한다.
   const [isPostMenuOpen, setIsPostMenuOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [openCommentMenuId, setOpenCommentMenuId] = useState<number | null>(
     null,
   );
@@ -99,18 +252,34 @@ const PostDetailModal = ({
   const [isCommentError, setIsCommentError] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState("");
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [currentUserProfile, setCurrentUserProfile] = useState<
+    Pick<ProfileData, "username" | "profileImageUrl"> | null
+  >(null);
   const [commentSubmitError, setCommentSubmitError] = useState<string | null>(
     null,
   );
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(
-    null,
-  );
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [commentActionError, setCommentActionError] = useState<string | null>(
     null,
   );
   const [isCommentActionLoading, setIsCommentActionLoading] = useState(false);
-  const [commentReloadKey, setCommentReloadKey] = useState(0);
+  const commentListRef = useRef<HTMLDivElement>(null);
+  const shouldScrollCommentsToBottomRef = useRef(false);
+  const createdCommentIdRef = useRef<number | null>(null);
+  const commentMenuPopoverRef = useRef<HTMLDivElement>(null);
+  const [commentMenuAnchor, setCommentMenuAnchor] =
+    useState<HTMLButtonElement | null>(null);
+  const [commentMenuPosition, setCommentMenuPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const closeCommentMenu = () => {
+    setOpenCommentMenuId(null);
+    setCommentMenuAnchor(null);
+    setCommentMenuPosition(null);
+  };
 
   // 게시글 수정 모드 여부를 관리한다.
   const [isPostEditing, setIsPostEditing] = useState(false);
@@ -118,16 +287,171 @@ const PostDetailModal = ({
   const [editingPostContent, setEditingPostContent] = useState("");
   const [postUpdateError, setPostUpdateError] = useState<string | null>(null);
   const [isPostSaving, setIsPostSaving] = useState(false);
+  const [isPostDeleting, setIsPostDeleting] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [replacementFiles, setReplacementFiles] = useState<
+    Record<number, PendingImageReplacement>
+  >({});
+  const [pendingReplacementIds, setPendingReplacementIds] = useState<number[]>([]);
+  const replacementFilesRef = useRef(replacementFiles);
+  const [uploadedImages, setUploadedImages] = useState<
+    { id: number; imageUrl: string }[]
+  >([]);
+  const [postImageOverrides, setPostImageOverrides] = useState<{
+    postId: number;
+    images: Record<number, PostImage>;
+  }>({ postId: post.id, images: {} });
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
+  const [savedDeletedImageIds, setSavedDeletedImageIds] = useState<number[]>(
+    [],
+  );
+  const [deletedImageUrls, setDeletedImageUrls] = useState<string[]>([]);
+  const [savedDeletedImageUrls, setSavedDeletedImageUrls] = useState<string[]>(
+    [],
+  );
   const [displayedPostTitle, setDisplayedPostTitle] = useState(post.title);
   const [displayedPostContent, setDisplayedPostContent] = useState(
     post.content,
   );
 
-  useLayoutEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDisplayedPostTitle(post.title);
-    setDisplayedPostContent(post.content);
-  }, [post.id, post.title, post.content]);
+  useEffect(() => {
+    replacementFilesRef.current = replacementFiles;
+  }, [replacementFiles]);
+
+  useEffect(
+    () => () => revokeReplacementPreviews(replacementFilesRef.current),
+    [],
+  );
+
+  const [previousPost, setPreviousPost] = useState(post);
+  if (previousPost !== post) {
+    setPreviousPost(post);
+    if (
+      previousPost.liked !== post.liked ||
+      previousPost.likeCount !== post.likeCount
+    ) {
+      setIsLiked(post.liked ?? false);
+      setLikeCount(post.likeCount ?? 0);
+      setIsLikeLoading(false);
+      setLikeError(null);
+    }
+    if (
+      previousPost.title !== post.title ||
+      previousPost.content !== post.content
+    ) {
+      setDisplayedPostTitle(post.title);
+      setDisplayedPostContent(post.content);
+    }
+  }
+
+  // 상세 응답 형식에 맞춰 게시글 이미지를 구성한다.
+  const sourcePostImages: PostImage[] =
+    post.images?.length > 0
+      ? post.images
+      : (post.imageUrls ?? []).map((imageUrl) => ({ imageUrl }));
+  const imageMap = new Map<number | string, PostImage>();
+  for (const image of [...uploadedImages, ...sourcePostImages]) {
+    imageMap.set(image.id ?? image.imageUrl, image);
+  }
+  const postImages = [...imageMap.values()].map((image) => {
+    if (image.id === undefined || postImageOverrides.postId !== post.id) {
+      return image;
+    }
+
+    return {
+      ...image,
+      ...postImageOverrides.images[image.id],
+    };
+  });
+  const findPostImage = (imageUrl: string) => {
+    const image = postImages.find(
+      (postImage) =>
+        postImage.imageUrl === imageUrl ||
+        postImage.previousImageUrls?.includes(imageUrl),
+    );
+    if (image) {
+      return image;
+    }
+
+    const pendingReplacement = Object.entries(replacementFiles).find(
+      ([, replacement]) =>
+        replacement.currentUrl === imageUrl ||
+        replacement.previewUrl === imageUrl ||
+        replacement.uploadedImage?.imageUrl === imageUrl,
+    );
+    if (!pendingReplacement) {
+      return undefined;
+    }
+
+    const imageId = Number(pendingReplacement[0]);
+    return postImages.find((postImage) => postImage.id === imageId);
+  };
+
+  // 삭제된 이미지는 ID 또는 URL 기준으로 숨긴다.
+  const hiddenImageIds = new Set([...deletedImageIds, ...savedDeletedImageIds]);
+  const hiddenImageUrls = new Set([
+    ...deletedImageUrls,
+    ...savedDeletedImageUrls,
+  ]);
+
+  // 삭제되지 않은 기존 이미지와 새로 업로드한 이미지만 표시한다.
+  const visibleImages = postImages.filter(
+    (image) =>
+      !hiddenImageUrls.has(image.imageUrl) &&
+      (image.id === undefined || !hiddenImageIds.has(image.id)),
+  );
+
+  // 본문에 포함된 이미지는 별도 목록에서 중복 표시하지 않는다.
+  const contentForImageVisibility = isPostEditing
+    ? editingPostContent
+    : normalizeDisplayText(displayedPostContent);
+  const bodyImageUrls = useMemo(() => {
+    const urls = new Set<string>();
+    if (!contentForImageVisibility.includes("![")) return urls;
+    const manager = new MarkdownManager({ extensions: MARKDOWN_IMAGE_EXTENSIONS });
+    updateImageNodes(manager.parse(contentForImageVisibility), (url) => {
+      urls.add(url);
+      return url;
+    });
+    return urls;
+  }, [contentForImageVisibility]);
+  const standaloneUrls = new Set<string>();
+  const visibleStandaloneImages = visibleImages.flatMap((image) => {
+    const replacement = image.id === undefined ? undefined : replacementFiles[image.id];
+    const src = replacement?.uploadedImage?.imageUrl ?? replacement?.previewUrl ?? image.imageUrl;
+    const aliases = [src, image.imageUrl, ...(image.previousImageUrls ?? [])];
+    if (aliases.some((url) => bodyImageUrls.has(url)) || standaloneUrls.has(src)) {
+      return [];
+    }
+    standaloneUrls.add(src);
+    return [{ image, src }];
+  });
+  const openComment = comments.find(
+    (comment) => comment.id === openCommentMenuId,
+  );
+
+  // 이미지 ID와 URL을 삭제 목록에 추가한다.
+  const handleImageDelete = (image: PostImage) => {
+    if (image.id !== undefined) {
+      const pendingReplacement = replacementFiles[image.id];
+      if (pendingReplacement) {
+        URL.revokeObjectURL(pendingReplacement.previewUrl);
+      }
+      setDeletedImageIds((current) =>
+        current.includes(image.id as number)
+          ? current
+          : [...current, image.id as number],
+      );
+      setReplacementFiles((current) => {
+        const next = { ...current };
+        delete next[image.id as number];
+        return next;
+      });
+    }
+    setDeletedImageUrls((current) =>
+      current.includes(image.imageUrl) ? current : [...current, image.imageUrl],
+    );
+  };
 
   // 좋아요 등록·취소 API를 호출하고 성공했을 때만 화면 상태를 변경한다.
   const handleLikeClick = async () => {
@@ -169,15 +493,24 @@ const PostDetailModal = ({
 
   const handlePostDelete = async () => {
     setDeleteError(null);
+    setIsPostDeleting(true);
     try {
       await onDelete(post.id);
     } catch {
       setDeleteError("게시글을 삭제하지 못했습니다.");
+    } finally {
+      setIsPostDeleting(false);
     }
   };
 
   // 게시글 수정 모드를 시작하고 게시글 메뉴를 닫는다.
   const handlePostEditStart = () => {
+    // 수정할 때 이전 수정 시도의 임시 삭제 상태를 초기화한다.
+    revokeReplacementPreviews(replacementFiles);
+    setSelectedImages([]);
+    setReplacementFiles({});
+    setDeletedImageIds([]);
+    setDeletedImageUrls([]);
     setIsPostEditing(true);
     setIsPostMenuOpen(false);
     setEditingPostTitle(displayedPostTitle);
@@ -214,7 +547,72 @@ const PostDetailModal = ({
     return () => {
       isActive = false;
     };
-  }, [post.id, commentReloadKey]);
+  }, [post.id]);
+
+  // 새 댓글을 등록한 뒤 댓글 목록의 마지막 위치로 이동한다.
+  useEffect(() => {
+    if (
+      !shouldScrollCommentsToBottomRef.current ||
+      isCommentLoading
+    ) {
+      return;
+    }
+
+    const commentList = commentListRef.current;
+    const createdCommentId = createdCommentIdRef.current;
+    if (!commentList || createdCommentId === null) {
+      return;
+    }
+
+    const createdComment = commentList.querySelector(
+      `[data-comment-id="${createdCommentId}"]`,
+    );
+    if (!createdComment) {
+      return;
+    }
+
+    const animationFrame = requestAnimationFrame(() => {
+      commentList.scrollTo({
+        top: commentList.scrollHeight,
+        behavior: "smooth",
+      });
+      shouldScrollCommentsToBottomRef.current = false;
+      createdCommentIdRef.current = null;
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [
+    comments,
+    isCommentLoading,
+  ]);
+
+  useLayoutEffect(() => {
+    const popover = commentMenuPopoverRef.current;
+    if (!commentMenuAnchor || openCommentMenuId === null || !popover) {
+      return;
+    }
+
+    return autoUpdate(commentMenuAnchor, popover, () => {
+      void computePosition(commentMenuAnchor, popover, {
+        placement: "top-end",
+        strategy: "fixed",
+        middleware: [
+          offset(8),
+          flip(),
+          shift({ padding: 8 }),
+          hide({ strategy: "referenceHidden" }),
+        ],
+      }).then(({ x, y, middlewareData }) => {
+        // 댓글 버튼이 스크롤 영역 밖으로 나가면 팝업도 닫는다.
+        if (middlewareData.hide?.referenceHidden) {
+          closeCommentMenu();
+          return;
+        }
+
+        setCommentMenuPosition({ x, y });
+      });
+    });
+  }, [commentMenuAnchor, openCommentMenuId]);
 
   const handleCommentSubmit = async (
     event: FormEvent<HTMLFormElement>,
@@ -228,9 +626,42 @@ const PostDetailModal = ({
     setCommentSubmitError(null);
 
     try {
-      await commentsApi.createComment(post.id, { content: trimmedComment });
+      const createdComment = await commentsApi.createComment(post.id, {
+        content: trimmedComment,
+      });
+      let currentUserProfileSnapshot = currentUserProfile;
+      if (!currentUserProfileSnapshot) {
+        try {
+          const profile = await profileApi.getMyProfile();
+          currentUserProfileSnapshot = profile;
+          setCurrentUserProfile(profile);
+        } catch {
+          // 댓글 생성은 성공했으므로 닉네임 조회 실패가 등록을 실패시키지 않도록 한다.
+        }
+      }
+      const authorName =
+        currentUserProfileSnapshot?.username ??
+        createdComment.authorName ??
+        "사용자";
+      const profileImageUrl =
+        currentUserProfileSnapshot?.profileImageUrl ??
+        createdComment.profileImageUrl ??
+        null;
       setCommentContent("");
-      setCommentReloadKey((current) => current + 1);
+      setIsCommentError(null);
+      createdCommentIdRef.current = createdComment.id;
+      shouldScrollCommentsToBottomRef.current = true;
+      setComments((currentComments) => [
+        ...currentComments,
+        {
+          id: createdComment.id,
+          userId: createdComment.userId,
+          authorName,
+          content: createdComment.content,
+          createdAt: createdComment.createdAt,
+          profileImageUrl,
+        },
+      ]);
     } catch {
       setCommentSubmitError("댓글을 작성하지 못했습니다.");
     } finally {
@@ -242,7 +673,7 @@ const PostDetailModal = ({
   const handleCommentEditStart = (comment: PostComment): void => {
     setEditingCommentId(comment.id);
     setEditingCommentContent(comment.content);
-    setOpenCommentMenuId(null);
+    closeCommentMenu();
     setCommentActionError(null);
   };
 
@@ -259,9 +690,13 @@ const PostDetailModal = ({
     setCommentActionError(null);
 
     try {
-      const updatedComment = await commentsApi.updateComment(post.id, commentId, {
-        content: trimmedComment,
-      });
+      const updatedComment = await commentsApi.updateComment(
+        post.id,
+        commentId,
+        {
+          content: trimmedComment,
+        },
+      );
       setComments((currentComments) =>
         currentComments.map((comment) =>
           comment.id === commentId
@@ -285,7 +720,7 @@ const PostDetailModal = ({
 
     setIsCommentActionLoading(true);
     setCommentActionError(null);
-    setOpenCommentMenuId(null);
+    closeCommentMenu();
 
     try {
       await commentsApi.deleteComment(post.id, commentId);
@@ -306,25 +741,150 @@ const PostDetailModal = ({
 
     setPostUpdateError(null);
 
-    if (isPostSaving || trimmedPostTitle === "" || trimmedPostContent === "") {
+    if (
+      isPostSaving ||
+      pendingReplacementIds.length > 0 ||
+      trimmedPostTitle === "" ||
+      trimmedPostContent === ""
+    ) {
       return;
     }
 
-    const updateData: UpdatePostRequest = {
-      userId: currentUserId,
-      title: trimmedPostTitle,
-      content: trimmedPostContent,
-    };
+    const categoryId =
+      post.categoryId ??
+      CATEGORIES.find((category) => category.name === post.categoryName)?.id;
+    if (!categoryId) {
+      setPostUpdateError("카테고리 정보를 확인할 수 없습니다.");
+      return;
+    }
+    // 삭제한 이미지의 마크다운을 저장할 본문에서 제거한다.
+    const deletedContentImageUrls = deletedImageUrls;
+    const deletedImageUrlsFromIds = (post.images ?? [])
+      .filter((image) => deletedImageIds.includes(image.id))
+      .map((image) => image.imageUrl);
+    const deletedUrls = new Set([...deletedContentImageUrls, ...deletedImageUrlsFromIds]);
     setIsPostSaving(true);
     try {
+      const replacementEntries = Object.entries(replacementFiles).map(
+        ([imageIdString, replacement]) => {
+          const imageId = Number(imageIdString);
+          const image = postImages.find((postImage) => postImage.id === imageId);
+          if (!image) {
+            throw new Error(`교체할 이미지 정보를 찾을 수 없습니다. (imageId: ${imageId})`);
+          }
+          if (!replacement.uploadedImage) {
+            throw new Error("이미지 교체 업로드가 완료되지 않았습니다.");
+          }
+          const currentImage =
+            (postImageOverrides.postId === post.id
+              ? postImageOverrides.images[imageId]
+              : undefined) ?? image;
+          return {
+            imageId,
+            image,
+            replacement,
+            result: replacement.uploadedImage,
+            override: {
+              ...currentImage,
+              ...replacement.uploadedImage,
+              previousImageUrls: [
+                ...new Set([
+                  ...(currentImage.previousImageUrls ?? []),
+                  currentImage.imageUrl,
+                ]),
+              ],
+            } satisfies PostImage,
+          };
+        },
+      );
+
+      // 교체 API는 파일 선택 시 호출한다. 저장 시에는 신규 업로드만 실행한다.
+      const uploaded =
+        selectedImages.length > 0
+          ? await postsApi.uploadPostImages(post.id, selectedImages)
+          : [];
+
+      const replacementUrls = new Map<string, string>();
+      for (const { image, replacement, result } of replacementEntries) {
+        for (const url of [
+          image.imageUrl,
+          ...(image.previousImageUrls ?? []),
+          replacement.currentUrl,
+          replacement.previewUrl,
+          result.imageUrl,
+        ]) {
+          replacementUrls.set(url, result.imageUrl);
+        }
+      }
+      const seenReplacements = new Set<string>();
+      let nextContent = trimmedPostContent;
+      if (deletedUrls.size > 0 || replacementUrls.size > 0) {
+        nextContent = transformMarkdownImageNodes(nextContent, (url) => {
+          if (deletedUrls.has(url)) return null;
+          const replacementUrl = replacementUrls.get(url);
+          if (replacementUrl === undefined) return url;
+          if (seenReplacements.has(replacementUrl)) return null;
+          seenReplacements.add(replacementUrl);
+          return replacementUrl;
+        });
+      }
+      nextContent = appendImageMarkdown(nextContent, uploaded, selectedImages);
+
+      const updateData: UpdatePostRequest = {
+        categoryId,
+        title: trimmedPostTitle,
+        content: nextContent,
+        status: "PUBLISHED",
+        deleteImageIds: deletedImageIds,
+      };
       await postsApi.updatePost(post.id, updateData);
 
+      if (replacementEntries.length > 0) {
+        setPostImageOverrides((current) => ({
+          postId: post.id,
+          images: {
+            ...(current.postId === post.id ? current.images : {}),
+            ...Object.fromEntries(
+              replacementEntries.map(({ imageId, override }) => [
+                imageId,
+                override,
+              ]),
+            ),
+          },
+        }));
+      }
+
+      if (uploaded.length > 0) {
+        setUploadedImages((current) => [...current, ...uploaded]);
+      }
+
+      revokeReplacementPreviews(replacementFiles);
+      setReplacementFiles({});
+      setSelectedImages([]);
+
+      // 저장된 삭제 상태를 유지해 화면에 삭제한 이미지를 다시 표시하지 않는다.
+      setSavedDeletedImageIds((current) => [...current, ...deletedImageIds]);
+      setSavedDeletedImageUrls((current) => [
+        ...new Set([...current, ...deletedContentImageUrls]),
+      ]);
+      setDeletedImageIds([]);
+      setDeletedImageUrls([]);
+
       setDisplayedPostTitle(trimmedPostTitle);
-      setDisplayedPostContent(trimmedPostContent);
-      onUpdate?.(post.id, trimmedPostTitle, trimmedPostContent);
+      setDisplayedPostContent(updateData.content);
+      onUpdate?.(post.id, trimmedPostTitle, updateData.content);
       setIsPostEditing(false);
-    } catch {
-      setPostUpdateError("게시물을 수정하는데 실패하였습니다.");
+    } catch (error) {
+      if (
+        isAxiosError<UploadPostImageErrorResponse>(error) &&
+        error.response?.data?.error?.code === "POST_IMAGE_LIMIT_EXCEEDED"
+      ) {
+        window.alert(POST_IMAGE_LIMIT_MESSAGE);
+        return;
+      }
+      setPostUpdateError(
+        "이미지 교체 또는 게시글 저장에 실패했습니다. 다시 시도해주세요.",
+      );
     } finally {
       setIsPostSaving(false);
     }
@@ -334,9 +894,67 @@ const PostDetailModal = ({
     <S.DetailDialog
       onClose={onClose}
       aria-labelledby="post-detail-title"
-      closeIcon={<X aria-hidden="true" />}
     >
+      <S.DetailFrame>
       <S.ModalScrollArea>
+      <S.DetailActionLayer>
+          <S.DetailCloseButton
+            type="button"
+            aria-label="모달 닫기"
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </S.DetailCloseButton>
+          <S.PostMenuArea>
+            <S.PostMenuButton
+              type="button"
+              aria-label="게시글 메뉴"
+              disabled={isPostEditing}
+              onClick={() => setIsPostMenuOpen((previous) => !previous)}
+              aria-expanded={isPostMenuOpen}
+            >
+              <S.KebabIcon src={KebabMenu} alt="" />
+            </S.PostMenuButton>
+
+            {isPostMenuOpen && (
+              <S.PostMenuPopover>
+                {!isMyPost && (
+                  <S.ReportPopoverLink
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsPostMenuOpen(false)}
+                  >
+                    신고하기
+                  </S.ReportPopoverLink>
+                )}
+
+                {isMyPost && (
+                  <>
+                    <S.CommentEditButton
+                      type="button"
+                      aria-label="게시글 수정"
+                      onClick={handlePostEditStart}
+                    >
+                      글 수정
+                    </S.CommentEditButton>
+
+                    <S.CommentDeleteButton
+                      type="button"
+                      aria-label="게시글 삭제"
+                      onClick={() => {
+                        setIsPostMenuOpen(false);
+                        setIsDeleteConfirmOpen(true);
+                      }}
+                    >
+                      삭제하기
+                    </S.CommentDeleteButton>
+                  </>
+                )}
+              </S.PostMenuPopover>
+            )}
+          </S.PostMenuArea>
+      </S.DetailActionLayer>
         <S.DetailContent>
           {/* 작성자 정보와 게시글 메뉴 */}
           <S.PostHeader>
@@ -354,54 +972,6 @@ const PostDetailModal = ({
               </S.PostMeta>
             </S.WriterInfo>
 
-            <S.PostMenuArea>
-              <S.PostMenuButton
-                type="button"
-                aria-label="게시글 메뉴"
-                disabled={isPostEditing}
-                onClick={() => setIsPostMenuOpen((previous) => !previous)}
-                aria-expanded={isPostMenuOpen}
-              >
-                <S.KebabIcon src={KebabMenu} alt="" />
-              </S.PostMenuButton>
-
-              {isPostMenuOpen && (
-                <S.PostMenuPopover>
-                  {!isMyPost && (
-                    <S.ReportPopoverLink
-                      href="https://docs.google.com/forms/d/e/1FAIpQLSeLaXHB-Wo9VVqcbNtGBlzQtL5rscli2KoiMpWsRs277_8Qbw/viewform"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      신고하기
-                    </S.ReportPopoverLink>
-                  )}
-
-                  {isMyPost && (
-                    <>
-                      <S.CommentEditButton
-                        type="button"
-                        aria-label="게시글 수정"
-                        onClick={handlePostEditStart}
-                      >
-                        글 수정
-                      </S.CommentEditButton>
-
-                      <S.CommentDeleteButton
-                        type="button"
-                        aria-label="게시글 삭제"
-                        onClick={handlePostDelete}
-                      >
-                        삭제하기
-                      </S.CommentDeleteButton>
-                    </>
-                  )}
-                  {deleteError && (
-                    <p role="alert">{deleteError}</p>
-                  )}
-                </S.PostMenuPopover>
-              )}
-            </S.PostMenuArea>
           </S.PostHeader>
 
           {isPostEditing ? (
@@ -409,7 +979,9 @@ const PostDetailModal = ({
               <S.PostTitle id="post-detail-title">게시글 수정</S.PostTitle>
               <S.PostEditTitleInput
                 value={editingPostTitle}
-                onChange={(event: ChangeEvent<HTMLInputElement>) => setEditingPostTitle(event.target.value)}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  setEditingPostTitle(event.target.value)
+                }
                 aria-label="게시글 제목"
                 disabled={isPostSaving}
               />
@@ -418,12 +990,153 @@ const PostDetailModal = ({
                 value={editingPostContent}
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
+                onSelectImages={async (files, selectedImageUrl) => {
+                  const file = files[0];
+                  if (!file) {
+                    return;
+                  }
+
+                  if (
+                    !selectedImageUrl &&
+                    visibleImages.length + selectedImages.length + files.length >
+                      MAX_POST_IMAGE_COUNT
+                  ) {
+                    window.alert(POST_IMAGE_LIMIT_MESSAGE);
+                    return;
+                  }
+
+                  const invalidFile = files.find(
+                    (candidate) =>
+                      !ALLOWED_POST_IMAGE_TYPES.has(candidate.type) ||
+                      candidate.size > MAX_POST_IMAGE_SIZE,
+                  );
+                  if (invalidFile && !ALLOWED_POST_IMAGE_TYPES.has(invalidFile.type)) {
+                    setPostUpdateError(
+                      "JPEG, PNG 또는 WebP 파일만 업로드할 수 있습니다.",
+                    );
+                    return;
+                  }
+                  if (invalidFile) {
+                    setPostUpdateError(
+                      "이미지 파일은 10MB 이하만 업로드할 수 있습니다.",
+                    );
+                    return;
+                  }
+
+                  if (!selectedImageUrl) {
+                    setPostUpdateError(null);
+                    setSelectedImages((current) => [...current, ...files]);
+                    return;
+                  }
+
+                  const image = findPostImage(selectedImageUrl);
+                  if (image?.id === undefined) {
+                    setPostUpdateError(
+                      "이미지 ID를 확인할 수 없어 교체할 수 없습니다.",
+                    );
+                    return;
+                  }
+
+                  setPostUpdateError(null);
+                  const imageId = image.id;
+                  const previewUrl = URL.createObjectURL(file);
+                  const previousReplacement = replacementFiles[imageId];
+                  if (previousReplacement) {
+                    URL.revokeObjectURL(previousReplacement.previewUrl);
+                  }
+
+                  setEditingPostContent((currentContent) =>
+                    replaceImageUrlInMarkdown(
+                      currentContent,
+                      selectedImageUrl,
+                      previewUrl,
+                    ),
+                  );
+                  setReplacementFiles((current) => {
+                    const next = {
+                      ...current,
+                      [imageId]: {
+                        file,
+                        currentUrl: selectedImageUrl,
+                        previewUrl,
+                      },
+                    };
+                    replacementFilesRef.current = next;
+                    return next;
+                  });
+                  setPendingReplacementIds((current) => [...current, imageId]);
+
+                  try {
+                    const uploadedImage = await postsApi.replacePostImage(
+                      post.id,
+                      imageId,
+                      file,
+                    );
+                    setReplacementFiles((current) => {
+                      const next = {
+                        ...current,
+                        [imageId]: {
+                          ...current[imageId],
+                          uploadedImage,
+                        },
+                      };
+                      replacementFilesRef.current = next;
+                      return next;
+                    });
+                    setEditingPostContent((currentContent) =>
+                      replaceImageUrlInMarkdown(
+                        currentContent,
+                        previewUrl,
+                        uploadedImage.imageUrl,
+                      ),
+                    );
+                  } catch {
+                    setPostUpdateError("이미지 교체 업로드에 실패했습니다.");
+                  } finally {
+                    setPendingReplacementIds((current) =>
+                      current.filter((id) => id !== imageId),
+                    );
+                  }
+                }}
+                onDeleteImage={(imageUrl) => {
+                  // 에디터에서 삭제한 이미지의 ID와 URL을 찾아 기록한다.
+                  const image = findPostImage(imageUrl);
+                  handleImageDelete(image ?? { imageUrl });
+                }}
+                selectedImages={selectedImages}
+                onRemoveImage={(index) =>
+                  setSelectedImages((current) =>
+                    current.filter((_, itemIndex) => itemIndex !== index),
+                  )
+                }
                 actions={
                   <S.PostEditActions>
-                    <S.PostEditCancelButton type="button" variant="secondary" disabled={isPostSaving} onClick={() => setIsPostEditing(false)}>
+                    <S.PostEditCancelButton
+                      type="button"
+                      variant="secondary"
+                      disabled={isPostSaving}
+                      onClick={() => {
+                        revokeReplacementPreviews(replacementFiles);
+                        setSelectedImages([]);
+                        setReplacementFiles({});
+                        setDeletedImageIds([]);
+                        setDeletedImageUrls([]);
+                        setIsPostEditing(false);
+                      }}
+                    >
                       취소
                     </S.PostEditCancelButton>
-                    <S.PostEditSaveButton type="button" variant="primary" onClick={handlePostEditSave} disabled={isPostSaving || !editingPostTitle.trim() || !editingPostContent.trim()}>
+                    <S.PostEditSaveButton
+                      type="button"
+                      variant="primary"
+                      onClick={handlePostEditSave}
+                      disabled={
+                        isPostSaving ||
+                        pendingReplacementIds.length > 0 ||
+                        !editingPostTitle.trim() ||
+                        !editingPostContent.trim()
+                      }
+                    >
                       {isPostSaving ? "저장 중" : "저장"}
                     </S.PostEditSaveButton>
                   </S.PostEditActions>
@@ -432,18 +1145,34 @@ const PostDetailModal = ({
             </S.PostEditForm>
           ) : (
             <>
-              <S.PostTitle id="post-detail-title">{displayedPostTitle}</S.PostTitle>
-              <S.PostContent><PostMarkdown content={displayedPostContent} /></S.PostContent>
+              <S.PostTitle id="post-detail-title">
+                {normalizeDisplayText(displayedPostTitle)}
+              </S.PostTitle>
+              <S.PostContent>
+                <PostMarkdown content={displayedPostContent} />
+              </S.PostContent>
             </>
           )}
-          {post.imageUrls.length > 0 && (
+          {visibleStandaloneImages.length > 0 && (
             <S.ImageList>
-              {post.imageUrls.map((imageUrl, index) => (
-                <S.ContentImage
-                  key={`${imageUrl}-${index}`}
-                  src={imageUrl}
-                  alt={`${displayedPostTitle} 첨부된 이미지`}
-                />
+              {visibleStandaloneImages.map(({ image, src }) => (
+                <S.ImageItem key={image.id ?? src}>
+                  <S.ContentImage
+                    src={src}
+                    alt={`${displayedPostTitle} 첨부된 이미지`}
+                  />
+                  {isPostEditing && (
+                    <S.ImageDeleteButton
+                      type="button"
+                      aria-label="이미지 삭제"
+                      $alwaysVisible={isPostEditing}
+                      disabled={isPostSaving}
+                      onClick={() => handleImageDelete(image)}
+                    >
+                      <img src={deleteImageIcon} alt="" />
+                    </S.ImageDeleteButton>
+                  )}
+                </S.ImageItem>
               ))}
             </S.ImageList>
           )}
@@ -470,13 +1199,19 @@ const PostDetailModal = ({
         {likeError && <p role="alert">{likeError}</p>}
 
         {/* 댓글 목록과 댓글별 메뉴 */}
-        <S.CommentList>
-          {isCommentLoading && <p> 댓글을 불러오는 중입니다... </p>}
+        <S.CommentList
+          ref={commentListRef}
+          aria-busy={isCommentLoading || isCommentSubmitting}
+        >
+          {isCommentLoading && <CommentSkeleton />}
 
-          {!isCommentLoading && !isCommentError && (
+          {!isCommentLoading && (
             <>
               {comments.map((comment) => (
-                <S.CommentItem key={comment.id}>
+                <S.CommentItem
+                  key={comment.id}
+                  data-comment-id={comment.id}
+                >
                   <S.CommentHeader>
                     <S.CommentAuthor>
                       {comment.profileImageUrl ? (
@@ -500,44 +1235,20 @@ const PostDetailModal = ({
                       <S.CommentButton
                         type="button"
                         aria-label="댓글 메뉴"
-                        onClick={() =>
-                          setOpenCommentMenuId((previous) =>
-                            previous === comment.id ? null : comment.id,
-                          )
-                        }
+                        onClick={(event) => {
+                          if (openCommentMenuId === comment.id) {
+                            closeCommentMenu();
+                            return;
+                          }
+
+                          setOpenCommentMenuId(comment.id);
+                          setCommentMenuAnchor(event.currentTarget);
+                          setCommentMenuPosition(null);
+                        }}
                         aria-expanded={openCommentMenuId === comment.id}
                       >
                         <S.KebabIcon src={KebabMenu} alt="" />
                       </S.CommentButton>
-                      {openCommentMenuId === comment.id && (
-                        <S.CommentMenuPopover>
-                          {currentUserId === comment.userId ? (
-                            <>
-                              <S.CommentEditButton
-                                type="button"
-                                onClick={() => handleCommentEditStart(comment)}
-                              >
-                                댓글 수정
-                              </S.CommentEditButton>
-                              <S.CommentDeleteButton
-                                type="button"
-                                onClick={() => void handleCommentDelete(comment.id)}
-                                disabled={isCommentActionLoading}
-                              >
-                                삭제하기
-                              </S.CommentDeleteButton>
-                            </>
-                          ) : (
-                              <S.CommentMenuPopoverLink
-                                href="https://docs.google.com/forms/d/e/1FAIpQLSdZfb16smuoFx3K4JUiB-dqX5hKLywfr2FcyAI4KqWuSYdLZg/viewform"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                신고하기
-                              </S.CommentMenuPopoverLink>
-                          )}
-                        </S.CommentMenuPopover>
-                      )}
                     </S.CommentMenuArea>
                   </S.CommentHeader>
                   {editingCommentId === comment.id ? (
@@ -576,15 +1287,61 @@ const PostDetailModal = ({
                       </S.CommentEditSaveButton>
                     </S.CommentEditForm>
                   ) : (
-                    <S.CommentBody>{comment.content}</S.CommentBody>
+                    <S.CommentBody>
+                      <PostMarkdown content={comment.content} />
+                    </S.CommentBody>
                   )}
                 </S.CommentItem>
               ))}
             </>
           )}
-          {isCommentError && <p role="alert"> {isCommentError} </p>}
+          {!isCommentLoading && isCommentSubmitting && <CommentSkeleton />}
+          {isCommentError && comments.length === 0 && (
+            <p role="alert"> {isCommentError} </p>
+          )}
           {commentActionError && <p role="alert">{commentActionError}</p>}
         </S.CommentList>
+
+        {openComment &&
+          commentMenuAnchor &&
+          createPortal(
+            <S.CommentMenuPopover
+              ref={commentMenuPopoverRef}
+              style={{
+                left: commentMenuPosition?.x ?? 0,
+                top: commentMenuPosition?.y ?? 0,
+                visibility: commentMenuPosition ? "visible" : "hidden",
+              }}
+            >
+              {currentUserId === openComment.userId ? (
+                <>
+                  <S.CommentEditButton
+                    type="button"
+                    onClick={() => handleCommentEditStart(openComment)}
+                  >
+                    댓글 수정
+                  </S.CommentEditButton>
+                  <S.CommentDeleteButton
+                    type="button"
+                    onClick={() => void handleCommentDelete(openComment.id)}
+                    disabled={isCommentActionLoading}
+                  >
+                    삭제하기
+                  </S.CommentDeleteButton>
+                </>
+              ) : (
+                <S.CommentMenuPopoverLink
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSdZfb16smuoFx3K4JUiB-dqX5hKLywfr2FcyAI4KqWuSYdLZg/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeCommentMenu}
+                >
+                  신고하기
+                </S.CommentMenuPopoverLink>
+              )}
+            </S.CommentMenuPopover>,
+            commentMenuAnchor.closest("dialog") ?? document.body,
+          )}
 
         <S.CommentComposer onSubmit={handleCommentSubmit}>
           <S.CommentInput
@@ -603,6 +1360,42 @@ const PostDetailModal = ({
         </S.CommentComposer>
         {commentSubmitError && <p role="alert">{commentSubmitError}</p>}
       </S.ModalScrollArea>
+      </S.DetailFrame>
+      {isDeleteConfirmOpen && (
+        <S.DeleteConfirmDialog
+          onClose={() => {
+            if (!isPostDeleting) {
+              setDeleteError(null);
+              setIsDeleteConfirmOpen(false);
+            }
+          }}
+          aria-labelledby="post-delete-confirm-title"
+        >
+          <S.DeleteConfirmTitle id="post-delete-confirm-title">
+            게시글을 삭제하시겠습니까?
+          </S.DeleteConfirmTitle>
+          <S.DeleteConfirmActions>
+            <S.DeleteConfirmButton
+              type="button"
+              disabled={isPostDeleting}
+              onClick={() => {
+                void handlePostDelete();
+              }}
+            >
+              {isPostDeleting ? "삭제 중" : "삭제"}
+            </S.DeleteConfirmButton>
+            <S.DeleteCancelButton
+              type="button"
+              autoFocus
+              disabled={isPostDeleting}
+              onClick={() => setIsDeleteConfirmOpen(false)}
+            >
+              취소
+            </S.DeleteCancelButton>
+          </S.DeleteConfirmActions>
+          {deleteError && <p role="alert">{deleteError}</p>}
+        </S.DeleteConfirmDialog>
+      )}
     </S.DetailDialog>
   );
 };

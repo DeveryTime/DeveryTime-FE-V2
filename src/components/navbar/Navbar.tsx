@@ -15,8 +15,8 @@ const NavBar = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
-  const currentCategoryId = new URLSearchParams(location.search).get("categoryId");
+const location = useLocation();
+const currentCategoryId = new URLSearchParams(location.search).get("categoryId");
 
   // localStorage에 token이 있으면 로그인 상태로 판단
   const isLoggedIn = Boolean(localStorage.getItem("accessToken"));

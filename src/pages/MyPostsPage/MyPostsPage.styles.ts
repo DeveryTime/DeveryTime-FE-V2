@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
 const StatusMessage = styled.p`
+  // 로딩·오류 상태 안내 문구
   padding: 24px 12px;
   background: transparent;
   color: #000000;
@@ -9,6 +10,7 @@ const StatusMessage = styled.p`
 
 const S = {
   PageContainer: styled.main`
+    // 내가 쓴 글 페이지 전체 영역
     min-height: 100vh;
     width: min(1354px, 100%);
     margin: 0 auto;
@@ -19,6 +21,7 @@ const S = {
   `,
 
   PageHeader: styled.div`
+    // 뒤로가기 버튼과 페이지 제목 배치
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -27,6 +30,7 @@ const S = {
   `,
 
   BackButton: styled.button`
+    // 이전 페이지로 이동하는 버튼
     position: relative;
     left: -32px;
     padding: 0;
@@ -46,6 +50,7 @@ const S = {
   `,
 
   Title: styled.h1`
+    // 페이지 제목
     margin: 0;
     font-size: clamp(28px, 3.55vw, 48px);
     font-weight: 500;

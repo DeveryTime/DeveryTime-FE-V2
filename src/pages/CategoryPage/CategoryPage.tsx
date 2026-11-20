@@ -4,6 +4,8 @@ import S from "./CategoryPage.styles";
 
 import PostSortMenu from "../../components/posts/PostSortMenu/PostSortMenu";
 import PostTable from "../../components/posts/PostTable/PostTable";
+import PostTableSkeleton from "../../components/posts/PostTable/PostTableSkeleton";
+import PostDetailSkeleton from "../../components/posts/PostDetailSkeleton";
 import PostPagination from "../../components/posts/PostPagination/PostPagination";
 import PostDetailModal from "../../components/posts/PostDetailModal/PostDetailModal";
 
@@ -28,6 +30,7 @@ const CategoryPage = ({
   categoryName,
 }: CategoryPageProps) => {
   const navigate = useNavigate();
+  // 정렬, 페이지, 게시글 상세 조회 상태를 관리한다.
   const [selectedSort, setSelectedSort] =
     useState<PostSort>("likeCount,desc");
   const [pagination, setPagination] = useState({ categoryId, page: 1 });
@@ -102,6 +105,7 @@ const CategoryPage = ({
   }, [categoryId, currentPage, reloadKey, selectedSort]);
 
   const handlePostClick = async (postId: number) => {
+    // 선택한 게시글과 현재 사용자의 정보를 함께 조회한다.
     if (!localStorage.getItem("accessToken")) {
       navigate("/login");
       return;
@@ -136,6 +140,7 @@ const CategoryPage = ({
 
   //게시글 삭제 함수
   const handlePostDelete = async (postId: number) => {
+    // 삭제 성공 후 목록과 페이지 데이터를 갱신한다.
     try {
       await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
@@ -150,6 +155,7 @@ const CategoryPage = ({
 
   //수정 성공한 후에 상태 갱신하는 로직
   const handlePostUpdate = (postId: number, title: string, content: string) => {
+    // 수정된 제목과 본문을 목록과 상세 모달에 반영한다.
     setPosts((currentPage) =>
       currentPage.map((currentPost) =>
         currentPost.id === postId ? { ...currentPost, title } : currentPost,
@@ -188,7 +194,7 @@ const CategoryPage = ({
         <S.Description>{categoryName} 게시판입니다.</S.Description>
         <S.CategoryMeta>게시글 {totalElements}개</S.CategoryMeta>
 
-        {isLoading && <p>카테고리 게시글을 불러오는 중입니다...</p>}
+        {isLoading && <PostTableSkeleton />}
         {error && <p role="alert">{error}</p>}
 
         {!isLoading && !error && posts.length > 0 ? (
@@ -202,7 +208,7 @@ const CategoryPage = ({
           )
         )}
 
-        {isDetailLoading && <p>게시글 상세 정보를 불러오는 중입니다...</p>}
+        {isDetailLoading && <PostDetailSkeleton />}
         {detailError && <p role="alert">{detailError}</p>}
 
         {selectedPost && currentUserId !== null && (          <PostDetailModal

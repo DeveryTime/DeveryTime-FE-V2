@@ -8,6 +8,12 @@ import LoginS from "./loginPageStyle";
 import { loginApi } from "../../api/authApi";
 import { getLoginApiErrorMessage } from "../../api/errorMessages";
 
+const completeSchoolEmail = (value: string): string => {
+  const trimmedValue = value.trim();
+  if (trimmedValue === "" || trimmedValue.includes("@")) return trimmedValue;
+  return trimmedValue + "@dsm.hs.kr";
+};
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
@@ -16,7 +22,7 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = async () => {
-    const trimmedEmail = email.trim();
+    const trimmedEmail = completeSchoolEmail(email);
     const trimmedPassword = password.trim();
 
     if (trimmedEmail === "") {
@@ -24,7 +30,7 @@ const LoginPage = () => {
       return;
     }
 
-    if (!trimmedEmail.endsWith("@dsm.hs.kr")) {
+    if (!trimmedEmail.toLowerCase().endsWith("@dsm.hs.kr")) {
       alert("학교 이메일(@dsm.hs.kr)을 입력해주세요.");
       return;
     }
@@ -38,6 +44,7 @@ const LoginPage = () => {
 
     setIsSubmitting(true);
     try {
+      setEmail(trimmedEmail);
       await loginApi({ email: trimmedEmail, password });
       navigate("/main");
     } catch (error: unknown) {
@@ -63,8 +70,11 @@ const LoginPage = () => {
           <LoginS.Title>로그인</LoginS.Title>
 
           <InputBox
-            placeholder="이메일"
-            ariaLabel="이메일"
+            placeholder="학교 이메일 또는 아이디"
+            ariaLabel="학교 이메일 또는 아이디"
+            type="email"
+            autoComplete="email"
+            onBlur={(e) => setEmail(completeSchoolEmail(e.currentTarget.value))}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
