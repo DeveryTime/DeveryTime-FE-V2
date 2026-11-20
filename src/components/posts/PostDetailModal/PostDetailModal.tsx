@@ -61,6 +61,7 @@ type PendingImageReplacement = {
   file: File;
   currentUrl: string;
   previewUrl: string;
+  uploadedImage?: { id: number; imageUrl: string; sortOrder?: number };
 };
 
 const MAX_POST_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -294,6 +295,7 @@ const PostDetailModal = ({
   const [replacementFiles, setReplacementFiles] = useState<
     Record<number, PendingImageReplacement>
   >({});
+  const [pendingReplacementIds, setPendingReplacementIds] = useState<number[]>([]);
   const replacementFilesRef = useRef(replacementFiles);
   const [uploadedImages, setUploadedImages] = useState<
     { id: number; imageUrl: string }[]
@@ -740,7 +742,12 @@ const PostDetailModal = ({
 
     setPostUpdateError(null);
 
-    if (isPostSaving || trimmedPostTitle === "" || trimmedPostContent === "") {
+    if (
+      isPostSaving ||
+      pendingReplacementIds.length > 0 ||
+      trimmedPostTitle === "" ||
+      trimmedPostContent === ""
+    ) {
       return;
     }
 
@@ -769,47 +776,39 @@ const PostDetailModal = ({
           if (!image) {
             throw new Error(`교체할 이미지 정보를 찾을 수 없습니다. (imageId: ${imageId})`);
           }
-          return { imageId, image, replacement };
+          if (!replacement.uploadedImage) {
+            throw new Error("이미지 교체 업로드가 완료되지 않았습니다.");
+          }
+          const currentImage =
+            (postImageOverrides.postId === post.id
+              ? postImageOverrides.images[imageId]
+              : undefined) ?? image;
+          return {
+            imageId,
+            image,
+            replacement,
+            result: replacement.uploadedImage,
+            override: {
+              ...currentImage,
+              ...replacement.uploadedImage,
+              previousImageUrls: [
+                ...new Set([
+                  ...(currentImage.previousImageUrls ?? []),
+                  currentImage.imageUrl,
+                ]),
+              ],
+            } satisfies PostImage,
+          };
         },
       );
 
-      // 이미지 교체와 신규 업로드는 서로 독립적이므로 동시에 처리한다.
-      const [replacementResults, uploaded] = await Promise.all([
-        Promise.all(
-          replacementEntries.map(async ({ imageId, image, replacement }) => {
-            const result = await postsApi.replacePostImage(
-              post.id,
-              imageId,
-              replacement.file,
-            );
-            const currentImage =
-              (postImageOverrides.postId === post.id
-                ? postImageOverrides.images[imageId]
-                : undefined) ?? image;
-            return {
-              imageId,
-              image,
-              replacement,
-              result,
-              override: {
-                ...currentImage,
-                ...result,
-                previousImageUrls: [
-                  ...new Set([
-                    ...(currentImage.previousImageUrls ?? []),
-                    currentImage.imageUrl,
-                  ]),
-                ],
-              } satisfies PostImage,
-            };
-          }),
-        ),
+      // 교체 API는 파일 선택 시 호출한다. 저장 시에는 신규 업로드만 실행한다.
+      const uploaded =
         selectedImages.length > 0
-          ? postsApi.uploadPostImages(post.id, selectedImages)
-          : Promise.resolve([]),
-      ]);
+          ? await postsApi.uploadPostImages(post.id, selectedImages)
+          : [];
 
-      let nextContent = replacementResults.reduce(
+      let nextContent = replacementEntries.reduce(
         (content, { image, replacement, result }) =>
           [
             replacement.currentUrl,
@@ -837,13 +836,13 @@ const PostDetailModal = ({
       };
       await postsApi.updatePost(post.id, updateData);
 
-      if (replacementResults.length > 0) {
+      if (replacementEntries.length > 0) {
         setPostImageOverrides((current) => ({
           postId: post.id,
           images: {
             ...(current.postId === post.id ? current.images : {}),
             ...Object.fromEntries(
-              replacementResults.map(({ imageId, override }) => [
+              replacementEntries.map(({ imageId, override }) => [
                 imageId,
                 override,
               ]),
@@ -981,7 +980,7 @@ const PostDetailModal = ({
                 value={editingPostContent}
                 onChange={setEditingPostContent}
                 disabled={isPostSaving}
-                onSelectImages={(files, selectedImageUrl) => {
+                onSelectImages={async (files, selectedImageUrl) => {
                   const file = files[0];
                   if (!file) {
                     return;
@@ -1034,14 +1033,51 @@ const PostDetailModal = ({
                       previewUrl,
                     ),
                   );
-                  setReplacementFiles((current) => ({
-                    ...current,
-                    [imageId]: {
+                  setReplacementFiles((current) => {
+                    const next = {
+                      ...current,
+                      [imageId]: {
+                        file,
+                        currentUrl: selectedImageUrl,
+                        previewUrl,
+                      },
+                    };
+                    replacementFilesRef.current = next;
+                    return next;
+                  });
+                  setPendingReplacementIds((current) => [...current, imageId]);
+
+                  try {
+                    const uploadedImage = await postsApi.replacePostImage(
+                      post.id,
+                      imageId,
                       file,
-                      currentUrl: selectedImageUrl,
-                      previewUrl,
-                    },
-                  }));
+                    );
+                    setReplacementFiles((current) => {
+                      const next = {
+                        ...current,
+                        [imageId]: {
+                          ...current[imageId],
+                          uploadedImage,
+                        },
+                      };
+                      replacementFilesRef.current = next;
+                      return next;
+                    });
+                    setEditingPostContent((currentContent) =>
+                      replaceImageUrlInMarkdown(
+                        currentContent,
+                        previewUrl,
+                        uploadedImage.imageUrl,
+                      ),
+                    );
+                  } catch {
+                    setPostUpdateError("이미지 교체 업로드에 실패했습니다.");
+                  } finally {
+                    setPendingReplacementIds((current) =>
+                      current.filter((id) => id !== imageId),
+                    );
+                  }
                 }}
                 onDeleteImage={(imageUrl) => {
                   // 에디터에서 삭제한 이미지의 ID와 URL을 찾아 기록한다.
@@ -1077,6 +1113,7 @@ const PostDetailModal = ({
                       onClick={handlePostEditSave}
                       disabled={
                         isPostSaving ||
+                        pendingReplacementIds.length > 0 ||
                         !editingPostTitle.trim() ||
                         !editingPostContent.trim()
                       }
