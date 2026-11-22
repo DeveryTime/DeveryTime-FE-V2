@@ -368,18 +368,19 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
       return;
     }
     const files = Array.from(event.currentTarget.files ?? []);
-    setSelectedImages((current) => {
-      const remainingCount = MAX_IMAGE_COUNT - current.length;
-      if (remainingCount <= 0) {
-        alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
-        return current;
-      }
+    const remainingCount = MAX_IMAGE_COUNT - selectedImages.length;
+    const acceptedFiles = files.slice(0, Math.max(0, remainingCount));
 
-      const acceptedFiles = files.slice(0, remainingCount);
-      if (files.length > acceptedFiles.length) {
-        alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
-      }
-      return [...current, ...acceptedFiles];
+    if (files.length > acceptedFiles.length) {
+      alert(`이미지는 최대 ${MAX_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
+    }
+
+    setSelectedImages((current) => {
+      const currentRemainingCount = Math.max(
+        0,
+        MAX_IMAGE_COUNT - current.length,
+      );
+      return [...current, ...acceptedFiles.slice(0, currentRemainingCount)];
     });
     event.currentTarget.value = "";
   };
@@ -441,6 +442,49 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
 
         let uploadedImages = uploadedPostImages;
         let currentUploadedIndexes = uploadedIndexes;
+
+        if (
+          postCreationCompleted &&
+          currentUploadedIndexes.length < selectedImages.length
+        ) {
+          const existingPost = await postsApi.getPost(postId as number);
+          const existingImages = existingPost.images;
+          const hasUsableSortOrder = existingImages.every(
+            (image) =>
+              Number.isInteger(image.sortOrder) &&
+              image.sortOrder! >= 0 &&
+              image.sortOrder! < selectedImages.length,
+          );
+          const sortedExistingImages = [...existingImages].sort(
+            (a, b) => (a.sortOrder ?? -1) - (b.sortOrder ?? -1),
+          );
+          const existingIndexes = sortedExistingImages.map(
+            (image) => image.sortOrder as number,
+          );
+          const hasContiguousIndexes = existingIndexes.every(
+            (index, position) => index === position,
+          );
+
+          if (
+            existingImages.length > selectedImages.length ||
+            !hasUsableSortOrder ||
+            !hasContiguousIndexes
+          ) {
+            throw new Error(
+              "이미지 업로드 결과를 안전하게 확인할 수 없어 재시도를 중단했습니다. 게시글 이미지를 확인한 뒤 다시 시도해주세요.",
+            );
+          }
+
+          uploadedImages = sortedExistingImages.map((image) => ({
+            id: image.id,
+            imageUrl: image.imageUrl,
+            sortOrder: image.sortOrder as number,
+          }));
+          currentUploadedIndexes = existingIndexes;
+          setUploadedPostImages(uploadedImages);
+          setUploadedIndexes(currentUploadedIndexes);
+        }
+
         const uploadedIndexSet = new Set(currentUploadedIndexes);
         const pendingIndexes = selectedImages
           .map((_, index) => index)
