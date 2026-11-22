@@ -45,7 +45,7 @@ export interface PostDetailData {
   writerProfileImageUrl: string | null;
   categoryName: string;
   categoryId?: number;
-  images: { id: number; imageUrl: string; sortOrder?: number }[];
+  images: { id: number; imageUrl: string; sortOrder: number }[];
   imageUrls?: string[];
   likeCount: number;
   liked: boolean;

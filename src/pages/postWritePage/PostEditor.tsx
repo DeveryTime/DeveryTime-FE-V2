@@ -452,15 +452,13 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           const hasUsableSortOrder = existingImages.every(
             (image) =>
               Number.isInteger(image.sortOrder) &&
-              image.sortOrder! >= 0 &&
-              image.sortOrder! < selectedImages.length,
+              image.sortOrder >= 0 &&
+              image.sortOrder < selectedImages.length,
           );
           const sortedExistingImages = [...existingImages].sort(
-            (a, b) => (a.sortOrder ?? -1) - (b.sortOrder ?? -1),
+            (a, b) => a.sortOrder - b.sortOrder,
           );
-          const existingIndexes = sortedExistingImages.map(
-            (image) => image.sortOrder as number,
-          );
+          const existingIndexes = sortedExistingImages.map((image) => image.sortOrder);
           const hasContiguousIndexes = existingIndexes.every(
             (index, position) => index === position,
           );
@@ -478,7 +476,7 @@ const PostEditor = ({ userId, onClose }: PostEditorProps) => {
           uploadedImages = sortedExistingImages.map((image) => ({
             id: image.id,
             imageUrl: image.imageUrl,
-            sortOrder: image.sortOrder as number,
+            sortOrder: image.sortOrder,
           }));
           currentUploadedIndexes = existingIndexes;
           setUploadedPostImages(uploadedImages);
