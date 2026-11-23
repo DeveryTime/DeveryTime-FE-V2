@@ -30,6 +30,7 @@ const formatPostDate = (dateString: string) => {
 
 const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   const navigate = useNavigate();
+  // 내가 작성한 게시글 목록과 상세 조회 상태를 관리한다.
   const [currentPage, setCurrentPage] = useState(1);
   const [posts, setPosts] = useState<PostTableItem[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -55,6 +56,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   };
 
   useEffect(() => {
+    // 현재 페이지의 내가 작성한 게시글을 조회한다.
     let isActive = true;
 
     const fetchMyPosts = async () => {
@@ -109,6 +111,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   }, [currentPage]);
 
   const handlePostClick = async (postId: number) => {
+    // 선택한 게시글의 상세 정보를 조회한다.
     const requestId = ++detailRequestId.current;
     setIsDetailLoading(true);
     setDetailError(null);
@@ -136,6 +139,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   };
 
   const handlePostDelete = async (postId: number) => {
+    // 삭제 성공 후 목록에서 해당 게시글을 제거한다.
     try {
       await postsApi.deletePost(postId);
       setPosts((currentPosts) =>
@@ -150,6 +154,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
   };
 
   const handlePostUpdate = (postId: number, title: string, content: string) => {
+    // 수정된 게시글 정보를 목록과 상세 모달에 반영한다.
     setPosts((currentPosts) =>
       currentPosts.map((post) =>
         post.id === postId ? { ...post, title } : post,
@@ -202,7 +207,7 @@ const MyPostsPage = ({ onBack }: MyPostsPageProps) => {
           post={selectedPost}
           currentUserId={selectedPost.writerId}
           isMyPost
-          isLikeEnabled={false}
+          isLikeEnabled={true}
           onClose={() => {
             detailRequestId.current += 1;
             setSelectedPost(null);

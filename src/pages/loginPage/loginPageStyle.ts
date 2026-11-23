@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import colors from "../../styles/tokens/colors";
 import { Link } from "react-router-dom";
+import InputBoxStyle from "../../components/loginPage/inputBox/InputBoxStyle";
 
 const LoginS = {
   SignupWrapper: styled.div`
@@ -21,7 +22,9 @@ const LoginS = {
     height: 700px;
     background-color: #ffffff;
     gap: 64px;
-    box-shadow: 6px 4px 12px 8px #00000040;
+    box-sizing: border-box;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.12);
     border-radius: 15px;
   `,
 
@@ -103,23 +106,11 @@ const LoginS = {
     border-bottom: 2px solid #6f6f6f;
   `,
 
-  PasswordInput: styled.input`
-    width: 100%;
-    height: 64px;
-    padding: 0;
+  PasswordInput: styled(InputBoxStyle.Input)`
     padding-right: 45px;
-    border: none;
-    outline: none;
-    color: #333333;
-    font-family: Pretendard;
-    font-size: 24px;
 
     &::-ms-reveal {
       display: none;
-    }
-
-    &::placeholder {
-      color: #6f6f6f;
     }
   `,
 

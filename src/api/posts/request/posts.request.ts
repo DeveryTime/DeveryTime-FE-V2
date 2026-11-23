@@ -13,19 +13,16 @@ export interface GetMyPostsRequest {
 }
 
 export interface UpdatePostRequest {
-  userId: number;
+  categoryId: number;
   title: string;
   content: string;
+  status: "PUBLISHED";
+  deleteImageIds?: number[];
 }
 
 export interface CreatePostRequest {
   title: string;
   content: string;
   categoryId: number;
-  status: "PUBLISHED";
-}
-
-export interface UploadPostImageRequest {
-  file: File;
-  sortOrder?: number;
+  status: "DRAFT" | "PUBLISHED";
 }

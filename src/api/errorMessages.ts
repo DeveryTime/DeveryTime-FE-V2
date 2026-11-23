@@ -47,9 +47,33 @@ const POST_ERROR_MESSAGES: Record<string, ApiErrorDefinition> = {
     status: 404,
     message: "게시글을 찾을 수 없습니다.",
   },
+  POST_IMAGE_NOT_FOUND: {
+    status: 404,
+    message: "게시글 이미지를 찾을 수 없습니다.",
+  },
   CATEGORY_NOT_FOUND: {
     status: 404,
     message: "카테고리를 찾을 수 없습니다.",
+  },
+  POST_IMAGE_LIMIT_EXCEEDED: {
+    status: 400,
+    message: "게시글 이미지는 최대 3장까지 업로드할 수 있습니다.",
+  },
+  INVALID_IMAGE_FILE: {
+    status: 400,
+    message: "이미지 파일을 첨부해주세요.",
+  },
+  INVALID_IMAGE_TYPE: {
+    status: 400,
+    message: "JPEG, PNG, WebP 이미지만 업로드할 수 있습니다.",
+  },
+  IMAGE_FILE_TOO_LARGE: {
+    status: 400,
+    message: "이미지는 장당 10MB 이하만 업로드할 수 있습니다.",
+  },
+  IMAGE_UPLOAD_FAILED: {
+    status: 500,
+    message: "이미지 업로드에 실패했습니다.",
   },
 };
 

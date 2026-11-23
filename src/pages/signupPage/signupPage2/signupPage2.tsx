@@ -15,6 +15,12 @@ import { readSignupDraft, saveSignupDraft } from "../signupDraft";
 
 const VERIFICATION_DURATION_SECONDS = 5 * 60;
 
+const completeSchoolEmail = (value: string) => {
+  const trimmedValue = value.trim();
+  if (trimmedValue === "" || trimmedValue.includes("@")) return trimmedValue;
+  return `${trimmedValue}@dsm.hs.kr`;
+};
+
 const isValidSchoolEmail = (value: string) => {
   const [localPart, domain, ...extraParts] = value.trim().split("@");
 
@@ -44,7 +50,8 @@ const SignupPage2 = () => {
   const handleSendCode = async () => {
     if (isSending) return;
 
-    const trimmedEmail = email.trim();
+    const trimmedEmail = completeSchoolEmail(email);
+    setEmail(trimmedEmail);
 
     if (trimmedEmail === "") {
       alert("이메일을 입력해주세요.");
@@ -118,7 +125,10 @@ const SignupPage2 = () => {
       return;
     }
 
-    if (!isValidSchoolEmail(email)) {
+    const verifiedEmail = completeSchoolEmail(email);
+    setEmail(verifiedEmail);
+
+    if (!isValidSchoolEmail(verifiedEmail)) {
       alert("학교 이메일(@dsm.hs.kr)을 입력해주세요.");
       return;
     }
@@ -142,12 +152,12 @@ const SignupPage2 = () => {
 
     try {
       await verifyEmailApi({
-        email: email.trim(),
+        email: verifiedEmail,
         code: verificationCode,
       });
 
       saveSignupDraft({
-        email: email.trim(),
+        email: verifiedEmail,
         emailVerified: true,
       });
 
@@ -190,6 +200,14 @@ const SignupPage2 = () => {
               placeholder="이메일"
               aria-label="이메일"
               value={email}
+              onBlur={(e) => {
+                const nextEmail = completeSchoolEmail(e.currentTarget.value);
+                setEmail(nextEmail);
+                saveSignupDraft({
+                  email: nextEmail,
+                  emailVerified: false,
+                });
+              }}
               onChange={(e) => {
                 const nextEmail = e.target.value;
 

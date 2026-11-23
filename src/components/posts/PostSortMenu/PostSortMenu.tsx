@@ -21,6 +21,7 @@ const sortOptions: SortOption[] = [
 ];
 
 const PostSortMenu = ({ selectedSort, onChange }: PostSortMenuProps) => {
+  // 선택한 정렬 기준을 부모 페이지에 전달한다.
   return (
     // 선택된 정렬 기준을 부모 컴포넌트에 전달하는 메뉴다.
     <S.SortNav aria-label="게시글 정렬">

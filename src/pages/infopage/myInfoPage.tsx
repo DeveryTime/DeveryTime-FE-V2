@@ -117,9 +117,7 @@ const Info = () => {
               <S.ProfileImage>
                 {user.profileImageUrl ? (
                   <img src={user.profileImageUrl} alt="프로필 사진" />
-                ) : (
-                  <span>프로필 사진</span>
-                )}
+                ) : null}
               </S.ProfileImage>
 
               <div>

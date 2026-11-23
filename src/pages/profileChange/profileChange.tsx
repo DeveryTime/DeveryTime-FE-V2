@@ -14,6 +14,7 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUsernameEditing, setIsUsernameEditing] = useState(false);
 
   // 수정할 아이디
   const [username, setUsername] = useState("");
@@ -42,7 +43,6 @@ const Profile = () => {
         const profile = await profileApi.getMyProfile();
 
         if (!isActive) return;
-
         setUser(profile);
 
         // API 응답 필드명은 username으로 통일
@@ -225,9 +225,7 @@ const Profile = () => {
                     src={user.profileImageUrl}
                     alt="프로필 이미지"
                   />
-                ) : (
-                  <span>프로필 이미지</span>
-                )}
+                ) : null}
               </S.ProfileImage>
 
               <input
@@ -255,6 +253,8 @@ const Profile = () => {
 
               <S.NameInput
                 value={username}
+                className={isUsernameEditing ? "editing" : ""}
+                onFocus={() => setIsUsernameEditing(true)}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="10글자 이내로 입력해 주세요"
                 maxLength={10}

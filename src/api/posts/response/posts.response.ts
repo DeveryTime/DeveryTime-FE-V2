@@ -4,6 +4,8 @@ import type {
   UploadPostImageData,
 } from "../posts.types";
 
+export type { UploadPostImageData } from "../posts.types";
+
 export interface PostListResponse {
   success: boolean;
   data: PostListData;
@@ -38,9 +40,9 @@ export interface CreatePostErrorResponse {
 }
 
 export interface UpdatePostResponse {
-  id: number;
-  title: string;
-  updatedAt: string;
+  success: boolean;
+  data: { id: number; title: string; status: string; updatedAt: string };
+  message: string;
 }
 
 export interface PostDetailResponse {
@@ -48,7 +50,12 @@ export interface PostDetailResponse {
   data: PostDetailData;
 }
 
-export interface UploadPostImageResponse {
+export interface UploadPostImagesResponse {
+  success: boolean;
+  data: UploadPostImageData[];
+}
+
+export interface ReplacePostImageResponse {
   success: boolean;
   data: UploadPostImageData;
 }
@@ -56,11 +63,14 @@ export interface UploadPostImageResponse {
 export type UploadPostImageErrorCode =
   | "UNAUTHORIZED"
   | "POST_NOT_FOUND"
+  | "POST_IMAGE_NOT_FOUND"
   | "FORBIDDEN"
   | "INVALID_IMAGE_FILE"
   | "INVALID_IMAGE_TYPE"
   | "IMAGE_FILE_TOO_LARGE"
-  | "IMAGE_UPLOAD_FAILED";
+  | "POST_IMAGE_LIMIT_EXCEEDED"
+  | "IMAGE_UPLOAD_FAILED"
+  | "INTERNAL_SERVER_ERROR";
 
 export interface UploadPostImageErrorResponse {
   success: false;
